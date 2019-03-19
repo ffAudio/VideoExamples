@@ -31,9 +31,7 @@
  ==============================================================================
  */
 
-
-#ifndef OSDCOMPONENT_H_INCLUDED
-#define OSDCOMPONENT_H_INCLUDED
+#pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
@@ -42,11 +40,12 @@
 */
 class OSDComponent    : public Component,
                         public Slider::Listener,
-                        public Button::Listener
+                        public Button::Listener,
+                        public ChangeListener
 {
 public:
-    OSDComponent (foleys::AVClip* readerToControl, AudioTransportSource* transportToControl)
-    : clip (readerToControl), transport (transportToControl)
+    OSDComponent (foleys::AVClip* clipToControl, AudioTransportSource* transportToControl)
+    : clip (clipToControl), transport (transportToControl)
     {
         ffwdSpeed = 2;
 
@@ -157,6 +156,8 @@ public:
                 if (auto* reader = dynamic_cast<foleys::AVMovieClip*> (clip))
                     reader->openFromFile (video);
 
+                if (clip != nullptr)
+                    seekBar->setRange (0, clip->getLengthInSeconds());
             }
         }
         else if (b == play) {
@@ -184,6 +185,12 @@ public:
             clip->setNextReadPosition (lastPos);
             transport->start ();
         }
+    }
+
+    void changeListenerCallback (ChangeBroadcaster*) override
+    {
+        if (clip != nullptr)
+            seekBar->setRange (0, clip->getLengthInSeconds());
     }
 
     class MouseIdle : public MouseListener, public Timer
@@ -249,6 +256,3 @@ private:
 
     AudioTransportSource*               transport;
 };
-
-
-#endif  // OSDCOMPONENT_H_INCLUDED

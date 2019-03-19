@@ -31,8 +31,7 @@
  ==============================================================================
  */
 
-#ifndef MAINCOMPONENT_H_INCLUDED
-#define MAINCOMPONENT_H_INCLUDED
+#pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
@@ -44,7 +43,8 @@
  your controls and content.
  */
 class VideoComponentWithDropper :   public foleys::AVComponent,
-                                    public FileDragAndDropTarget
+                                    public FileDragAndDropTarget,
+                                    public ChangeBroadcaster
 {
 public:
     VideoComponentWithDropper (foleys::AVMovieClip* clip)
@@ -66,6 +66,7 @@ public:
         {
             File fileToOpen (files [0]);
             movieClip->openFromFile (fileToOpen);
+            sendChangeMessage();
             Process::makeForegroundProcess ();
         }
     }
@@ -77,6 +78,7 @@ public:
     your controls and content.
 */
 class MainContentComponent   :  public AudioAppComponent,
+                                public ChangeBroadcaster,
                                 public foleys::AVClip::TimecodeListener
 {
 public:
@@ -120,6 +122,8 @@ public:
 #endif
 
         setSize (800, 600);
+
+        videoComponent->addChangeListener (osdComponent);
 
         if (auto* b = movieClip->getBackgroundJob())
             backgroundThread.addTimeSliceClient (b);
@@ -224,7 +228,7 @@ public:
     {
         MessageManager::callAsync (std::bind (&OSDComponent::setCurrentTime,
                                               osdComponent.get(),
-                                              tc.count / tc.timebase));
+                                              tc.count * tc.timebase));
     }
 
     void paint (Graphics& g) override
@@ -281,6 +285,3 @@ private:
 
 // (This function is called by the app startup code to create our main component)
 Component* createMainContentComponent()     { return new MainContentComponent(); }
-
-
-#endif  // MAINCOMPONENT_H_INCLUDED
