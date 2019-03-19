@@ -1,0 +1,254 @@
+/*
+ ==============================================================================
+ Copyright (c) 2017, Filmstro Ltd. - Daniel Walz
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGE.
+ ==============================================================================
+
+ Overlay component 
+
+ ==============================================================================
+ */
+
+
+#ifndef OSDCOMPONENT_H_INCLUDED
+#define OSDCOMPONENT_H_INCLUDED
+
+#include "../JuceLibraryCode/JuceHeader.h"
+
+//==============================================================================
+/*
+*/
+class OSDComponent    : public Component,
+                        public Slider::Listener,
+                        public Button::Listener
+{
+public:
+    OSDComponent (foleys::AVClip* readerToControl, AudioTransportSource* transportToControl)
+    : clip (readerToControl), transport (transportToControl)
+    {
+        ffwdSpeed = 2;
+
+        setInterceptsMouseClicks (false, true);
+        setWantsKeyboardFocus (false);
+
+        openFile = new TextButton ("Open", "Open");
+        openFile->addListener (this);
+        openFile->setWantsKeyboardFocus (false);
+        addAndMakeVisible (openFile);
+        flexBox.items.add (FlexItem (*openFile).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+
+        saveFile = new TextButton ("Save", "Save");
+        saveFile->addListener (this);
+        saveFile->setWantsKeyboardFocus (false);
+        addAndMakeVisible (saveFile);
+        flexBox.items.add (FlexItem (*saveFile).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+
+        seekBar = new Slider (Slider::LinearHorizontal, Slider::NoTextBox);
+        addAndMakeVisible (seekBar);
+        seekBar->addListener (this);
+        seekBar->setWantsKeyboardFocus (false);
+        flexBox.items.add (FlexItem (*seekBar).withFlex (6.0, 1.0, 0.5).withHeight (20.0));
+
+        stop = new TextButton ("Stop", "Stop");
+        stop->addListener (this);
+        stop->setWantsKeyboardFocus (false);
+        addAndMakeVisible (stop);
+        flexBox.items.add (FlexItem (*stop).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+
+        pause = new TextButton ("Pause", "Pause");
+        pause->addListener (this);
+        pause->setWantsKeyboardFocus (false);
+        addAndMakeVisible (pause);
+        flexBox.items.add (FlexItem (*pause).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+
+        play = new TextButton ("Play", "Play");
+        play->addListener (this);
+        play->setWantsKeyboardFocus (false);
+        addAndMakeVisible (play);
+        flexBox.items.add (FlexItem (*play).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+
+        ffwd = new TextButton ("FFWD", "FFWD");
+        ffwd->addListener (this);
+        ffwd->setWantsKeyboardFocus (false);
+        addAndMakeVisible (ffwd);
+        flexBox.items.add (FlexItem (*ffwd).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+
+        openFile->setConnectedEdges (TextButton::ConnectedOnRight);
+        saveFile->setConnectedEdges (TextButton::ConnectedOnLeft);
+
+        stop->setConnectedEdges  (TextButton::ConnectedOnRight);
+        pause->setConnectedEdges (TextButton::ConnectedOnRight | TextButton::ConnectedOnLeft);
+        play->setConnectedEdges  (TextButton::ConnectedOnRight | TextButton::ConnectedOnLeft);
+        ffwd->setConnectedEdges  (TextButton::ConnectedOnLeft);
+
+        idle = new MouseIdle (*this);
+    }
+
+    ~OSDComponent()
+    {
+    }
+
+    void paint (Graphics& g) override
+    {
+        if (clip && clip->getLengthInSeconds() > 0) {
+            g.setColour (Colours::white);
+            g.setFont (24);
+            auto size = clip->getOriginalSize();
+            String dim = String (size.width) + " x " + String (size.height);
+            g.drawFittedText (dim, getLocalBounds(), Justification::topLeft, 1);
+            g.drawFittedText (foleys::timecodeToString (clip->getCurrentTimecode()),
+                              getLocalBounds(), Justification::topRight, 1);
+        }
+    }
+
+    void resized() override
+    {
+        Rectangle<int> bounds = getBounds().withTop (getHeight() - 40);
+        flexBox.performLayout (bounds);
+    }
+
+    void setCurrentTime (const double time)
+    {
+        seekBar->setValue (time, dontSendNotification);
+    }
+
+    void setVideoLength (const double length)
+    {
+        seekBar->setRange (0.0, length);
+    }
+
+    /** React to slider changes with seeking */
+    void sliderValueChanged (juce::Slider* slider) override
+    {
+        if (slider == seekBar) {
+            clip->setNextReadPosition (slider->getValue() * 48000);
+        }
+    }
+
+    void buttonClicked (Button* b) override
+    {
+        if (b == openFile) {
+            transport->stop();
+            FileChooser chooser ("Open Video File");
+            if (chooser.browseForFileToOpen()) {
+                File video = chooser.getResult();
+                if (auto* reader = dynamic_cast<foleys::AVMovieClip*> (clip))
+                    reader->openFromFile (video);
+
+            }
+        }
+        else if (b == play) {
+            if (ffwdSpeed != 2) {
+                int64 lastPos = clip->getNextReadPosition();
+                ffwdSpeed = 2;
+                double factor = 0.5 + (ffwdSpeed / 4.0);
+                transport->setSource (clip, 0, nullptr, factor, 2);
+                clip->setNextReadPosition (lastPos);
+            }
+            transport->start();
+        }
+        else if (b == stop) {
+            transport->stop();
+            clip->setNextReadPosition (0);
+        }
+        else if (b == pause) {
+            transport->stop();
+        }
+        else if (b == ffwd) {
+            int64 lastPos = clip->getNextReadPosition();
+            ffwdSpeed = ++ffwdSpeed % 7;
+            double factor = 0.5 + (ffwdSpeed / 4.0);
+            transport->setSource (clip, 0, nullptr, factor, 2);
+            clip->setNextReadPosition (lastPos);
+            transport->start ();
+        }
+    }
+
+    class MouseIdle : public MouseListener, public Timer
+    {
+    public:
+        MouseIdle (Component& c) :
+        component (c),
+        lastMovement (Time::getMillisecondCounter())
+        {
+            Desktop::getInstance().addGlobalMouseListener (this);
+            startTimerHz (20);
+        }
+
+        void timerCallback () override
+        {
+            const int64 relTime = Time::getMillisecondCounter() - lastMovement;
+            if (relTime < 2000) {
+                component.setVisible (true);
+                component.setAlpha (1.0);
+                if (Component* parent = component.getParentComponent())
+                    parent->setMouseCursor (MouseCursor::StandardCursorType::NormalCursor);
+            }
+            else if (relTime < 2300) {
+                component.setAlpha (1.0 - jmax (0.0, (relTime - 2000.0) / 300.0));
+            }
+            else {
+                component.setVisible (false);
+                if (Component* parent = component.getParentComponent()) {
+                    parent->setMouseCursor (MouseCursor::StandardCursorType::NoCursor);
+                    Desktop::getInstance().getMainMouseSource().forceMouseCursorUpdate();
+                }
+            }
+        }
+
+        void mouseMove (const MouseEvent &event) override
+        {
+            if (event.position.getDistanceFrom (lastPosition) > 3.0) {
+                lastMovement = Time::getMillisecondCounter();
+                lastPosition = event.position;
+            }
+        }
+    private:
+        Component&   component;
+        int64        lastMovement;
+        Point<float> lastPosition;
+    };
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OSDComponent)
+
+    FlexBox                             flexBox;
+
+    ScopedPointer<MouseIdle>            idle;
+    ScopedPointer<Slider>               seekBar;
+    ScopedPointer<TextButton>           openFile;
+    ScopedPointer<TextButton>           saveFile;
+    ScopedPointer<TextButton>           play;
+    ScopedPointer<TextButton>           pause;
+    ScopedPointer<TextButton>           stop;
+    ScopedPointer<TextButton>           ffwd;
+    int                                 ffwdSpeed;
+    foleys::AVClip*                     clip;
+
+    AudioTransportSource*               transport;
+};
+
+
+#endif  // OSDCOMPONENT_H_INCLUDED

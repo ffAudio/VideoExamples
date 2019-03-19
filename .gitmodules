@@ -1,0 +1,6 @@
+[submodule "JUCE"]
+	path = JUCE
+	url = https://github.com/WeAreRoli/JUCE.git
+[submodule "modules/foleys_video_engine"]
+	path = modules/foleys_video_engine
+	url = git@github.com:ffAudio/foleys_video_engine.git
