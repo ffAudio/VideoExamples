@@ -1,6 +1,6 @@
 /*
  ==============================================================================
- Copyright (c) 2017, Filmstro Ltd. - Daniel Walz
+ Copyright (c) 2019, Foleys Finest Audio - Daniel Walz
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without modification,
@@ -87,18 +87,13 @@ public:
         backgroundThread.startThread (5);
 
         setWantsKeyboardFocus (true);
-        videoAspectRatio = 1.77;
 
-        movieClip = new foleys::AVMovieClip();
-        movieClip->addTimecodeListener (this);
+        movieClip.addTimecodeListener (this);
 
-        transportSource = new AudioTransportSource ();
-        transportSource->setSource (movieClip, 0, nullptr);
+        transportSource.setSource (&movieClip, 0, nullptr);
 
-        videoComponent = new VideoComponentWithDropper (movieClip);
         addAndMakeVisible (videoComponent);
 
-        osdComponent = new OSDComponent (movieClip, transportSource);
         addAndMakeVisible (osdComponent);
 
         // specify the number of input and output channels that we want to open
@@ -120,13 +115,12 @@ public:
         addAndMakeVisible (meter);
 #endif
 
-        setSize (800, 600);
+        videoComponent.addChangeListener (&osdComponent);
 
-        videoComponent->addChangeListener (osdComponent);
-
-        if (auto* b = movieClip->getBackgroundJob())
+        if (auto* b = movieClip.getBackgroundJob())
             backgroundThread.addTimeSliceClient (b);
 
+        setSize (800, 600);
     }
 
     ~MainContentComponent()
@@ -139,8 +133,8 @@ public:
     {
         // This function will be called when the audio device is started, or when
         // its settings (i.e. sample rate, block size, etc) are changed.
-        if (movieClip)       movieClip->prepareToPlay (samplesPerBlockExpected, sampleRate);
-        if (transportSource) transportSource->prepareToPlay (samplesPerBlockExpected, sampleRate);
+        movieClip.prepareToPlay (samplesPerBlockExpected, sampleRate);
+        transportSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
 
         readBuffer.setSize (2, samplesPerBlockExpected);
     }
@@ -153,7 +147,7 @@ public:
                                      bufferToFill.startSample,
                                      bufferToFill.numSamples);
         // the AudioTransportSource takes care of start, stop and resample
-        transportSource->getNextAudioBlock (info);
+        transportSource.getNextAudioBlock (info);
 
 #ifdef USE_FF_AUDIO_METERS
         meterSource.measureBlock (readBuffer);
@@ -175,58 +169,22 @@ public:
                 }
             }
         }
-        else{
+        else
+        {
             bufferToFill.clearActiveBufferRegion();
         }
     }
 
     void releaseResources() override
     {
-        transportSource->releaseResources ();
-        movieClip->releaseResources ();
+        transportSource.releaseResources ();
+        movieClip.releaseResources ();
     }
-
-    //==============================================================================
-    /** Reset gui when a new file is loaded */
-//    void videoFileChanged (const juce::File& video) override
-//    {
-//        String abbrev (video.getFullPathName());
-//        if (abbrev.length() > 30)
-//            abbrev = "(...)" + abbrev.substring (abbrev.length() - 30);
-//        DBG ("====================================================");
-//        DBG ("Loaded file :   " + abbrev);
-//        DBG ("Channels:          " + String (videoReader->getVideoChannels()));
-//        DBG ("Duration (sec):    " + String (videoReader->getVideoDuration()));
-//        DBG ("Framerate (1/sec): " + String (videoReader->getFramesPerSecond()));
-//        DBG ("SampleRate:        " + String (videoReader->getVideoSamplingRate()));
-//        DBG ("SampleFormat:      " + String (av_get_sample_fmt_name (videoReader->getSampleFormat())));
-//        DBG ("Width:             " + String (videoReader->getVideoWidth()));
-//        DBG ("Height:            " + String (videoReader->getVideoHeight()));
-//        DBG ("Pixel format:      " + String (av_get_pix_fmt_name (videoReader->getPixelFormat())));
-//        DBG ("Pixel aspect ratio:" + String (videoReader->getVideoPixelAspect()));
-//        DBG ("====================================================");
-//
-//        osdComponent->setVideoLength (movieClip->getLengthInSeconds());
-//
-//        transportSource->setSource (videoReader, 0, nullptr, getSampleRate(), videoReader->getVideoChannels());
-//        readBuffer.setSize (videoReader->getVideoChannels(), readBuffer.getNumSamples());
-//
-//        videoAspectRatio = videoReader->getVideoAspectRatio ();
-//        resized ();
-//
-//        if (AudioIODevice* device = deviceManager.getCurrentAudioDevice()) {
-//            videoReader->prepareToPlay (device->getCurrentBufferSizeSamples(),
-//                                        device->getCurrentSampleRate());
-//            readBuffer.setSize (videoReader->getVideoChannels(),
-//                                device->getCurrentBufferSizeSamples());
-//
-//        }
-//    }
 
     void timecodeChanged (foleys::Timecode tc) override
     {
         MessageManager::callAsync (std::bind (&OSDComponent::setCurrentTime,
-                                              osdComponent.get(),
+                                              &osdComponent,
                                               tc.count * tc.timebase));
     }
 
@@ -237,8 +195,8 @@ public:
 
     void resized() override
     {
-        videoComponent->setBounds (getBounds());
-        osdComponent->setBounds (getBounds());
+        videoComponent.setBounds (getBounds());
+        osdComponent.setBounds (getBounds());
 
 #ifdef USE_FF_AUDIO_METERS
         const int w = 30 + 20 * videoReader->getVideoChannels();
@@ -248,12 +206,14 @@ public:
 
     bool keyPressed (const KeyPress &key) override
     {
-        if (key == KeyPress::spaceKey) {
-            if (transportSource->isPlaying()) {
-                transportSource->stop();
+        if (key == KeyPress::spaceKey)
+        {
+            if (transportSource.isPlaying())
+            {
+                transportSource.stop();
                 return true;
             }
-            transportSource->start();
+            transportSource.start();
             return true;
         }
         return false;
@@ -262,11 +222,11 @@ public:
 private:
     //==============================================================================
 
-    // Your private member variables go here...
-    ScopedPointer<VideoComponentWithDropper> videoComponent;
-    ScopedPointer<foleys::AVMovieClip>  movieClip;
-    ScopedPointer<OSDComponent>         osdComponent;
-    ScopedPointer<AudioTransportSource> transportSource;
+    foleys::AVMovieClip  movieClip;
+    AudioTransportSource transportSource;
+
+    VideoComponentWithDropper videoComponent { &movieClip };
+    OSDComponent              osdComponent   { &movieClip, &transportSource };
 
     TimeSliceThread                     backgroundThread {"MovieReader"};
 #ifdef USE_FF_AUDIO_METERS
@@ -275,8 +235,6 @@ private:
 #endif
 
     AudioSampleBuffer                   readBuffer;
-
-    double                              videoAspectRatio;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };

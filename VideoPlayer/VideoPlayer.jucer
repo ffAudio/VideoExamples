@@ -11,11 +11,14 @@
             file="Source/MainComponent.cpp"/>
       <FILE id="s5oeWD" name="OSDComponent.h" compile="0" resource="0" file="Source/OSDComponent.h"/>
     </GROUP>
+    <GROUP id="{BE44C3F3-D19E-4C06-B0A5-F502BE2EDC14}" name="Resources">
+      <FILE id="ynetjT" name="FF-Logo.png" compile="0" resource="1" file="../Resources/FF-Logo.png"/>
+    </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-Wno-reserved-user-defined-literal&#10;-I${FFMPEG_ROOT}/include"
                extraLinkerFlags="-L${FFMPEG_ROOT}/lib" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample&#10;avresample"
-               extraDefs="FFMPEG_ROOT=/usr/local">
+               extraDefs="FFMPEG_ROOT=/usr/local" bigIcon="ynetjT" smallIcon="ynetjT">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="VideoPlayer"
                        osxCompatibility="10.7 SDK" cppLanguageStandard="c++11" cppLibType="libc++"
@@ -42,7 +45,8 @@
     </XCODE_MAC>
     <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags="-I../../../../../../FFmpeg/build/windows/include"
             extraLinkerFlags="-LIBPATH:../../../../../../FFmpeg/build/windows/bin"
-            externalLibraries="avformat.lib&#10;avutil.lib&#10;avcodec.lib&#10;swscale.lib&#10;swresample.lib&#10;avresample.lib">
+            externalLibraries="avformat.lib&#10;avutil.lib&#10;avcodec.lib&#10;swscale.lib&#10;swresample.lib&#10;avresample.lib"
+            smallIcon="ynetjT" bigIcon="ynetjT">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
                        isDebug="1" optimisation="1" targetName="VideoLibTest" debugInformationFormat="ProgramDatabase"
@@ -83,7 +87,7 @@
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
-  <JUCEOPTIONS/>
+  <JUCEOPTIONS FOLEYS_DEBUG_LOGGING="0"/>
   <LIVE_SETTINGS>
     <OSX/>
   </LIVE_SETTINGS>
