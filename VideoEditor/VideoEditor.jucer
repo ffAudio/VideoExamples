@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="EUnLYn" name="VideoEditor" projectType="guiapp" jucerVersion="5.4.3"
+              companyName="Foleys Finest" companyCopyright="2019 by Foleys Finest Audio"
+              companyWebsite="https://foleysfinest.com" companyEmail="info@foleysfinest.com"
+              cppLanguageStandard="17">
+  <MAINGROUP id="r4Bi02" name="VideoEditor">
+    <GROUP id="{E81F3B37-CAD9-A723-6FDE-B69EFB1DEF5C}" name="Source">
+      <FILE id="fJYbQ1" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="sX877b" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+      <FILE id="ABGRJ3" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="yhGqAG" name="Library.cpp" compile="1" resource="0" file="Source/Library.cpp"/>
+      <FILE id="wfuXd2" name="Library.h" compile="0" resource="0" file="Source/Library.h"/>
+      <FILE id="B6jWUu" name="Properties.cpp" compile="1" resource="0" file="Source/Properties.cpp"/>
+      <FILE id="Zhc1eN" name="Properties.h" compile="0" resource="0" file="Source/Properties.h"/>
+      <FILE id="xBzud2" name="TimeLine.cpp" compile="1" resource="0" file="Source/TimeLine.cpp"/>
+      <FILE id="xSXKGD" name="TimeLine.h" compile="0" resource="0" file="Source/TimeLine.h"/>
+    </GROUP>
+    <GROUP id="{66B038AB-1AC5-5DC4-4753-9A0F0A778714}" name="Resources">
+      <FILE id="t8hwFJ" name="FF-Logo.png" compile="0" resource="1" file="../Resources/FF-Logo.png"/>
+    </GROUP>
+  </MAINGROUP>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="FFMPEG_ROOT=/usr/local"
+               extraCompilerFlags="-I${FFMPEG_ROOT}/include" extraLinkerFlags="-L${FFMPEG_ROOT}/lib"
+               externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample&#10;avresample"
+               smallIcon="t8hwFJ" bigIcon="t8hwFJ">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
+        <MODULEPATH id="foleys_video_engine" path="../modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+    <VS2017 targetFolder="Builds/VisualStudio2017" smallIcon="t8hwFJ" bigIcon="t8hwFJ"
+            extraCompilerFlags="-I${FFMPEG_ROOT}/include" extraLinkerFlags="-L${FFMPEG_ROOT}/lib"
+            externalLibraries="avformat.lib&#10;avutil.lib&#10;avcodec.lib&#10;swscale.lib&#10;swresample.lib&#10;avresample.lib">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
+        <MODULEPATH id="foleys_video_engine" path="../modules"/>
+      </MODULEPATHS>
+    </VS2017>
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraDefs="FFMPEG_ROOT=/usr/local"
+                extraCompilerFlags="-I${FFMPEG_ROOT}/include" extraLinkerFlags="-L${FFMPEG_ROOT}/lib"
+                externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample&#10;avresample">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
+        <MODULEPATH id="foleys_video_engine" path="../modules"/>
+      </MODULEPATHS>
+    </LINUX_MAKE>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="foleys_video_engine" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+  </MODULES>
+  <LIVE_SETTINGS>
+    <OSX/>
+  </LIVE_SETTINGS>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+</JUCERPROJECT>
