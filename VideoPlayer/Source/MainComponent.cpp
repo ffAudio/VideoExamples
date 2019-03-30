@@ -41,7 +41,7 @@
  This component lives inside our window, and this is where you should put all
  your controls and content.
  */
-class VideoComponentWithDropper :   public foleys::AVComponent,
+class VideoComponentWithDropper :   public foleys::VideoPreview,
                                     public FileDragAndDropTarget,
                                     public ChangeBroadcaster
 {

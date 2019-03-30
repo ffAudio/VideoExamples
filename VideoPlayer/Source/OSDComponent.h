@@ -1,6 +1,6 @@
 /*
  ==============================================================================
- Copyright (c) 2017, Foleys Finest Audio - Daniel Walz
+ Copyright (c) 2019, Foleys Finest Audio - Daniel Walz
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without modification,
@@ -232,10 +232,6 @@ public:
     };
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OSDComponent)
-
-    FlexBox         flexBox;
-
     MouseIdle       idle      { *this };
     Slider          seekBar   { Slider::LinearHorizontal, Slider::NoTextBox };
     TextButton      openFile  { TRANS ("Open") };
@@ -244,8 +240,12 @@ private:
     TextButton      stop      { TRANS ("Stop") };
     TextButton      ffwd      { TRANS ("FWD") };
 
+    FlexBox         flexBox;
+
     int             ffwdSpeed = 2;
     foleys::AVClip* clip = nullptr;
 
     AudioTransportSource* transport;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OSDComponent)
 };
