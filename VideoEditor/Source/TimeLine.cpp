@@ -9,10 +9,13 @@
 */
 
 #include "../JuceLibraryCode/JuceHeader.h"
+
+#include "Player.h"
 #include "TimeLine.h"
 
 //==============================================================================
-TimeLine::TimeLine()
+TimeLine::TimeLine (Player& playerToUse)
+  : player (playerToUse)
 {
 }
 
@@ -35,5 +38,23 @@ bool TimeLine::isInterestedInFileDrag (const StringArray& files)
 
 void TimeLine::filesDropped (const StringArray& files, int x, int y)
 {
-    
+    if (files.isEmpty())
+        return;
+
+    auto clip = foleys::AVFormatManager::createClipFromFile (files [0]);
+    player.setClip (std::move (clip));
+}
+
+bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
+{
+    return (dragSourceDetails.description == "media");
+}
+
+void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
+{
+    if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
+    {
+        auto clip = foleys::AVFormatManager::createClipFromFile (source->getSelectedFile());
+        player.setClip (std::move (clip));
+    }
 }

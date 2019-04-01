@@ -9,6 +9,8 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+
+#include "Player.h"
 #include "Library.h"
 #include "Properties.h"
 #include "TimeLine.h"
@@ -38,7 +40,9 @@ private:
     Library               library;
     foleys::VideoPreview  preview;
     Properties            properties;
-    TimeLine              timeline;
+    TimeLine              timeline { player };
+
+    Player                player { deviceManager, preview };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

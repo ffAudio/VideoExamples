@@ -6,10 +6,12 @@
               cppLanguageStandard="17">
   <MAINGROUP id="r4Bi02" name="VideoEditor">
     <GROUP id="{E81F3B37-CAD9-A723-6FDE-B69EFB1DEF5C}" name="Source">
+      <FILE id="ABGRJ3" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="fJYbQ1" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="sX877b" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
-      <FILE id="ABGRJ3" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="jPh8B5" name="Player.cpp" compile="1" resource="0" file="Source/Player.cpp"/>
+      <FILE id="MMghtW" name="Player.h" compile="0" resource="0" file="Source/Player.h"/>
       <FILE id="yhGqAG" name="Library.cpp" compile="1" resource="0" file="Source/Library.cpp"/>
       <FILE id="wfuXd2" name="Library.h" compile="0" resource="0" file="Source/Library.h"/>
       <FILE id="B6jWUu" name="Properties.cpp" compile="1" resource="0" file="Source/Properties.cpp"/>
