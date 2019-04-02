@@ -12,8 +12,11 @@
 #include "Properties.h"
 
 //==============================================================================
-Properties::Properties()
+Properties::Properties (AudioDeviceManager& deviceManagerToUse)
+  : deviceManager (deviceManagerToUse),
+    selector (deviceManager, 0, 2, 2, 6, false, false, true, false)
 {
+    addAndMakeVisible (selector);
 }
 
 Properties::~Properties()
@@ -26,16 +29,9 @@ void Properties::paint (Graphics& g)
 
     g.setColour (Colours::grey);
     g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
-    g.setColour (Colours::white);
-    g.setFont (14.0f);
-    g.drawText ("Properties", getLocalBounds(),
-                Justification::centred, true);   // draw some placeholder text
 }
 
 void Properties::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
-
+    selector.setBounds (getLocalBounds().reduced (5));
 }

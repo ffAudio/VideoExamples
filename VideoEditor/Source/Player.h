@@ -23,8 +23,15 @@ public:
 
     void setClip (std::unique_ptr<foleys::AVClip> clip);
 
+    void start();
+    void stop();
+    bool isPlaying();
+
+    void initialise();
+    void shutDown();
+
 private:
-    AudioDeviceManager&   deviceManager;
+    AudioDeviceManager& deviceManager;
 
     std::unique_ptr<foleys::AVClip> clip;
     AudioTransportSource  transportSource;

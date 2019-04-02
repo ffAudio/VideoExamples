@@ -14,6 +14,7 @@
 #include "Library.h"
 #include "Properties.h"
 #include "TimeLine.h"
+#include "TransportControl.h"
 
 //==============================================================================
 /*
@@ -39,8 +40,9 @@ private:
 
     Library               library;
     foleys::VideoPreview  preview;
-    Properties            properties;
-    TimeLine              timeline { player };
+    Properties            properties { deviceManager };
+    TimeLine              timeline   { player };
+    TransportControl      transport  { player };
 
     Player                player { deviceManager, preview };
 

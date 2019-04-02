@@ -55,6 +55,7 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
         auto clip = foleys::AVFormatManager::createClipFromFile (source->getSelectedFile());
+        foleys::VideoEngine::getInstance()->addAVClip (*clip.get());
         player.setClip (std::move (clip));
     }
 }

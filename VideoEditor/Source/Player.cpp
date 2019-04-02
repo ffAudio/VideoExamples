@@ -16,13 +16,26 @@ Player::Player (AudioDeviceManager& deviceManagerToUse, foleys::VideoPreview& pr
   : deviceManager (deviceManagerToUse),
     preview (previewToUse)
 {
-    sourcePlayer.setSource (&transportSource);
-    deviceManagerToUse.addAudioCallback (&sourcePlayer);
 }
 
 Player::~Player()
 {
-    deviceManager.removeAudioCallback (&sourcePlayer);
+    shutDown();
+}
+
+void Player::start()
+{
+    transportSource.start();
+}
+
+void Player::stop()
+{
+    transportSource.stop();
+}
+
+bool Player::isPlaying()
+{
+    return transportSource.isPlaying();
 }
 
 void Player::setClip (std::unique_ptr<foleys::AVClip> clipToUse)
@@ -30,7 +43,26 @@ void Player::setClip (std::unique_ptr<foleys::AVClip> clipToUse)
     transportSource.stop();
     transportSource.setSource (nullptr);
     clip = std::move (clipToUse);
+    if (auto* device = deviceManager.getCurrentAudioDevice())
+        if (clip != nullptr)
+            clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
+
     transportSource.setSource (clip.get());
 
     preview.setClip (clip.get());
 }
+
+void Player::initialise ()
+{
+    deviceManager.initialise (0, 2, nullptr, true);
+
+    sourcePlayer.setSource (&transportSource);
+    deviceManager.addAudioCallback (&sourcePlayer);
+}
+
+void Player::shutDown ()
+{
+    sourcePlayer.setSource (nullptr);
+    deviceManager.removeAudioCallback (&sourcePlayer);
+}
+

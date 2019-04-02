@@ -18,12 +18,15 @@
 class Properties    : public Component
 {
 public:
-    Properties();
+    Properties (AudioDeviceManager& deviceManager);
     ~Properties();
 
     void paint (Graphics&) override;
     void resized() override;
 
 private:
+    AudioDeviceManager& deviceManager;
+    AudioDeviceSelectorComponent selector;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Properties)
 };

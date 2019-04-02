@@ -11,15 +11,16 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
-    deviceManager.initialise (0, 2, nullptr, true);
-
     addAndMakeVisible (library);
     addAndMakeVisible (preview);
     addAndMakeVisible (properties);
     addAndMakeVisible (timeline);
+    addAndMakeVisible (transport);
 
     const auto area = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
     setBounds (area);
+
+    player.initialise();
 }
 
 MainComponent::~MainComponent()
@@ -39,5 +40,6 @@ void MainComponent::resized()
     auto sides = bounds.getWidth() / 4.0;
     library.setBounds (bounds.removeFromLeft (sides));
     properties.setBounds (bounds.removeFromRight (sides));
+    transport.setBounds (bounds.removeFromBottom (24));
     preview.setBounds (bounds);
 }
