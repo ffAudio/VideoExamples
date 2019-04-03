@@ -4,3 +4,6 @@
 [submodule "modules/foleys_video_engine"]
 	path = modules/foleys_video_engine
 	url = git@github.com:ffAudio/foleys_video_engine.git
+[submodule "modules/ff_meters"]
+	path = modules/ff_meters
+	url = git@github.com:ffAudio/ff_meters.git

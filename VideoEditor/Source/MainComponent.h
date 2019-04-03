@@ -38,11 +38,14 @@ private:
 
     AudioDeviceManager    deviceManager;
 
+    FFAU::LevelMeterLookAndFeel lookAndFeel;
+
     Library               library;
     foleys::VideoPreview  preview;
     Properties            properties { deviceManager };
     TimeLine              timeline   { player };
     TransportControl      transport  { player };
+    FFAU::LevelMeter      levelMeter;
 
     Player                player { deviceManager, preview };
 

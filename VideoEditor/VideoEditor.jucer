@@ -51,6 +51,7 @@
         <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
         <MODULEPATH id="foleys_video_engine" path="../modules"/>
         <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+        <MODULEPATH id="ff_meters" path="../modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2017 targetFolder="Builds/VisualStudio2017" smallIcon="t8hwFJ" bigIcon="t8hwFJ"
@@ -75,6 +76,7 @@
         <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
         <MODULEPATH id="foleys_video_engine" path="../modules"/>
         <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+        <MODULEPATH id="ff_meters" path="../modules"/>
       </MODULEPATHS>
     </VS2017>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraDefs="FFMPEG_ROOT=/usr/local"
@@ -99,10 +101,12 @@
         <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
         <MODULEPATH id="foleys_video_engine" path="../modules"/>
         <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+        <MODULEPATH id="ff_meters" path="../modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
   </EXPORTFORMATS>
   <MODULES>
+    <MODULE id="ff_meters" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="foleys_video_engine" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>

@@ -66,3 +66,7 @@ void Player::shutDown ()
     deviceManager.removeAudioCallback (&sourcePlayer);
 }
 
+FFAU::LevelMeterSource& Player::getMeterSource()
+{
+    return transportSource.meterSource;
+}
