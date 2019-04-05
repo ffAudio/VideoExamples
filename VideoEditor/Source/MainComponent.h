@@ -45,7 +45,7 @@ private:
     Properties            properties { deviceManager };
     TimeLine              timeline   { player };
     TransportControl      transport  { player };
-    FFAU::LevelMeter      levelMeter;
+    FFAU::LevelMeter      levelMeter { FFAU::LevelMeter::Default };
 
     Player                player { deviceManager, preview };
 

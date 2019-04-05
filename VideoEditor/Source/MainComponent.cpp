@@ -11,7 +11,9 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
-    setLookAndFeel (&lookAndFeel);
+    levelMeter.setLookAndFeel (&lookAndFeel);
+    lookAndFeel.setColour (FFAU::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+    lookAndFeel.setColour (FFAU::LevelMeter::lmTicksColour, Colours::silver);
 
     addAndMakeVisible (library);
     addAndMakeVisible (preview);
@@ -29,7 +31,7 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
-    setLookAndFeel (nullptr);
+    levelMeter.setLookAndFeel (nullptr);
 }
 
 //==============================================================================
@@ -42,7 +44,7 @@ void MainComponent::resized()
 {
     auto bounds = getLocalBounds();
     auto lower  = bounds.removeFromBottom (bounds.getHeight() * 0.4);
-    levelMeter.setBounds (lower.removeFromRight (lower.getHeight() / 4));
+    levelMeter.setBounds (lower.removeFromRight (lower.getHeight() / 4).reduced (2));
     timeline.setBounds (lower);
     auto sides = bounds.getWidth() / 4.0;
     library.setBounds (bounds.removeFromLeft (sides));
