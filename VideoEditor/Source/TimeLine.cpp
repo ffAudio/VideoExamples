@@ -42,7 +42,7 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
         return;
 
     auto clip = foleys::AVFormatManager::createClipFromFile (files [0]);
-    player.setClip (std::move (clip));
+    player.setClip (clip);
 }
 
 bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -55,7 +55,14 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
         auto clip = foleys::AVFormatManager::createClipFromFile (source->getSelectedFile());
-        foleys::VideoEngine::getInstance()->addAVClip (*clip.get());
-        player.setClip (std::move (clip));
+        foleys::VideoEngine::getInstance()->addClip (clip);
+        player.setClip (clip);
+
+        // TODO this is brutal testing only
+//        auto* strip = new foleys::FilmStrip();
+//        strip->setClip (clip);
+//        strip->setStartAndLength (0, 10);
+//        strip->setBounds (dragSourceDetails.localPosition.x, dragSourceDetails.localPosition.y, 400, 80);
+//        addAndMakeVisible (strip);
     }
 }

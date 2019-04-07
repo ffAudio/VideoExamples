@@ -46,7 +46,7 @@ class VideoComponentWithDropper :   public foleys::VideoPreview,
                                     public ChangeBroadcaster
 {
 public:
-    VideoComponentWithDropper (foleys::AVMovieClip* clip)
+    VideoComponentWithDropper (foleys::AVMovieClip::Ptr clip)
     {
         setWantsKeyboardFocus (false);
         setClip (clip);
@@ -61,7 +61,7 @@ public:
 
     void filesDropped (const StringArray &files, int x, int y) override
     {
-        if (auto* movieClip = dynamic_cast<foleys::AVMovieClip*>(getClip()))
+        if (auto* movieClip = dynamic_cast<foleys::AVMovieClip*>(getClip().get()))
         {
             File fileToOpen (files [0]);
             movieClip->openFromFile (fileToOpen);

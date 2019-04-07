@@ -38,11 +38,11 @@ bool Player::isPlaying()
     return transportSource.isPlaying();
 }
 
-void Player::setClip (std::unique_ptr<foleys::AVClip> clipToUse)
+void Player::setClip (foleys::AVClip::Ptr clipToUse)
 {
     transportSource.stop();
     transportSource.setSource (nullptr);
-    clip = std::move (clipToUse);
+    clip = clipToUse;
     if (auto* device = deviceManager.getCurrentAudioDevice())
         if (clip != nullptr)
             clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());

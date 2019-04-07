@@ -21,7 +21,7 @@ public:
     Player (AudioDeviceManager& deviceManager, foleys::VideoPreview& preview);
     ~Player();
 
-    void setClip (std::unique_ptr<foleys::AVClip> clip);
+    void setClip (foleys::AVClip::Ptr clip);
 
     void start();
     void stop();
@@ -57,7 +57,7 @@ public:
 private:
     AudioDeviceManager& deviceManager;
 
-    std::unique_ptr<foleys::AVClip> clip;
+    foleys::AVClip::Ptr     clip;
     MeasuredTransportSource transportSource;
     AudioSourcePlayer       sourcePlayer;
     foleys::VideoPreview&   preview;
