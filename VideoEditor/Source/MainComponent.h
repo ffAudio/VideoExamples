@@ -37,13 +37,14 @@ private:
     //==============================================================================
 
     AudioDeviceManager    deviceManager;
+    foleys::VideoEngine   videoEngine;
 
     FFAU::LevelMeterLookAndFeel lookAndFeel;
 
     Library               library;
     foleys::VideoPreview  preview;
     Properties            properties { deviceManager };
-    TimeLine              timeline   { player };
+    TimeLine              timeline   { videoEngine, player };
     TransportControl      transport  { player };
     FFAU::LevelMeter      levelMeter { FFAU::LevelMeter::Default };
 

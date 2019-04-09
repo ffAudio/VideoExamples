@@ -20,7 +20,7 @@ class TimeLine    : public Component,
                     public FileDragAndDropTarget
 {
 public:
-    TimeLine (Player& player);
+    TimeLine (foleys::VideoEngine& videoEngine, Player& player);
     ~TimeLine();
 
     bool isInterestedInFileDrag (const StringArray& files) override;
@@ -29,6 +29,8 @@ public:
     void itemDropped (const SourceDetails &dragSourceDetails) override;
 
     void paint (Graphics&) override;
+
+    void setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip);
 
     class ClipComponent : public Component
     {
@@ -39,7 +41,10 @@ public:
     };
 
 private:
+    foleys::VideoEngine& videoEngine;
     Player& player;
+
+    std::shared_ptr<foleys::AVCompoundClip> edit;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimeLine)
 };

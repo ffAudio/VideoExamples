@@ -38,7 +38,7 @@ bool Player::isPlaying()
     return transportSource.isPlaying();
 }
 
-void Player::setClip (foleys::AVCompoundClip::Ptr clipToUse)
+void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
 {
     transportSource.stop();
     transportSource.setSource (nullptr);
@@ -49,7 +49,7 @@ void Player::setClip (foleys::AVCompoundClip::Ptr clipToUse)
 
     transportSource.setSource (clip.get());
 
-    preview.setClip (clip.get());
+    preview.setClip (clip);
 }
 
 void Player::initialise ()

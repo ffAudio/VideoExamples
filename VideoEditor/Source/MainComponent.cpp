@@ -27,6 +27,8 @@ MainComponent::MainComponent()
 
     player.initialise();
     levelMeter.setMeterSource (&player.getMeterSource());
+
+    timeline.setEditClip (videoEngine.createCompoundClip());
 }
 
 MainComponent::~MainComponent()

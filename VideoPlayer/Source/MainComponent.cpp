@@ -46,8 +46,9 @@ class VideoComponentWithDropper :   public foleys::VideoPreview,
                                     public ChangeBroadcaster
 {
 public:
-    VideoComponentWithDropper (foleys::AVMovieClip::Ptr clip)
+    VideoComponentWithDropper (std::shared_ptr<foleys::AVMovieClip> clip)
     {
+        setInterceptsMouseClicks (true, true);
         setWantsKeyboardFocus (false);
         setClip (clip);
     }
@@ -61,7 +62,7 @@ public:
 
     void filesDropped (const StringArray &files, int x, int y) override
     {
-        if (auto* movieClip = dynamic_cast<foleys::AVMovieClip*>(getClip().get()))
+        if (auto movieClip = std::dynamic_pointer_cast<foleys::AVMovieClip>(getClip()))
         {
             File fileToOpen (files [0]);
             movieClip->openFromFile (fileToOpen);
@@ -88,9 +89,9 @@ public:
 
         setWantsKeyboardFocus (true);
 
-        movieClip.addTimecodeListener (this);
+        movieClip->addTimecodeListener (this);
 
-        transportSource.setSource (&movieClip, 0, nullptr);
+        transportSource.setSource (movieClip.get(), 0, nullptr);
 
         addAndMakeVisible (videoComponent);
 
@@ -117,7 +118,7 @@ public:
 
         videoComponent.addChangeListener (&osdComponent);
 
-        if (auto* b = movieClip.getBackgroundJob())
+        if (auto* b = movieClip->getBackgroundJob())
             backgroundThread.addTimeSliceClient (b);
 
         setSize (800, 600);
@@ -133,7 +134,7 @@ public:
     {
         // This function will be called when the audio device is started, or when
         // its settings (i.e. sample rate, block size, etc) are changed.
-        movieClip.prepareToPlay (samplesPerBlockExpected, sampleRate);
+        movieClip->prepareToPlay (samplesPerBlockExpected, sampleRate);
         transportSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
 
         readBuffer.setSize (2, samplesPerBlockExpected);
@@ -178,7 +179,7 @@ public:
     void releaseResources() override
     {
         transportSource.releaseResources ();
-        movieClip.releaseResources ();
+        movieClip->releaseResources ();
     }
 
     void timecodeChanged (foleys::Timecode tc) override
@@ -222,11 +223,11 @@ public:
 private:
     //==============================================================================
 
-    foleys::AVMovieClip  movieClip;
+    std::shared_ptr<foleys::AVMovieClip>  movieClip = std::make_shared<foleys::AVMovieClip>();
     AudioTransportSource transportSource;
 
-    VideoComponentWithDropper videoComponent { &movieClip };
-    OSDComponent              osdComponent   { &movieClip, &transportSource };
+    VideoComponentWithDropper videoComponent { movieClip };
+    OSDComponent              osdComponent   { movieClip, &transportSource };
 
     TimeSliceThread                     backgroundThread {"MovieReader"};
 #ifdef USE_FF_AUDIO_METERS

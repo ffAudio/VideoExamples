@@ -21,7 +21,7 @@ public:
     Player (AudioDeviceManager& deviceManager, foleys::VideoPreview& preview);
     ~Player();
 
-    void setClip (foleys::AVCompoundClip::Ptr clip);
+    void setClip (std::shared_ptr<foleys::AVClip> clip);
 
     void start();
     void stop();
@@ -57,11 +57,10 @@ public:
 private:
     AudioDeviceManager& deviceManager;
 
-    foleys::AVCompoundClip::Ptr clip;
+    std::shared_ptr<foleys::AVClip> clip;
     MeasuredTransportSource     transportSource;
     AudioSourcePlayer           sourcePlayer;
     foleys::VideoPreview&       preview;
-    ToneGeneratorAudioSource    sine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Player)
 };

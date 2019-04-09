@@ -44,7 +44,7 @@ class OSDComponent    : public Component,
                         public ChangeListener
 {
 public:
-    OSDComponent (foleys::AVClip* clipToControl, AudioTransportSource* transportToControl)
+    OSDComponent (std::shared_ptr<foleys::AVClip> clipToControl, AudioTransportSource* transportToControl)
     : clip (clipToControl), transport (transportToControl)
     {
         setInterceptsMouseClicks (false, true);
@@ -137,8 +137,8 @@ public:
             if (chooser.browseForFileToOpen())
             {
                 auto video = chooser.getResult();
-                if (auto* reader = dynamic_cast<foleys::AVMovieClip*> (clip))
-                    reader->openFromFile (video);
+                if (auto movie = std::dynamic_pointer_cast<foleys::AVMovieClip> (clip))
+                    movie->openFromFile (video);
 
                 if (clip != nullptr)
                     seekBar.setRange (0, clip->getLengthInSeconds());
@@ -151,7 +151,7 @@ public:
                 int64 lastPos = clip->getNextReadPosition();
                 ffwdSpeed = 2;
                 auto factor = 0.5 + (ffwdSpeed / 4.0);
-                transport->setSource (clip, 0, nullptr, factor, 2);
+                transport->setSource (clip.get(), 0, nullptr, factor, 2);
                 clip->setNextReadPosition (lastPos);
             }
             transport->start();
@@ -170,7 +170,7 @@ public:
             auto lastPos = clip->getNextReadPosition();
             ffwdSpeed = ++ffwdSpeed % 7;
             auto factor = 0.5 + (ffwdSpeed / 4.0);
-            transport->setSource (clip, 0, nullptr, factor, 2);
+            transport->setSource (clip.get(), 0, nullptr, factor, 2);
             clip->setNextReadPosition (lastPos);
             transport->start ();
         }
@@ -243,7 +243,7 @@ private:
     FlexBox         flexBox;
 
     int             ffwdSpeed = 2;
-    foleys::AVClip* clip = nullptr;
+    std::shared_ptr<foleys::AVClip> clip;
 
     AudioTransportSource* transport;
 
