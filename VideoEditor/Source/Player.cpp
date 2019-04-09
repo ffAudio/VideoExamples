@@ -38,7 +38,7 @@ bool Player::isPlaying()
     return transportSource.isPlaying();
 }
 
-void Player::setClip (foleys::AVClip::Ptr clipToUse)
+void Player::setClip (foleys::AVCompoundClip::Ptr clipToUse)
 {
     transportSource.stop();
     transportSource.setSource (nullptr);

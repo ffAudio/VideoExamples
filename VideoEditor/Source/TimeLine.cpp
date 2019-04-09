@@ -59,10 +59,10 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
         player.setClip (clip);
 
         // TODO this is brutal testing only
-//        auto* strip = new foleys::FilmStrip();
-//        strip->setClip (clip);
-//        strip->setStartAndLength (0, 10);
-//        strip->setBounds (dragSourceDetails.localPosition.x, dragSourceDetails.localPosition.y, 400, 80);
-//        addAndMakeVisible (strip);
+        auto* strip = new foleys::FilmStrip();
+        strip->setClip (clip);
+        strip->setStartAndLength (0, 20);
+        strip->setBounds (dragSourceDetails.localPosition.x, dragSourceDetails.localPosition.y, 1200, 80);
+        addAndMakeVisible (strip);
     }
 }
