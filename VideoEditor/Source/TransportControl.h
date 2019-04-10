@@ -15,7 +15,8 @@
 //==============================================================================
 /*
 */
-class TransportControl    : public Component
+class TransportControl    : public Component,
+                            private Timer
 {
 public:
     TransportControl (Player& player);
@@ -24,9 +25,13 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    void timerCallback() override;
+
 private:
     Player& player;
 
+    TextButton zero { NEEDS_TRANS ("Return") };
+    TextButton stop { NEEDS_TRANS ("Stop") };
     TextButton play { NEEDS_TRANS ("Play") };
     TextButton settings { NEEDS_TRANS ("Settings") };
 

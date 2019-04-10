@@ -27,6 +27,10 @@ public:
     void stop();
     bool isPlaying();
 
+    void setPosition (double pts);
+
+    foleys::Timecode getCurrentTimecode() const;
+
     FFAU::LevelMeterSource& getMeterSource();
 
     void initialise();

@@ -31,6 +31,7 @@ public:
     void paint (Graphics&) override;
 
     void setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip);
+    std::shared_ptr<foleys::AVCompoundClip> getEditClip() const;
 
     class ClipComponent : public Component
     {

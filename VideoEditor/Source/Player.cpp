@@ -38,6 +38,20 @@ bool Player::isPlaying()
     return transportSource.isPlaying();
 }
 
+void Player::setPosition (double pts)
+{
+    if (clip && deviceManager.getCurrentAudioDevice() != nullptr)
+        clip->setNextReadPosition (pts * deviceManager.getCurrentAudioDevice()->getCurrentSampleRate());
+}
+
+foleys::Timecode Player::getCurrentTimecode() const
+{
+    if (clip)
+        return clip->getCurrentTimecode();
+
+    return {};
+}
+
 void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
 {
     transportSource.stop();

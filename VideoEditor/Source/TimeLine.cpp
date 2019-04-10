@@ -88,3 +88,7 @@ void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
     player.setClip (edit);
 }
 
+std::shared_ptr<foleys::AVCompoundClip> TimeLine::getEditClip() const
+{
+    return edit;
+}

@@ -28,11 +28,16 @@ MainComponent::MainComponent()
     player.initialise();
     levelMeter.setMeterSource (&player.getMeterSource());
 
-    timeline.setEditClip (videoEngine.createCompoundClip());
+    auto edit = videoEngine.createCompoundClip();
+    timeline.setEditClip (edit);
+    edit->addTimecodeListener (&preview);
 }
 
 MainComponent::~MainComponent()
 {
+    if (auto edit = timeline.getEditClip())
+        edit->removeTimecodeListener (&preview);
+
     levelMeter.setLookAndFeel (nullptr);
 }
 
