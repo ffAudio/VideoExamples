@@ -41,6 +41,9 @@ public:
     };
 
 private:
+
+    void addClipToEdit (juce::File file, double start);
+
     foleys::VideoEngine& videoEngine;
     Player& player;
 

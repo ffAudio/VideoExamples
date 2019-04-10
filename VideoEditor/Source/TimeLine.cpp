@@ -43,9 +43,7 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
     if (files.isEmpty() || edit == nullptr)
         return;
 
-    auto clip = foleys::AVFormatManager::createClipFromFile (files [0]);
-
-    edit->addClip (clip, x * 10.0 / getWidth());
+    addClipToEdit (files [0], x * 10.0 / getWidth());
 }
 
 bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -63,10 +61,7 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
-        auto clip = videoEngine.createClipFromFile (source->getSelectedFile());
-        edit->addClip (clip, dragSourceDetails.localPosition.x * 10.0 / getWidth());
-
-//        player.setClip (clip);
+        addClipToEdit (source->getSelectedFile(), dragSourceDetails.localPosition.x * 10.0 / getWidth());
 
         // TODO this is brutal testing only
 //        auto* strip = new foleys::FilmStrip();
@@ -75,6 +70,16 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 //        strip->setBounds (dragSourceDetails.localPosition.x, dragSourceDetails.localPosition.y, 1200, 80);
 //        addAndMakeVisible (strip);
     }
+}
+
+void TimeLine::addClipToEdit (juce::File file, double start)
+{
+    auto length = -1.0;
+    auto clip = videoEngine.createClipFromFile (file);
+    if (std::dynamic_pointer_cast<foleys::AVMovieClip>(clip) == nullptr)
+        length = 3.0;
+
+    edit->addClip (clip, start, length);
 }
 
 void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
