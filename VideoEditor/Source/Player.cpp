@@ -40,8 +40,8 @@ bool Player::isPlaying()
 
 void Player::setPosition (double pts)
 {
-    if (clip && deviceManager.getCurrentAudioDevice() != nullptr)
-        clip->setNextReadPosition (pts * deviceManager.getCurrentAudioDevice()->getCurrentSampleRate());
+    if (clip)
+        clip->setNextReadPosition (pts * getSampleRate());
 }
 
 foleys::Timecode Player::getCurrentTimecode() const
@@ -78,6 +78,14 @@ void Player::shutDown ()
 {
     sourcePlayer.setSource (nullptr);
     deviceManager.removeAudioCallback (&sourcePlayer);
+}
+
+double Player::getSampleRate() const
+{
+    if (deviceManager.getCurrentAudioDevice() != nullptr)
+        return deviceManager.getCurrentAudioDevice()->getCurrentSampleRate();
+
+    return 0;
 }
 
 FFAU::LevelMeterSource& Player::getMeterSource()

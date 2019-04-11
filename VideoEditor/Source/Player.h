@@ -36,6 +36,8 @@ public:
     void initialise();
     void shutDown();
 
+    double getSampleRate() const;
+
     class MeasuredTransportSource : public AudioTransportSource
     {
     public:

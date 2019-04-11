@@ -12,15 +12,18 @@
 MainComponent::MainComponent()
 {
     levelMeter.setLookAndFeel (&lookAndFeel);
-    lookAndFeel.setColour (FFAU::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+    lookAndFeel.setColour (FFAU::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
     lookAndFeel.setColour (FFAU::LevelMeter::lmTicksColour, Colours::silver);
 
     addAndMakeVisible (library);
     addAndMakeVisible (preview);
     addAndMakeVisible (properties);
-    addAndMakeVisible (timeline);
+    addAndMakeVisible (viewport);
     addAndMakeVisible (transport);
     addAndMakeVisible (levelMeter);
+
+    viewport.setViewedComponent (&timeline);
+    timeline.setSize (2000, 800);
 
     const auto area = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
     setBounds (area);
@@ -45,14 +48,20 @@ MainComponent::~MainComponent()
 void MainComponent::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+    g.setColour (getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
+    g.fillRect (getLocalBounds().withTop (lowerPart));
+    g.setColour (Colours::grey);
+    g.drawRect (getLocalBounds());
 }
 
 void MainComponent::resized()
 {
-    auto bounds = getLocalBounds();
-    auto lower  = bounds.removeFromBottom (bounds.getHeight() * 0.4);
+    auto bounds = getLocalBounds().reduced (1);
+    lowerPart = bounds.getHeight() * 0.4;
+    auto lower  = bounds.removeFromBottom (lowerPart);
     levelMeter.setBounds (lower.removeFromRight (lower.getHeight() / 4).reduced (2));
-    timeline.setBounds (lower);
+    lower.removeFromTop (14); // TODO: ruler
+    viewport.setBounds (lower);
     auto sides = bounds.getWidth() / 4.0;
     library.setBounds (bounds.removeFromLeft (sides));
     properties.setBounds (bounds.removeFromRight (sides));

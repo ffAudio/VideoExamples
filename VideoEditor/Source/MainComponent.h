@@ -44,11 +44,14 @@ private:
     Library               library;
     foleys::VideoPreview  preview;
     Properties            properties { deviceManager };
+    Viewport              viewport;
     TimeLine              timeline   { videoEngine, player };
     TransportControl      transport  { player };
     FFAU::LevelMeter      levelMeter { FFAU::LevelMeter::Default };
 
     Player                player { deviceManager, preview };
+
+    int lowerPart = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

@@ -29,6 +29,7 @@ public:
     void itemDropped (const SourceDetails &dragSourceDetails) override;
 
     void paint (Graphics&) override;
+    void resized() override;
 
     void setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip);
     std::shared_ptr<foleys::AVCompoundClip> getEditClip() const;
@@ -36,10 +37,20 @@ public:
     class ClipComponent : public Component
     {
     public:
+        ClipComponent (std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip, ThreadPool& threadPool);
+        void paint (Graphics& g) override;
+        void resized() override;
+
+        std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip;
+
     private:
-        std::unique_ptr<foleys::FilmStrip> filmstrip;
+
+        foleys::FilmStrip filmstrip;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipComponent)
     };
+
+    int getXFromTime (double seconds) const;
+    double getTimeFromX (int pixels) const;
 
 private:
 
@@ -49,6 +60,8 @@ private:
     Player& player;
 
     std::shared_ptr<foleys::AVCompoundClip> edit;
+
+    std::vector<std::unique_ptr<ClipComponent>> clipComponents;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimeLine)
 };
