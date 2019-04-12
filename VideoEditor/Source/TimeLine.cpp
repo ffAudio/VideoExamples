@@ -18,10 +18,15 @@ TimeLine::TimeLine (foleys::VideoEngine& theVideoEngine, Player& playerToUse)
   : videoEngine (theVideoEngine),
     player (playerToUse)
 {
+    addAndMakeVisible (timemarker);
+    timemarker.setAlwaysOnTop (true);
 }
 
 TimeLine::~TimeLine()
 {
+    if (edit)
+        edit->removeTimecodeListener (this);
+
     edit = nullptr;
 }
 
@@ -35,13 +40,28 @@ void TimeLine::resized()
     if (edit == nullptr)
         return;
 
-    auto sampleRate = player.getSampleRate();
+    auto sampleRate = getSampleRate();
     if (sampleRate == 0)
         sampleRate = 48000.0;
 
     for (auto& clip : clipComponents)
         clip->setBounds (getXFromTime (clip->clip->start / sampleRate), 30,
                          getXFromTime (clip->clip->length / sampleRate), 80);
+
+    auto time = player.getCurrentTimecode();
+    auto t = getXFromTime (time.count * time.timebase);
+    timemarker.setBounds (t, 0, 3, getHeight());
+}
+
+void TimeLine::timecodeChanged (foleys::Timecode time)
+{
+    auto t = getXFromTime (time.count * time.timebase);
+    timemarker.setBounds (t, 0, 3, getHeight());
+}
+
+void TimeLine::mouseDown (const MouseEvent& event)
+{
+    player.setPosition (getTimeFromX (event.x));
 }
 
 bool TimeLine::isInterestedInFileDrag (const StringArray& files)
@@ -54,7 +74,7 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
     if (files.isEmpty() || edit == nullptr)
         return;
 
-    addClipToEdit (files [0], x * 10.0 / getWidth());
+    addClipToEdit (files [0], getTimeFromX (x));
 }
 
 bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -72,7 +92,7 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
-        addClipToEdit (source->getSelectedFile(), dragSourceDetails.localPosition.x * 10.0 / getWidth());
+        addClipToEdit (source->getSelectedFile(), getTimeFromX (dragSourceDetails.localPosition.x));
     }
 }
 
@@ -90,12 +110,31 @@ void TimeLine::addClipToEdit (juce::File file, double start)
     addAndMakeVisible (strip.get());
     clipComponents.emplace_back (std::move (strip));
 
+    setSelectedClip (descriptor);
     resized();
+}
+
+void TimeLine::setSelectedClip (std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip)
+{
+    selectedClip = clip;
+    repaint();
+}
+
+std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> TimeLine::getSelectedClip() const
+{
+    return selectedClip.lock();
 }
 
 void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
 {
+    if (edit)
+        edit->removeTimecodeListener (this);
+
     edit = clip;
+
+    if (edit)
+        edit->addTimecodeListener (this);
+
     player.setClip (edit);
 }
 
@@ -115,6 +154,11 @@ double TimeLine::getTimeFromX (int pixels) const
     return w > 0 ? 120.0 * pixels / w : 0;
 }
 
+double TimeLine::getSampleRate() const
+{
+    return player.getSampleRate();
+}
+
 //==============================================================================
 
 TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
@@ -130,10 +174,13 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
 
 void TimeLine::ClipComponent::paint (Graphics& g)
 {
+    bool selected = timeline.getSelectedClip() == clip;
     g.fillAll (Colours::darkgrey);
-    g.setColour (Colours::orange.darker());
+    g.setColour (selected ? Colours::orange : Colours::orange.darker());
     g.fillRoundedRectangle (getLocalBounds().reduced (1).toFloat(), 5.0);
-    g.setColour (Colours::orange);
+
+    g.setColour (selected ? Colours::darkorange.darker() : Colours::orange);
+
     g.drawRoundedRectangle (getLocalBounds().toFloat(), 5.0, 2.0);
     if (clip != nullptr)
         g.drawFittedText (clip->name, 5, 3, getWidth() - 10, 18, Justification::left, 1);
@@ -157,6 +204,7 @@ void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
 void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
 {
     localDragStart = event.getPosition();
+    timeline.setSelectedClip (clip);
 
     if (event.x > getWidth() - 5)
         dragmode = dragLength;
@@ -170,10 +218,12 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
     if (parent == nullptr)
         return;
 
+    auto sampleRate = timeline.getSampleRate();
+
     if (dragmode == dragPosition)
-        clip->start = timeline.getTimeFromX ((event.x - localDragStart.x) + getX()) * 44100;
+        clip->start = std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()), 0.0) * sampleRate;
     else if (dragmode == dragLength)
-        clip->length = timeline.getTimeFromX (event.x) * 44100;
+        clip->length = timeline.getTimeFromX (event.x) * sampleRate;
 
     parent->resized();
 }
