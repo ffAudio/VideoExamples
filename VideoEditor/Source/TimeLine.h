@@ -37,15 +37,29 @@ public:
     class ClipComponent : public Component
     {
     public:
-        ClipComponent (std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip, ThreadPool& threadPool);
+        ClipComponent (TimeLine& tl, std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip, ThreadPool& threadPool);
         void paint (Graphics& g) override;
         void resized() override;
+
+        void mouseMove (const MouseEvent& event) override;
+        void mouseDown (const MouseEvent& event) override;
+        void mouseDrag (const MouseEvent& event) override;
+        void mouseUp (const MouseEvent& event) override;
 
         std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip;
 
     private:
+        enum DragMode
+        {
+            notDragging, dragPosition, dragLength
+        };
 
+        TimeLine& timeline;
         foleys::FilmStrip filmstrip;
+
+        DragMode dragmode = notDragging;
+        Point<int> localDragStart;
+
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipComponent)
     };
 

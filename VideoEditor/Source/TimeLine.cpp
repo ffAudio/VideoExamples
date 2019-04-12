@@ -86,7 +86,7 @@ void TimeLine::addClipToEdit (juce::File file, double start)
     auto descriptor = edit->addClip (clip, start, length);
 
     // TODO this is brutal testing only
-    auto strip = std::make_unique<ClipComponent> (descriptor, videoEngine.getThreadPool());
+    auto strip = std::make_unique<ClipComponent> (*this, descriptor, videoEngine.getThreadPool());
     addAndMakeVisible (strip.get());
     clipComponents.emplace_back (std::move (strip));
 
@@ -117,12 +117,14 @@ double TimeLine::getTimeFromX (int pixels) const
 
 //==============================================================================
 
-TimeLine::ClipComponent::ClipComponent (std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clipToUse, ThreadPool& threadPool)
+TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
+                                        std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clipToUse,
+                                        ThreadPool& threadPool)
   : clip (clipToUse),
+    timeline (tl),
     filmstrip (threadPool)
 {
     filmstrip.setClip (clip->clip);
-    filmstrip.setStartAndLength (0, 100);
     addAndMakeVisible (filmstrip);
 }
 
@@ -140,4 +142,43 @@ void TimeLine::ClipComponent::paint (Graphics& g)
 void TimeLine::ClipComponent::resized()
 {
     filmstrip.setBounds (1, 20, getWidth() - 2, getHeight() - 25);
+    filmstrip.setStartAndLength (timeline.getTimeFromX (getX()), timeline.getTimeFromX (getWidth()));
+}
+
+void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
+{
+    if (event.x > getWidth() - 5)
+        setMouseCursor (MouseCursor::LeftRightResizeCursor);
+    else
+        setMouseCursor (MouseCursor::DraggingHandCursor);
+
+}
+
+void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
+{
+    localDragStart = event.getPosition();
+
+    if (event.x > getWidth() - 5)
+        dragmode = dragLength;
+    else
+        dragmode = dragPosition;
+}
+
+void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
+{
+    auto* parent = getParentComponent();
+    if (parent == nullptr)
+        return;
+
+    if (dragmode == dragPosition)
+        clip->start = timeline.getTimeFromX ((event.x - localDragStart.x) + getX()) * 44100;
+    else if (dragmode == dragLength)
+        clip->length = timeline.getTimeFromX (event.x) * 44100;
+
+    parent->resized();
+}
+
+void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
+{
+    dragmode = notDragging;
 }
