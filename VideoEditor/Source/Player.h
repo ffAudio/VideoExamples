@@ -15,7 +15,7 @@
 //==============================================================================
 /*
 */
-class Player
+class Player : public ChangeListener
 {
 public:
     Player (AudioDeviceManager& deviceManager, foleys::VideoPreview& preview);
@@ -37,6 +37,8 @@ public:
     void shutDown();
 
     double getSampleRate() const;
+
+    void changeListenerCallback (ChangeBroadcaster* sender) override;
 
     class MeasuredTransportSource : public AudioTransportSource
     {

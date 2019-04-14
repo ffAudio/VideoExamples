@@ -18,7 +18,8 @@
 class TimeLine    : public Component,
                     public DragAndDropTarget,
                     public FileDragAndDropTarget,
-                    public foleys::AVClip::TimecodeListener
+                    public foleys::AVClip::TimecodeListener,
+                    public ValueTree::Listener
 {
 public:
     TimeLine (foleys::VideoEngine& videoEngine, Player& player);
@@ -87,6 +88,22 @@ public:
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimeMarker)
     };
+
+    void valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged,
+                                   const juce::Identifier& property) override;
+
+    void valueTreeChildAdded (juce::ValueTree& parentTree,
+                              juce::ValueTree& childWhichHasBeenAdded) override;
+
+    void valueTreeChildRemoved (juce::ValueTree& parentTree,
+                                juce::ValueTree& childWhichHasBeenRemoved,
+                                int indexFromWhichChildWasRemoved) override;
+
+    void valueTreeChildOrderChanged (juce::ValueTree& parentTreeWhoseChildrenHaveMoved,
+                                     int oldIndex, int newIndex) override {}
+
+    void valueTreeParentChanged (juce::ValueTree& treeWhoseParentHasChanged) override {}
+
 private:
 
     void addClipToEdit (juce::File file, double start);

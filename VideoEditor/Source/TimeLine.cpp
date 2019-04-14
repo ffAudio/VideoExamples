@@ -25,7 +25,10 @@ TimeLine::TimeLine (foleys::VideoEngine& theVideoEngine, Player& playerToUse)
 TimeLine::~TimeLine()
 {
     if (edit)
+    {
         edit->removeTimecodeListener (this);
+        edit->getStatusTree().removeListener (this);
+    }
 
     edit = nullptr;
 }
@@ -45,8 +48,8 @@ void TimeLine::resized()
         sampleRate = 48000.0;
 
     for (auto& clip : clipComponents)
-        clip->setBounds (getXFromTime (clip->clip->start / sampleRate), 30,
-                         getXFromTime (clip->clip->length / sampleRate), 80);
+        clip->setBounds (getXFromTime (clip->clip->getStart()), 30,
+                         getXFromTime (clip->clip->getLength()), 80);
 
     auto time = player.getCurrentTimecode();
     auto t = getXFromTime (time.count * time.timebase);
@@ -105,7 +108,6 @@ void TimeLine::addClipToEdit (juce::File file, double start)
 
     auto descriptor = edit->addClip (clip, start, length);
 
-    // TODO this is brutal testing only
     auto strip = std::make_unique<ClipComponent> (*this, descriptor, videoEngine.getThreadPool());
     addAndMakeVisible (strip.get());
     clipComponents.emplace_back (std::move (strip));
@@ -128,12 +130,18 @@ std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> TimeLine::getSelectedCli
 void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
 {
     if (edit)
+    {
         edit->removeTimecodeListener (this);
+        edit->getStatusTree().removeListener (this);
+    }
 
     edit = clip;
 
     if (edit)
+    {
+        edit->getStatusTree().addListener (this);
         edit->addTimecodeListener (this);
+    }
 
     player.setClip (edit);
 }
@@ -159,14 +167,32 @@ double TimeLine::getSampleRate() const
     return player.getSampleRate();
 }
 
+void TimeLine::valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged,
+                                         const juce::Identifier& property)
+{
+    resized();
+}
+
+void TimeLine::valueTreeChildAdded (juce::ValueTree& parentTree,
+                                    juce::ValueTree& childWhichHasBeenAdded)
+{
+    resized();
+}
+
+void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
+                                      juce::ValueTree& childWhichHasBeenRemoved,
+                                      int indexFromWhichChildWasRemoved)
+{
+    resized();
+}
+
 //==============================================================================
 
 TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
                                         std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clipToUse,
                                         ThreadPool& threadPool)
   : clip (clipToUse),
-    timeline (tl),
-    filmstrip (threadPool)
+    timeline (tl)
 {
     filmstrip.setClip (clip->clip);
     addAndMakeVisible (filmstrip);
@@ -183,7 +209,7 @@ void TimeLine::ClipComponent::paint (Graphics& g)
 
     g.drawRoundedRectangle (getLocalBounds().toFloat(), 5.0, 2.0);
     if (clip != nullptr)
-        g.drawFittedText (clip->name, 5, 3, getWidth() - 10, 18, Justification::left, 1);
+        g.drawFittedText (clip->getDescription(), 5, 3, getWidth() - 10, 18, Justification::left, 1);
 }
 
 void TimeLine::ClipComponent::resized()
@@ -218,12 +244,10 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
     if (parent == nullptr)
         return;
 
-    auto sampleRate = timeline.getSampleRate();
-
     if (dragmode == dragPosition)
-        clip->start = std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()), 0.0) * sampleRate;
+        clip->setStart (std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()), 0.0));
     else if (dragmode == dragLength)
-        clip->length = timeline.getTimeFromX (event.x) * sampleRate;
+        clip->setLength (timeline.getTimeFromX (event.x));
 
     parent->resized();
 }

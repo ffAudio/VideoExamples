@@ -69,6 +69,7 @@ void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
 void Player::initialise ()
 {
     deviceManager.initialise (0, 2, nullptr, true);
+    deviceManager.addChangeListener (this);
 
     sourcePlayer.setSource (&transportSource);
     deviceManager.addAudioCallback (&sourcePlayer);
@@ -76,6 +77,7 @@ void Player::initialise ()
 
 void Player::shutDown ()
 {
+    deviceManager.removeChangeListener (this);
     sourcePlayer.setSource (nullptr);
     deviceManager.removeAudioCallback (&sourcePlayer);
 }
@@ -86,6 +88,13 @@ double Player::getSampleRate() const
         return deviceManager.getCurrentAudioDevice()->getCurrentSampleRate();
 
     return 0;
+}
+
+void Player::changeListenerCallback (ChangeBroadcaster* sender)
+{
+    if (auto* device = deviceManager.getCurrentAudioDevice())
+        if (clip != nullptr)
+            clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
 }
 
 FFAU::LevelMeterSource& Player::getMeterSource()
