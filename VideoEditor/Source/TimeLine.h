@@ -110,11 +110,14 @@ public:
 
 private:
 
-    void addClipToEdit (juce::File file, double start, int line);
+    void addClipToEdit (juce::File file, double start, int y);
 
     foleys::VideoEngine& videoEngine;
     Player& player;
     TimeMarker timemarker;
+
+    const int numVideoLines = 2;
+    const int numAudioLines = 5;
 
     std::shared_ptr<foleys::ComposedClip> edit;
 

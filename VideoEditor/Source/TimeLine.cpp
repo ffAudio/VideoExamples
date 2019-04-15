@@ -38,8 +38,12 @@ void TimeLine::paint (Graphics& g)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
 
     g.setColour (Colours::darkgrey);
-    for (int i=0; i < 2; ++i)
+    for (int i=0; i < numVideoLines; ++i)
         g.fillRect (0, 30 + i * 90, getWidth(), 80);
+
+    g.setColour (Colours::darkgrey.darker());
+    for (int i=0; i < numAudioLines; ++i)
+        g.fillRect (0, 250 + i * 60, getWidth(), 50);
 }
 
 void TimeLine::resized()
@@ -62,7 +66,7 @@ void TimeLine::resized()
         else
         {
             auto audioline = component->clip->getAudioLine();
-            component->setBounds (getXFromTime (component->clip->getStart()), 230 + audioline * 60,
+            component->setBounds (getXFromTime (component->clip->getStart()), 250 + audioline * 60,
                                   getXFromTime (component->clip->getLength()), 50);
         }
     }
@@ -93,8 +97,7 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
     if (files.isEmpty() || edit == nullptr)
         return;
 
-    int line = (y - 30) / 90.0;
-    addClipToEdit (files [0], getTimeFromX (x), line);
+    addClipToEdit (files [0], getTimeFromX (x), y);
 }
 
 bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -112,20 +115,28 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
-        int line = (dragSourceDetails.localPosition.y - 30) / 90.0;
-        addClipToEdit (source->getSelectedFile(), getTimeFromX (dragSourceDetails.localPosition.x), line);
+        addClipToEdit (source->getSelectedFile(), getTimeFromX (dragSourceDetails.localPosition.x), dragSourceDetails.localPosition.y);
     }
 }
 
-void TimeLine::addClipToEdit (juce::File file, double start, int line)
+void TimeLine::addClipToEdit (juce::File file, double start, int y)
 {
     auto length = -1.0;
     auto clip = videoEngine.createClipFromFile (file);
-    if (std::dynamic_pointer_cast<foleys::MovieClip>(clip) == nullptr)
+    if (std::dynamic_pointer_cast<foleys::ImageClip>(clip) != nullptr)
         length = 3.0;
 
     auto descriptor = edit->addClip (clip, start, length);
-    descriptor->setVideoLine (line);
+    if (y < 220)
+    {
+        int line = (y - 30) / 90.0;
+        descriptor->setVideoLine (jlimit (0, numVideoLines, line));
+    }
+    else
+    {
+        int line = (y - 250) / 60.0;
+        descriptor->setAudioLine (jlimit (0, numAudioLines, line));
+    }
 
     restoreClipComponents();
 
@@ -325,13 +336,13 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
     {
         int line = (event.y + getY() - 30) / 90.0;
         if (line != clip->getVideoLine())
-            clip->setVideoLine (line);
+            clip->setVideoLine (jlimit (0, timeline.numVideoLines - 1, line));
     }
     else
     {
-        int line = (event.y + getY() - 230) / 60.0;
+        int line = (event.y + getY() - 250) / 60.0;
         if (line != clip->getAudioLine())
-            clip->setAudioLine (line);
+            clip->setAudioLine (jlimit (0, timeline.numAudioLines - 1, line));
     }
 
     parent->resized();

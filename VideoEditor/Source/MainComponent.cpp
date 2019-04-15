@@ -51,7 +51,7 @@ MainComponent::MainComponent()
     addAndMakeVisible (levelMeter);
 
     viewport.setViewedComponent (&timeline);
-    timeline.setSize (2000, 800);
+    timeline.setSize (2000, 580);
 
     const auto area = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
     setBounds (area);
@@ -123,7 +123,7 @@ void MainComponent::resetEdit()
 
 void MainComponent::loadEdit()
 {
-    FileChooser myChooser ("Please select the moose you want to save...",
+    FileChooser myChooser ("Please select the project you want to save...",
                            File::getSpecialLocation (File::userHomeDirectory),
                            "*.videdit");
     if (myChooser.browseForFileToOpen())
@@ -155,7 +155,7 @@ void MainComponent::saveEdit (bool saveAs)
 
     if (saveAs || editFileName.getFullPathName().isEmpty())
     {
-        FileChooser myChooser ("Please select the moose you want to save...",
+        FileChooser myChooser ("Please select the project you want to save...",
                                File::getSpecialLocation (File::userHomeDirectory),
                                "*.videdit");
         if (myChooser.browseForFileToSave (true))
@@ -283,7 +283,7 @@ bool MainComponent::perform (const InvocationInfo& info)
 
 StringArray MainComponent::getMenuBarNames()
 {
-    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Help")};
+    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("Help")};
 }
 
 PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
