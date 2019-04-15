@@ -36,6 +36,10 @@ TimeLine::~TimeLine()
 void TimeLine::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
+
+    g.setColour (Colours::darkgrey);
+    for (int i=0; i < 2; ++i)
+        g.fillRect (0, 30 + i * 90, getWidth(), 80);
 }
 
 void TimeLine::resized()
@@ -109,7 +113,7 @@ void TimeLine::addClipToEdit (juce::File file, double start, int line)
 {
     auto length = -1.0;
     auto clip = videoEngine.createClipFromFile (file);
-    if (std::dynamic_pointer_cast<foleys::AVMovieClip>(clip) == nullptr)
+    if (std::dynamic_pointer_cast<foleys::MovieClip>(clip) == nullptr)
         length = 3.0;
 
     auto descriptor = edit->addClip (clip, start, length);
@@ -121,13 +125,13 @@ void TimeLine::addClipToEdit (juce::File file, double start, int line)
     resized();
 }
 
-void TimeLine::setSelectedClip (std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip)
+void TimeLine::setSelectedClip (std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip)
 {
     selectedClip = clip;
     repaint();
 }
 
-std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> TimeLine::getSelectedClip() const
+std::shared_ptr<foleys::ComposedClip::ClipDescriptor> TimeLine::getSelectedClip() const
 {
     return selectedClip.lock();
 }
@@ -160,7 +164,7 @@ void TimeLine::restoreClipComponents()
     resized();
 }
 
-void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
+void TimeLine::setEditClip (std::shared_ptr<foleys::ComposedClip> clip)
 {
     if (edit)
     {
@@ -181,7 +185,7 @@ void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
     player.setClip (edit);
 }
 
-std::shared_ptr<foleys::AVCompoundClip> TimeLine::getEditClip() const
+std::shared_ptr<foleys::ComposedClip> TimeLine::getEditClip() const
 {
     return edit;
 }
@@ -224,13 +228,14 @@ void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
 //==============================================================================
 
 TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
-                                        std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clipToUse,
+                                        std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clipToUse,
                                         ThreadPool& threadPool)
   : clip (clipToUse),
     timeline (tl)
 {
-    filmstrip.setClip (clip->clip);
-    addAndMakeVisible (filmstrip);
+    filmstrip = std::make_unique<foleys::FilmStrip>();
+    filmstrip->setClip (clip->clip);
+    addAndMakeVisible (filmstrip.get());
 }
 
 void TimeLine::ClipComponent::paint (Graphics& g)
@@ -249,8 +254,11 @@ void TimeLine::ClipComponent::paint (Graphics& g)
 
 void TimeLine::ClipComponent::resized()
 {
-    filmstrip.setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-    filmstrip.setStartAndLength (timeline.getTimeFromX (getX()), timeline.getTimeFromX (getWidth()));
+    if (filmstrip)
+    {
+        filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
+        filmstrip->setStartAndLength (timeline.getTimeFromX (getX()), timeline.getTimeFromX (getWidth()));
+    }
 }
 
 void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
@@ -284,9 +292,12 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
     else if (dragmode == dragLength)
         clip->setLength (timeline.getTimeFromX (event.x));
 
-    int line = (event.y + getY() - 30) / 90.0;
-    if (line != clip->getVideoLine())
-        clip->setVideoLine (line);
+    if (filmstrip)
+    {
+        int line = (event.y + getY() - 30) / 90.0;
+        if (line != clip->getVideoLine())
+            clip->setVideoLine (line);
+    }
 
     parent->resized();
 }

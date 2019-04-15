@@ -137,7 +137,7 @@ public:
             if (chooser.browseForFileToOpen())
             {
                 auto video = chooser.getResult();
-                if (auto movie = std::dynamic_pointer_cast<foleys::AVMovieClip> (clip))
+                if (auto movie = std::dynamic_pointer_cast<foleys::MovieClip> (clip))
                     movie->openFromFile (video);
 
                 if (clip != nullptr)

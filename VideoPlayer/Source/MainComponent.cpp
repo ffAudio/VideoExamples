@@ -46,7 +46,7 @@ class VideoComponentWithDropper :   public foleys::VideoPreview,
                                     public ChangeBroadcaster
 {
 public:
-    VideoComponentWithDropper (std::shared_ptr<foleys::AVMovieClip> clip)
+    VideoComponentWithDropper (std::shared_ptr<foleys::MovieClip> clip)
     {
         setInterceptsMouseClicks (true, true);
         setWantsKeyboardFocus (false);
@@ -62,7 +62,7 @@ public:
 
     void filesDropped (const StringArray &files, int x, int y) override
     {
-        if (auto movieClip = std::dynamic_pointer_cast<foleys::AVMovieClip>(getClip()))
+        if (auto movieClip = std::dynamic_pointer_cast<foleys::MovieClip>(getClip()))
         {
             File fileToOpen (files [0]);
             movieClip->openFromFile (fileToOpen);
@@ -221,7 +221,7 @@ private:
     //==============================================================================
 
     foleys::VideoEngine videoEngine;
-    std::shared_ptr<foleys::AVMovieClip>  movieClip = std::make_shared<foleys::AVMovieClip> (videoEngine);
+    std::shared_ptr<foleys::MovieClip>  movieClip = std::make_shared<foleys::MovieClip> (videoEngine);
     AudioTransportSource transportSource;
 
     VideoComponentWithDropper videoComponent { movieClip };
