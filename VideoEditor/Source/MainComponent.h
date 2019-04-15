@@ -22,7 +22,10 @@
     your controls and content.
 */
 class MainComponent   : public Component,
-                        public DragAndDropContainer
+                        public DragAndDropContainer,
+                        private ApplicationCommandTarget,
+                        public MenuBarModel,
+                        private Timer
 {
 public:
     //==============================================================================
@@ -33,13 +36,34 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    void timerCallback() override;
+
+    ApplicationCommandTarget* getNextCommandTarget() override { return nullptr; }
+    void getAllCommands (Array<CommandID>& commands) override;
+    void getCommandInfo (CommandID commandID, ApplicationCommandInfo& result) override;
+    bool perform (const InvocationInfo& info) override;
+
+    StringArray getMenuBarNames() override;
+    PopupMenu getMenuForIndex (int topLevelMenuIndex,
+                               const String& menuName) override;
+    void menuItemSelected (int menuItemID,
+                           int topLevelMenuIndex) override {}
+
 private:
+
+    void resetEdit();
+    void loadEdit();
+    void saveEdit (bool saveAs);
+
+    void deleteSelectedClip();
+
     //==============================================================================
 
     AudioDeviceManager    deviceManager;
     foleys::VideoEngine   videoEngine;
 
     FFAU::LevelMeterLookAndFeel lookAndFeel;
+    ApplicationCommandManager   commandManager;
 
     Library               library;
     foleys::VideoPreview  preview;
@@ -51,7 +75,8 @@ private:
 
     Player                player { deviceManager, preview };
 
-    int lowerPart = 0;
+    File editFileName;
+    int  lowerPart = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

@@ -42,6 +42,8 @@ public:
     void setSelectedClip (std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> clip);
     std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> getSelectedClip() const;
 
+    void restoreClipComponents();
+
     class ClipComponent : public Component
     {
     public:
@@ -106,7 +108,7 @@ public:
 
 private:
 
-    void addClipToEdit (juce::File file, double start);
+    void addClipToEdit (juce::File file, double start, int line);
 
     foleys::VideoEngine& videoEngine;
     Player& player;

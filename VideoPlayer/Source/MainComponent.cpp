@@ -85,9 +85,9 @@ public:
     //==============================================================================
     MainContentComponent()
     {
-        backgroundThread.startThread (5);
-
         setWantsKeyboardFocus (true);
+
+        videoEngine.manageLifeTime (movieClip);
 
         movieClip->addTimecodeListener (this);
 
@@ -117,9 +117,6 @@ public:
 #endif
 
         videoComponent.addChangeListener (&osdComponent);
-
-        if (auto* b = movieClip->getBackgroundJob())
-            backgroundThread.addTimeSliceClient (b);
 
         setSize (800, 600);
     }
@@ -223,13 +220,13 @@ public:
 private:
     //==============================================================================
 
-    std::shared_ptr<foleys::AVMovieClip>  movieClip = std::make_shared<foleys::AVMovieClip>();
+    foleys::VideoEngine videoEngine;
+    std::shared_ptr<foleys::AVMovieClip>  movieClip = std::make_shared<foleys::AVMovieClip> (videoEngine);
     AudioTransportSource transportSource;
 
     VideoComponentWithDropper videoComponent { movieClip };
     OSDComponent              osdComponent   { movieClip, &transportSource };
 
-    TimeSliceThread                     backgroundThread {"MovieReader"};
 #ifdef USE_FF_AUDIO_METERS
     ScopedPointer<LevelMeter>           meter;
     LevelMeterSource                    meterSource;

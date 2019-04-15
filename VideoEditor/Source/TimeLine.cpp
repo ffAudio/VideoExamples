@@ -47,9 +47,13 @@ void TimeLine::resized()
     if (sampleRate == 0)
         sampleRate = 48000.0;
 
-    for (auto& clip : clipComponents)
-        clip->setBounds (getXFromTime (clip->clip->getStart()), 30,
-                         getXFromTime (clip->clip->getLength()), 80);
+    for (auto& component : clipComponents)
+    {
+        auto videoline = component->clip->getVideoLine();
+
+        component->setBounds (getXFromTime (component->clip->getStart()), 30 + videoline * 90,
+                              getXFromTime (component->clip->getLength()), 80);
+    }
 
     auto time = player.getCurrentTimecode();
     auto t = getXFromTime (time.count * time.timebase);
@@ -77,7 +81,8 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
     if (files.isEmpty() || edit == nullptr)
         return;
 
-    addClipToEdit (files [0], getTimeFromX (x));
+    int line = (y - 30) / 90.0;
+    addClipToEdit (files [0], getTimeFromX (x), line);
 }
 
 bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -95,11 +100,12 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
-        addClipToEdit (source->getSelectedFile(), getTimeFromX (dragSourceDetails.localPosition.x));
+        int line = (dragSourceDetails.localPosition.y - 30) / 90.0;
+        addClipToEdit (source->getSelectedFile(), getTimeFromX (dragSourceDetails.localPosition.x), line);
     }
 }
 
-void TimeLine::addClipToEdit (juce::File file, double start)
+void TimeLine::addClipToEdit (juce::File file, double start, int line)
 {
     auto length = -1.0;
     auto clip = videoEngine.createClipFromFile (file);
@@ -107,6 +113,7 @@ void TimeLine::addClipToEdit (juce::File file, double start)
         length = 3.0;
 
     auto descriptor = edit->addClip (clip, start, length);
+    descriptor->setVideoLine (line);
 
     auto strip = std::make_unique<ClipComponent> (*this, descriptor, videoEngine.getThreadPool());
     addAndMakeVisible (strip.get());
@@ -127,6 +134,34 @@ std::shared_ptr<foleys::AVCompoundClip::ClipDescriptor> TimeLine::getSelectedCli
     return selectedClip.lock();
 }
 
+void TimeLine::restoreClipComponents()
+{
+    if (edit == nullptr)
+        return;
+
+    auto clips = edit->getClips();
+    for (auto it = clips.begin(); it != clips.end(); ++it)
+    {
+        auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [it](const auto& comp){ return comp->clip == *it; });
+        if (comp == clipComponents.end())
+        {
+            auto strip = std::make_unique<ClipComponent> (*this, *it, videoEngine.getThreadPool());
+            addAndMakeVisible (strip.get());
+            clipComponents.emplace_back (std::move (strip));
+        }
+    }
+    for (auto it = clipComponents.begin(); it != clipComponents.end();)
+    {
+        auto clip = std::find_if (clips.begin(), clips.end(), [it](const auto& clip){ return (*it)->clip == clip; });
+        if (clip == clips.end())
+            it = clipComponents.erase (it);
+        else
+            ++it;
+    }
+
+    resized();
+}
+
 void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
 {
     if (edit)
@@ -142,6 +177,8 @@ void TimeLine::setEditClip (std::shared_ptr<foleys::AVCompoundClip> clip)
         edit->getStatusTree().addListener (this);
         edit->addTimecodeListener (this);
     }
+
+    restoreClipComponents();
 
     player.setClip (edit);
 }
@@ -176,14 +213,14 @@ void TimeLine::valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasCh
 void TimeLine::valueTreeChildAdded (juce::ValueTree& parentTree,
                                     juce::ValueTree& childWhichHasBeenAdded)
 {
-    resized();
+    restoreClipComponents();
 }
 
 void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
                                       juce::ValueTree& childWhichHasBeenRemoved,
                                       int indexFromWhichChildWasRemoved)
 {
-    resized();
+    restoreClipComponents();
 }
 
 //==============================================================================
@@ -248,6 +285,10 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
         clip->setStart (std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()), 0.0));
     else if (dragmode == dragLength)
         clip->setLength (timeline.getTimeFromX (event.x));
+
+    int line = (event.y + getY() - 30) / 90.0;
+    if (line != clip->getVideoLine())
+        clip->setVideoLine (line);
 
     parent->resized();
 }
