@@ -8,6 +8,9 @@ Getting the Code
 
 The Code is provided via Github: https://github.com/ffAudio/VideoExamples
 
+If you want to use only the video engine in your own projects, go directly to
+https://github.com/ffAudio/foleys_video_engine
+
 This is how you clone the repository. Make sure to clone the submodules as well:
 
 ```
@@ -17,7 +20,7 @@ Projucer --resave VideoEditor.jucer
 open Builds/MacOS/VideoEditor.xcodeproj
 ```
 
-The eaasiest way to get the needed FFmpeg is to install it using https://brew.sh
+The easiest way to get the needed FFmpeg is to install it using https://brew.sh
 
 ```
 brew install ffmpeg
