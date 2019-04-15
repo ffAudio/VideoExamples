@@ -53,10 +53,18 @@ void TimeLine::resized()
 
     for (auto& component : clipComponents)
     {
-        auto videoline = component->clip->getVideoLine();
-
-        component->setBounds (getXFromTime (component->clip->getStart()), 30 + videoline * 90,
-                              getXFromTime (component->clip->getLength()), 80);
+        if (component->isVideoClip())
+        {
+            auto videoline = component->clip->getVideoLine();
+            component->setBounds (getXFromTime (component->clip->getStart()), 30 + videoline * 90,
+                                  getXFromTime (component->clip->getLength()), 80);
+        }
+        else
+        {
+            auto audioline = component->clip->getAudioLine();
+            component->setBounds (getXFromTime (component->clip->getStart()), 230 + audioline * 60,
+                                  getXFromTime (component->clip->getLength()), 50);
+        }
     }
 
     auto time = player.getCurrentTimecode();
@@ -144,12 +152,26 @@ void TimeLine::restoreClipComponents()
     auto clips = edit->getClips();
     for (auto it = clips.begin(); it != clips.end(); ++it)
     {
-        auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [it](const auto& comp){ return comp->clip == *it; });
-        if (comp == clipComponents.end())
+        if ((*it)->clip->hasVideo())
         {
-            auto strip = std::make_unique<ClipComponent> (*this, *it, videoEngine.getThreadPool());
-            addAndMakeVisible (strip.get());
-            clipComponents.emplace_back (std::move (strip));
+            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [it](const auto& comp){ return comp->isVideoClip() && comp->clip == *it; });
+            if (comp == clipComponents.end())
+            {
+                auto strip = std::make_unique<ClipComponent> (*this, *it, videoEngine.getThreadPool(), true);
+                addAndMakeVisible (strip.get());
+                clipComponents.emplace_back (std::move (strip));
+            }
+        }
+
+        if ((*it)->clip->hasAudio())
+        {
+            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [it](const auto& comp){ return !comp->isVideoClip() && comp->clip == *it; });
+            if (comp == clipComponents.end())
+            {
+                auto strip = std::make_unique<ClipComponent> (*this, *it, videoEngine.getThreadPool(), false);
+                addAndMakeVisible (strip.get());
+                clipComponents.emplace_back (std::move (strip));
+            }
         }
     }
     for (auto it = clipComponents.begin(); it != clipComponents.end();)
@@ -229,23 +251,30 @@ void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
 
 TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
                                         std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clipToUse,
-                                        ThreadPool& threadPool)
+                                        ThreadPool& threadPool, bool video)
   : clip (clipToUse),
     timeline (tl)
 {
-    filmstrip = std::make_unique<foleys::FilmStrip>();
-    filmstrip->setClip (clip->clip);
-    addAndMakeVisible (filmstrip.get());
+    if (video)
+    {
+        filmstrip = std::make_unique<foleys::FilmStrip>();
+        filmstrip->setClip (clip->clip);
+        addAndMakeVisible (filmstrip.get());
+    }
 }
 
 void TimeLine::ClipComponent::paint (Graphics& g)
 {
     bool selected = timeline.getSelectedClip() == clip;
+
     g.fillAll (Colours::darkgrey);
-    g.setColour (selected ? Colours::orange : Colours::orange.darker());
+
+    auto colour = isVideoClip() ? Colours::orange : Colours::darkgreen;
+
+    g.setColour (selected ? colour : colour.darker());
     g.fillRoundedRectangle (getLocalBounds().reduced (1).toFloat(), 5.0);
 
-    g.setColour (selected ? Colours::darkorange.darker() : Colours::orange);
+    g.setColour (selected ? colour.contrasting() : colour);
 
     g.drawRoundedRectangle (getLocalBounds().toFloat(), 5.0, 2.0);
     if (clip != nullptr)
@@ -290,13 +319,19 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
     if (dragmode == dragPosition)
         clip->setStart (std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()), 0.0));
     else if (dragmode == dragLength)
-        clip->setLength (timeline.getTimeFromX (event.x));
+        clip->setLength (std::min (timeline.getTimeFromX (event.x), clip->clip->getLengthInSeconds()));
 
     if (filmstrip)
     {
         int line = (event.y + getY() - 30) / 90.0;
         if (line != clip->getVideoLine())
             clip->setVideoLine (line);
+    }
+    else
+    {
+        int line = (event.y + getY() - 230) / 60.0;
+        if (line != clip->getAudioLine())
+            clip->setAudioLine (line);
     }
 
     parent->resized();
@@ -305,4 +340,9 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
 void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 {
     dragmode = notDragging;
+}
+
+bool TimeLine::ClipComponent::isVideoClip() const
+{
+    return filmstrip.get() != nullptr;
 }

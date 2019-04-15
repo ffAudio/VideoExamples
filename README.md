@@ -17,7 +17,7 @@ This is how you clone the repository. Make sure to clone the submodules as well:
 git clone --recurse-submodules https://github.com/ffAudio/VideoExamples.git
 cd VideoExamples/VideoEditor
 Projucer --resave VideoEditor.jucer
-open Builds/MacOS/VideoEditor.xcodeproj
+open Builds/MacOSX/VideoEditor.xcodeproj
 ```
 
 The easiest way to get the needed FFmpeg is to install it using https://brew.sh

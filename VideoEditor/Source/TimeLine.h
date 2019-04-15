@@ -47,7 +47,7 @@ public:
     class ClipComponent : public Component
     {
     public:
-        ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip, ThreadPool& threadPool);
+        ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip, ThreadPool& threadPool, bool video);
         void paint (Graphics& g) override;
         void resized() override;
 
@@ -55,6 +55,8 @@ public:
         void mouseDown (const MouseEvent& event) override;
         void mouseDrag (const MouseEvent& event) override;
         void mouseUp (const MouseEvent& event) override;
+
+        bool isVideoClip() const;
 
         std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip;
 
