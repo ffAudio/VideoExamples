@@ -115,9 +115,7 @@ void TimeLine::addClipToEdit (juce::File file, double start, int line)
     auto descriptor = edit->addClip (clip, start, length);
     descriptor->setVideoLine (line);
 
-    auto strip = std::make_unique<ClipComponent> (*this, descriptor, videoEngine.getThreadPool());
-    addAndMakeVisible (strip.get());
-    clipComponents.emplace_back (std::move (strip));
+    restoreClipComponents();
 
     setSelectedClip (descriptor);
     resized();
