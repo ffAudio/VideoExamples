@@ -272,6 +272,12 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
         filmstrip->setClip (clip->clip);
         addAndMakeVisible (filmstrip.get());
     }
+    else
+    {
+        audiostrip = std::make_unique<foleys::AudioStrip>();
+        audiostrip->setClip (clip->clip);
+        addAndMakeVisible (audiostrip.get());
+    }
 }
 
 void TimeLine::ClipComponent::paint (Graphics& g)
@@ -298,6 +304,11 @@ void TimeLine::ClipComponent::resized()
     {
         filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
         filmstrip->setStartAndLength (timeline.getTimeFromX (getX()), timeline.getTimeFromX (getWidth()));
+    }
+    if (audiostrip)
+    {
+        audiostrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
+        audiostrip->setStartAndLength (timeline.getTimeFromX (getX()), timeline.getTimeFromX (getWidth()));
     }
 }
 

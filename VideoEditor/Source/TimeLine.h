@@ -67,7 +67,8 @@ public:
         };
 
         TimeLine& timeline;
-        std::unique_ptr<foleys::FilmStrip> filmstrip;
+        std::unique_ptr<foleys::FilmStrip>  filmstrip;
+        std::unique_ptr<foleys::AudioStrip> audiostrip;
 
         DragMode dragmode = notDragging;
         Point<int> localDragStart;
