@@ -49,6 +49,8 @@ public:
     void menuItemSelected (int menuItemID,
                            int topLevelMenuIndex) override {}
 
+    KeyPressMappingSet* getKeyMappings() const;
+
 private:
 
     void resetEdit();
@@ -56,6 +58,7 @@ private:
     void saveEdit (bool saveAs);
 
     void deleteSelectedClip();
+    void showPreferences();
 
     //==============================================================================
 
@@ -67,7 +70,7 @@ private:
 
     Library               library;
     foleys::VideoPreview  preview;
-    Properties            properties { deviceManager };
+    Properties            properties;
     Viewport              viewport;
     TimeLine              timeline   { videoEngine, player };
     TransportControl      transport  { player };

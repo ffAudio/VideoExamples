@@ -19,11 +19,7 @@ namespace CommandIDs
         fileRender,
         fileQuit,
 
-        editUndo = 200,
-        editRedo,
-        editDelete,
-        editCopy,
-        editPaste,
+        editPreferences = 200,
 
         playStart = 300,
         playStop,
@@ -70,6 +66,8 @@ MainComponent::MainComponent()
         window->setMenuBar (this);
 #endif
 
+    commandManager.getKeyMappings()->resetToDefaultMappings();
+
     startTimerHz (10);
 }
 
@@ -86,6 +84,11 @@ MainComponent::~MainComponent()
 #endif
 
     levelMeter.setLookAndFeel (nullptr);
+}
+
+KeyPressMappingSet* MainComponent::getKeyMappings() const
+{
+    return commandManager.getKeyMappings();
 }
 
 //==============================================================================
@@ -146,6 +149,8 @@ void MainComponent::loadEdit()
 
         timeline.setEditClip (edit);
         edit->addTimecodeListener (&preview);
+
+        player.setPosition (0);
     }
 }
 
@@ -191,12 +196,21 @@ void MainComponent::deleteSelectedClip()
             edit->removeClip (selected);
 }
 
+void MainComponent::showPreferences()
+{
+    auto selector = std::make_unique<AudioDeviceSelectorComponent>(deviceManager, 0, 2, 2, 2, false, false, true, false);
+    properties.showProperties (std::move (selector));
+}
+
 //==============================================================================
 
 void MainComponent::getAllCommands (Array<CommandID>& commands)
 {
-    commands.add (CommandIDs::fileNew, CommandIDs::fileOpen, CommandIDs::fileSave, CommandIDs::fileSaveAs, CommandIDs::fileRender, CommandIDs::fileQuit);
-    commands.add (CommandIDs::editUndo, CommandIDs::editRedo, CommandIDs::editDelete, CommandIDs::editCopy, CommandIDs::editPaste);
+    commands.add (CommandIDs::fileNew, CommandIDs::fileOpen, CommandIDs::fileSave, CommandIDs::fileSaveAs, CommandIDs::fileRender, StandardApplicationCommandIDs::quit);
+    commands.add (StandardApplicationCommandIDs::undo, StandardApplicationCommandIDs::redo,
+                  StandardApplicationCommandIDs::del, StandardApplicationCommandIDs::copy, StandardApplicationCommandIDs::paste,
+                  CommandIDs::editPreferences);
+    commands.add (CommandIDs::playStart);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
 }
 
@@ -227,29 +241,37 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.setInfo ("Render Project...", "Export the piece into an audio file", categoryFile, 0);
             result.defaultKeypresses.add (KeyPress ('r', ModifierKeys::commandModifier, 0));
             break;
-        case CommandIDs::fileQuit:
+        case StandardApplicationCommandIDs::quit:
             result.setInfo ("Quit...", "Quit Application", categoryFile, 0);
             result.defaultKeypresses.add (KeyPress ('q', ModifierKeys::commandModifier, 0));
             break;
-        case CommandIDs::editUndo:
+        case StandardApplicationCommandIDs::undo:
             result.setInfo ("Undo", "Undo the last step", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress ('z', ModifierKeys::commandModifier, 0));
             break;
-        case CommandIDs::editRedo:
+        case StandardApplicationCommandIDs::redo:
             result.setInfo ("Redo", "Redo the last undo step", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress ('z', ModifierKeys::commandModifier | ModifierKeys::shiftModifier, 0));
             break;
-        case CommandIDs::editDelete:
+        case StandardApplicationCommandIDs::del:
             result.setInfo ("Delete", "Delete the selected gesture", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::backspaceKey, ModifierKeys::commandModifier, 0));
             break;
-        case CommandIDs::editCopy:
+        case StandardApplicationCommandIDs::copy:
             result.setInfo ("Copy", "Copy the selected gesture", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress ('c', ModifierKeys::commandModifier, 0));
             break;
-        case CommandIDs::editPaste:
+        case StandardApplicationCommandIDs::paste:
             result.setInfo ("Paste", "Paste the gesture in the clipboard", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress ('v', ModifierKeys::commandModifier, 0));
+            break;
+        case CommandIDs::editPreferences:
+            result.setInfo ("Preferences", "Open the audio preferences", categoryEdit, 0);
+            result.defaultKeypresses.add (KeyPress (',', ModifierKeys::commandModifier, 0));
+            break;
+        case CommandIDs::playStart:
+            result.setInfo ("Play", "Start/Pause playback", categoryEdit, 0);
+            result.defaultKeypresses.add (KeyPress (KeyPress::spaceKey, ModifierKeys::noModifiers, 0));
             break;
         case CommandIDs::helpAbout:
             result.setInfo ("About", "Show information about the program", categoryHelp, 0);
@@ -271,9 +293,12 @@ bool MainComponent::perform (const InvocationInfo& info)
         case CommandIDs::fileSave: saveEdit(false); break;
         case CommandIDs::fileSaveAs: saveEdit(true); break;
 
-        case CommandIDs::editUndo:   videoEngine.getUndoManager()->undo(); break;
-        case CommandIDs::editRedo:   videoEngine.getUndoManager()->redo(); break;
-        case CommandIDs::editDelete: deleteSelectedClip(); break;
+        case StandardApplicationCommandIDs::undo: videoEngine.getUndoManager()->undo(); break;
+        case StandardApplicationCommandIDs::redo: videoEngine.getUndoManager()->redo(); break;
+        case StandardApplicationCommandIDs::del: deleteSelectedClip(); break;
+
+        case CommandIDs::editPreferences: showPreferences(); break;
+        case CommandIDs::playStart: if (player.isPlaying()) player.stop(); else player.start(); break;
 
         default:
             break;
@@ -300,17 +325,19 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
         menu.addCommandItem (&commandManager, CommandIDs::fileRender);
 #if ! JUCE_MAC
         menu.addSeparator();
-        menu.addCommandItem (&commandManager, CommandIDs::fileQuit);
+        menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::quit);
 #endif
     }
     else if (topLevelMenuIndex == 1)
     {
-        menu.addCommandItem (&commandManager, CommandIDs::editUndo);
-        menu.addCommandItem (&commandManager, CommandIDs::editRedo);
+        menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::undo);
+        menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::redo);
         menu.addSeparator();
-        menu.addCommandItem (&commandManager, CommandIDs::editDelete);
-        menu.addCommandItem (&commandManager, CommandIDs::editCopy);
-        menu.addCommandItem (&commandManager, CommandIDs::editPaste);
+        menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::del);
+        menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::copy);
+        menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::paste);
+        menu.addSeparator();
+        menu.addCommandItem (&commandManager, CommandIDs::editPreferences);
     }
     else if (topLevelMenuIndex == 2)
     {

@@ -18,15 +18,16 @@
 class Properties    : public Component
 {
 public:
-    Properties (AudioDeviceManager& deviceManager);
-    ~Properties();
+    Properties() = default;
 
     void paint (Graphics&) override;
     void resized() override;
 
+    void showProperties (std::unique_ptr<Component> component);
+
 private:
-    AudioDeviceManager& deviceManager;
-    AudioDeviceSelectorComponent selector;
+
+    std::unique_ptr<Component> component;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Properties)
 };

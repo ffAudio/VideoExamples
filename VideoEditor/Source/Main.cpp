@@ -64,7 +64,8 @@ public:
                                                     DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
-            setContentOwned (new MainComponent(), true);
+            auto* mainComponent = new MainComponent();
+            setContentOwned (mainComponent, true);
 
            #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);
@@ -72,6 +73,8 @@ public:
             setResizable (true, true);
             centreWithSize (getWidth(), getHeight());
            #endif
+
+            addKeyListener (mainComponent->getKeyMappings());
 
             setVisible (true);
         }
