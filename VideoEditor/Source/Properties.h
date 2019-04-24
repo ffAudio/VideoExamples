@@ -18,7 +18,7 @@
 class Properties    : public Component
 {
 public:
-    Properties() = default;
+    Properties();
 
     void paint (Graphics&) override;
     void resized() override;
@@ -28,6 +28,7 @@ public:
 private:
 
     std::unique_ptr<Component> component;
+    juce::TextButton close { "X" };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Properties)
 };

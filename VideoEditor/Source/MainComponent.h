@@ -56,14 +56,18 @@ private:
     void resetEdit();
     void loadEdit();
     void saveEdit (bool saveAs);
+    void showRenderDialog();
 
     void deleteSelectedClip();
     void showPreferences();
+
+    void updateTitleBar();
 
     //==============================================================================
 
     AudioDeviceManager    deviceManager;
     foleys::VideoEngine   videoEngine;
+    foleys::ClipBouncer   bouncer { videoEngine };
 
     FFAU::LevelMeterLookAndFeel lookAndFeel;
     ApplicationCommandManager   commandManager;
@@ -76,7 +80,7 @@ private:
     TransportControl      transport  { player };
     FFAU::LevelMeter      levelMeter { FFAU::LevelMeter::Default };
 
-    Player                player { deviceManager, preview };
+    Player                player  { deviceManager, preview };
 
     File editFileName;
     int  lowerPart = 0;

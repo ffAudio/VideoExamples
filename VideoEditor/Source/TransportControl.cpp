@@ -39,6 +39,9 @@ TransportControl::TransportControl (Player& playerToUse)
     {
         player.setPosition (0);
     };
+
+    zero.setConnectedEdges (TextButton::ConnectedOnRight);
+    play.setConnectedEdges (TextButton::ConnectedOnLeft);
 }
 
 TransportControl::~TransportControl()

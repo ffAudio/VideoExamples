@@ -53,12 +53,21 @@ public:
                                       info.startSample,
                                       info.numSamples);
             meterSource.measureBlock (proxy);
+
+            if (clipOutput)
+            {
+                for (int channel = 0; channel < info.buffer->getNumChannels(); ++channel)
+                    FloatVectorOperations::clip (info.buffer->getWritePointer (channel, info.startSample),
+                                                 info.buffer->getReadPointer (channel, info.startSample),
+                                                 -1.0f, 1.0f, info.numSamples);
+            }
         }
 
         FFAU::LevelMeterSource meterSource;
 
     private:
         bool preFader = true;
+        bool clipOutput = true;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MeasuredTransportSource)
     };

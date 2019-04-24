@@ -7,6 +7,7 @@
 */
 
 #include "MainComponent.h"
+#include "RenderDialog.h"
 
 namespace CommandIDs
 {
@@ -122,6 +123,10 @@ void MainComponent::resetEdit()
     auto edit = videoEngine.createCompoundClip();
     timeline.setEditClip (edit);
     edit->addTimecodeListener (&preview);
+    editFileName = File();
+    updateTitleBar();
+
+    videoEngine.getUndoManager()->clearUndoHistory();
 }
 
 void MainComponent::loadEdit()
@@ -141,6 +146,8 @@ void MainComponent::loadEdit()
             return;
         }
 
+        editFileName = myChooser.getResult();
+
         auto tree = ValueTree::fromXml (*xml);
         auto edit = videoEngine.createCompoundClip();
 
@@ -151,6 +158,9 @@ void MainComponent::loadEdit()
         edit->addTimecodeListener (&preview);
 
         player.setPosition (0);
+        updateTitleBar();
+
+        videoEngine.getUndoManager()->clearUndoHistory();
     }
 }
 
@@ -186,7 +196,16 @@ void MainComponent::saveEdit (bool saveAs)
         {
             AlertWindow::showMessageBox (AlertWindow::WarningIcon, NEEDS_TRANS("Saving failed"), "Saving of file \"" + editFileName.getFullPathName() + "\" failed.");
         }
+        updateTitleBar();
     }
+}
+
+void MainComponent::showRenderDialog()
+{
+    if (! bouncer.isRendering())
+        bouncer.setClipToRender (timeline.getEditClip());
+
+    properties.showProperties (std::make_unique<RenderDialog>(bouncer));
 }
 
 void MainComponent::deleteSelectedClip()
@@ -200,6 +219,17 @@ void MainComponent::showPreferences()
 {
     auto selector = std::make_unique<AudioDeviceSelectorComponent>(deviceManager, 0, 2, 2, 2, false, false, true, false);
     properties.showProperties (std::move (selector));
+}
+
+void MainComponent::updateTitleBar()
+{
+    if (auto* window = dynamic_cast<DocumentWindow*>(TopLevelWindow::getActiveTopLevelWindow()))
+    {
+        if (editFileName.getFullPathName().isNotEmpty())
+            window->setName (ProjectInfo::projectName + String (": ") + editFileName.getFileNameWithoutExtension());
+        else
+            window->setName (ProjectInfo::projectName);
+    }
 }
 
 //==============================================================================
@@ -255,7 +285,7 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             break;
         case StandardApplicationCommandIDs::del:
             result.setInfo ("Delete", "Delete the selected gesture", categoryEdit, 0);
-            result.defaultKeypresses.add (KeyPress (KeyPress::backspaceKey, ModifierKeys::commandModifier, 0));
+            result.defaultKeypresses.add (KeyPress (KeyPress::backspaceKey, ModifierKeys::noModifiers, 0));
             break;
         case StandardApplicationCommandIDs::copy:
             result.setInfo ("Copy", "Copy the selected gesture", categoryEdit, 0);
@@ -292,6 +322,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case CommandIDs::fileOpen: loadEdit(); break;
         case CommandIDs::fileSave: saveEdit(false); break;
         case CommandIDs::fileSaveAs: saveEdit(true); break;
+        case CommandIDs::fileRender: showRenderDialog(); break;
 
         case StandardApplicationCommandIDs::undo: videoEngine.getUndoManager()->undo(); break;
         case StandardApplicationCommandIDs::redo: videoEngine.getUndoManager()->redo(); break;
@@ -301,6 +332,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case CommandIDs::playStart: if (player.isPlaying()) player.stop(); else player.start(); break;
 
         default:
+            jassertfalse;
             break;
     }
     return true;

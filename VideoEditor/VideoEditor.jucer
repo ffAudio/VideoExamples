@@ -22,6 +22,9 @@
             file="Source/TransportControl.cpp"/>
       <FILE id="tjoZLs" name="TransportControl.h" compile="0" resource="0"
             file="Source/TransportControl.h"/>
+      <FILE id="SoDaGi" name="RenderDialog.cpp" compile="1" resource="0"
+            file="Source/RenderDialog.cpp"/>
+      <FILE id="Xik0Ya" name="RenderDialog.h" compile="0" resource="0" file="Source/RenderDialog.h"/>
     </GROUP>
     <GROUP id="{66B038AB-1AC5-5DC4-4753-9A0F0A778714}" name="Resources">
       <FILE id="t8hwFJ" name="FF-Logo.png" compile="0" resource="1" file="../Resources/FF-Logo.png"/>
@@ -125,5 +128,5 @@
   <LIVE_SETTINGS>
     <OSX/>
   </LIVE_SETTINGS>
-  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" FOLEYS_DEBUG_LOGGING="1"/>
 </JUCERPROJECT>

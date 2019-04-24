@@ -183,7 +183,8 @@ public:
     {
         MessageManager::callAsync (std::bind (&OSDComponent::setCurrentTime,
                                               &osdComponent,
-                                              tc.count * tc.timebase));
+                                              tc.timebase > 0 ?
+                                              tc.count / double (tc.timebase) : 0));
     }
 
     void paint (Graphics& g) override

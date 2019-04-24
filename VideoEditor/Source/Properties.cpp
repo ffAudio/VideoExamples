@@ -13,15 +13,35 @@
 
 //==============================================================================
 
+Properties::Properties()
+{
+    addAndMakeVisible (close);
+
+    close.onClick = [&]
+    {
+        showProperties ({});
+        repaint();
+    };
+}
+
 void Properties::paint (Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
+    auto background = getLookAndFeel().findColour (ResizableWindow::backgroundColourId);
+    g.fillAll (background);   // clear the background
     g.setColour (Colours::silver);
     g.drawFittedText (NEEDS_TRANS ("Properties"), getLocalBounds().withHeight (38).reduced (10, 3), Justification::left, 1);
+
+    if (component)
+    {
+        g.setColour (background.darker());
+        g.fillRect (getLocalBounds().withTop (40).reduced (5));
+    }
 }
 
 void Properties::resized()
 {
+    close.setBounds (getLocalBounds().withHeight (38).reduced (5).removeFromRight (20));
+
     if (component)
         component->setBounds (getLocalBounds().withTop (40).reduced (5));
 }
