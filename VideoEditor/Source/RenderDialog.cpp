@@ -39,7 +39,7 @@ RenderDialog::RenderDialog (foleys::ClipBouncer& rendererToUse) : renderer (rend
     browse.onClick = [&]
     {
         FileChooser myChooser ("Please select the project you want to save...",
-                               File::getSpecialLocation (File::userHomeDirectory),
+                               File::getSpecialLocation (File::userMoviesDirectory),
                                "*.mp4");
         if (myChooser.browseForFileToSave (true))
         {
@@ -53,10 +53,6 @@ RenderDialog::~RenderDialog()
 {
 }
 
-//void RenderDialog::paint (Graphics& g)
-//{
-//    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());   // clear the background
-//}
 
 void RenderDialog::resized()
 {

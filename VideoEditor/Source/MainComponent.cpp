@@ -132,7 +132,7 @@ void MainComponent::resetEdit()
 void MainComponent::loadEdit()
 {
     FileChooser myChooser ("Please select the project you want to save...",
-                           File::getSpecialLocation (File::userHomeDirectory),
+                           File::getSpecialLocation (File::userMoviesDirectory),
                            "*.videdit");
     if (myChooser.browseForFileToOpen())
     {
@@ -171,7 +171,7 @@ void MainComponent::saveEdit (bool saveAs)
     if (saveAs || editFileName.getFullPathName().isEmpty())
     {
         FileChooser myChooser ("Please select the project you want to save...",
-                               File::getSpecialLocation (File::userHomeDirectory),
+                               File::getSpecialLocation (File::userMoviesDirectory),
                                "*.videdit");
         if (myChooser.browseForFileToSave (true))
         {
