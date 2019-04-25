@@ -26,6 +26,17 @@ RenderDialog::RenderDialog (foleys::ClipBouncer& rendererToUse) : renderer (rend
 
     start.onClick = [&]()
     {
+        if (renderer.getOutputFile().existsAsFile())
+        {
+            auto answer = AlertWindow::showOkCancelBox (AlertWindow::WarningIcon,
+                                                        NEEDS_TRANS ("Overwrite existing file?"),
+                                                        NEEDS_TRANS ("The file \"" + renderer.getOutputFile().getFileName() + "\" exists. Do you want to overwrite it?"));
+            if (answer)
+                renderer.getOutputFile().deleteFile();
+            else
+                return;
+        }
+
         foleys::VideoStreamSettings settings;
         settings.frameSize = { 800, 576 };
         renderer.setVideoSettings (settings);
@@ -41,7 +52,7 @@ RenderDialog::RenderDialog (foleys::ClipBouncer& rendererToUse) : renderer (rend
         FileChooser myChooser ("Please select the project you want to save...",
                                File::getSpecialLocation (File::userMoviesDirectory),
                                "*.mp4");
-        if (myChooser.browseForFileToSave (true))
+        if (myChooser.browseForFileToSave (false))
         {
             renderer.setOutputFile (myChooser.getResult());
             updateGUI();
@@ -51,6 +62,7 @@ RenderDialog::RenderDialog (foleys::ClipBouncer& rendererToUse) : renderer (rend
 
 RenderDialog::~RenderDialog()
 {
+    renderer.onRenderingFinished = nullptr;
 }
 
 
@@ -90,6 +102,7 @@ void RenderDialog::timerCallback()
     }
     else
     {
+        updateGUI();
         stopTimer();
     }
 }

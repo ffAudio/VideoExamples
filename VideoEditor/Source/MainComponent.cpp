@@ -120,7 +120,7 @@ void MainComponent::resized()
 
 void MainComponent::resetEdit()
 {
-    auto edit = videoEngine.createCompoundClip();
+    auto edit = videoEngine.createComposedClip();
     timeline.setEditClip (edit);
     edit->addTimecodeListener (&preview);
     editFileName = File();
@@ -149,7 +149,7 @@ void MainComponent::loadEdit()
         editFileName = myChooser.getResult();
 
         auto tree = ValueTree::fromXml (*xml);
-        auto edit = videoEngine.createCompoundClip();
+        auto edit = videoEngine.createComposedClip();
 
         for (auto clip : tree)
             edit->getStatusTree().appendChild (clip.createCopy(), nullptr);
@@ -203,7 +203,7 @@ void MainComponent::saveEdit (bool saveAs)
 void MainComponent::showRenderDialog()
 {
     if (! bouncer.isRendering())
-        bouncer.setClipToRender (timeline.getEditClip());
+        bouncer.setClipToRender (timeline.getEditClip()->createCopy());
 
     properties.showProperties (std::make_unique<RenderDialog>(bouncer));
 }
