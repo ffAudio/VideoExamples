@@ -58,13 +58,16 @@ RenderDialog::RenderDialog (foleys::ClipBouncer& rendererToUse) : renderer (rend
             updateGUI();
         }
     };
+    renderer.onRenderingFinished = [r = &renderer](bool success)
+    {
+        if (success)
+            r->getOutputFile().startAsProcess();
+    };
 }
 
 RenderDialog::~RenderDialog()
 {
-    renderer.onRenderingFinished = nullptr;
 }
-
 
 void RenderDialog::resized()
 {
