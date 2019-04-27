@@ -71,15 +71,15 @@ void TimeLine::resized()
         }
     }
 
-    auto time = player.getCurrentTimecode();
-    auto t = getXFromTime (time.count * time.timebase);
-    timemarker.setBounds (t, 0, 3, getHeight());
+    auto tx = getXFromTime (player.getCurrentTimeInSeconds());
+    timemarker.setBounds (tx, 0, 3, getHeight());
 }
 
 void TimeLine::timecodeChanged (foleys::Timecode time)
 {
-    auto t = getXFromTime (time.count * time.timebase);
-    timemarker.setBounds (t, 0, 3, getHeight());
+    ignoreUnused (time);
+    auto tx = getXFromTime (player.getCurrentTimeInSeconds());
+    timemarker.setBounds (tx, 0, 3, getHeight());
 }
 
 void TimeLine::mouseDown (const MouseEvent& event)

@@ -31,6 +31,8 @@ public:
 
     foleys::Timecode getCurrentTimecode() const;
 
+    double getCurrentTimeInSeconds() const;
+
     FFAU::LevelMeterSource& getMeterSource();
 
     void initialise();

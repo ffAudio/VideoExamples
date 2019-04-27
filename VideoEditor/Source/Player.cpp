@@ -52,6 +52,14 @@ foleys::Timecode Player::getCurrentTimecode() const
     return {};
 }
 
+double Player::getCurrentTimeInSeconds() const
+{
+    if (clip)
+        return clip->getCurrentTimeInSeconds();
+
+    return {};
+}
+
 void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
 {
     transportSource.stop();
