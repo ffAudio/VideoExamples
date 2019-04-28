@@ -64,14 +64,6 @@ void Player::setPosition (double pts)
     sendChangeMessage();
 }
 
-foleys::Timecode Player::getCurrentTimecode() const
-{
-    if (clip)
-        return clip->getCurrentTimecode();
-
-    return {};
-}
-
 double Player::getCurrentTimeInSeconds() const
 {
     if (clip)

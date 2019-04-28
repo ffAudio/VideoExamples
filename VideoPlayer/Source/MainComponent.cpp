@@ -179,12 +179,11 @@ public:
         movieClip->releaseResources ();
     }
 
-    void timecodeChanged (foleys::Timecode tc) override
+    void timecodeChanged (int64_t count, double seconds) override
     {
         MessageManager::callAsync (std::bind (&OSDComponent::setCurrentTime,
                                               &osdComponent,
-                                              tc.timebase > 0 ?
-                                              tc.count / double (tc.timebase) : 0));
+                                              seconds));
     }
 
     void paint (Graphics& g) override

@@ -65,7 +65,7 @@ void TransportControl::paint (Graphics& g)
     g.setColour (Colours::silver);
 
     auto bounds = getLocalBounds().reduced (1);
-    g.drawFittedText (foleys::timecodeToString (player.getCurrentTimecode()), bounds, Justification::right, 1);
+    g.drawFittedText (foleys::timecodeToString (player.getCurrentTimeInSeconds()), bounds, Justification::right, 1);
 }
 
 void TransportControl::resized()

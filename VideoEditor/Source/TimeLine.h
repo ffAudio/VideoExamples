@@ -50,7 +50,7 @@ public:
 
     void paint (Graphics&) override;
     void resized() override;
-    void timecodeChanged (foleys::Timecode tc) override;
+    void timecodeChanged (int64_t count, double seconds) override;
 
     void setEditClip (std::shared_ptr<foleys::ComposedClip> clip);
     std::shared_ptr<foleys::ComposedClip> getEditClip() const;

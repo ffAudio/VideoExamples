@@ -46,8 +46,6 @@ public:
 
     void setPosition (double pts);
 
-    foleys::Timecode getCurrentTimecode() const;
-
     double getCurrentTimeInSeconds() const;
 
     FFAU::LevelMeterSource& getMeterSource();

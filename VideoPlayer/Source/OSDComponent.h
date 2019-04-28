@@ -99,7 +99,7 @@ public:
             auto size = clip->getVideoSize();
             String dim = String (size.width) + " x " + String (size.height);
             g.drawFittedText (dim, getLocalBounds(), Justification::topLeft, 1);
-            g.drawFittedText (foleys::timecodeToString (clip->getCurrentTimecode()),
+            g.drawFittedText (foleys::timecodeToString (clip->getCurrentTimeInSeconds()),
                               getLocalBounds(), Justification::topRight, 1);
         }
     }

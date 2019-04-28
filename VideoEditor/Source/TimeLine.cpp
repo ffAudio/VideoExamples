@@ -93,10 +93,10 @@ void TimeLine::resized()
     timemarker.setBounds (tx, 0, 3, getHeight());
 }
 
-void TimeLine::timecodeChanged (foleys::Timecode time)
+void TimeLine::timecodeChanged (int64_t count, double seconds)
 {
     ignoreUnused (time);
-    auto tx = getXFromTime (player.getCurrentTimeInSeconds());
+    auto tx = getXFromTime (seconds);
     timemarker.setBounds (tx, 0, 3, getHeight());
 }
 
