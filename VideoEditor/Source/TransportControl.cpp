@@ -21,17 +21,9 @@ TransportControl::TransportControl (Player& playerToUse)
     play.onStateChange = [&]
     {
         if (play.getToggleState())
-        {
             player.start();
-            play.setButtonText (NEEDS_TRANS ("Pause"));
-            startTimerHz (30);
-        }
         else
-        {
-            play.setButtonText (NEEDS_TRANS ("Play"));
             player.stop();
-            stopTimer();
-        }
     };
 
     addAndMakeVisible (zero);
@@ -42,10 +34,13 @@ TransportControl::TransportControl (Player& playerToUse)
 
     zero.setConnectedEdges (TextButton::ConnectedOnRight);
     play.setConnectedEdges (TextButton::ConnectedOnLeft);
+
+    player.addChangeListener (this);
 }
 
 TransportControl::~TransportControl()
 {
+    player.removeChangeListener (this);
 }
 
 void TransportControl::paint (Graphics& g)
@@ -67,4 +62,20 @@ void TransportControl::resized()
 void TransportControl::timerCallback()
 {
     repaint();
+}
+
+void TransportControl::changeListenerCallback (ChangeBroadcaster*)
+{
+    if (player.isPlaying())
+    {
+        play.setButtonText (NEEDS_TRANS ("Pause"));
+        startTimerHz (30);
+    }
+    else
+    {
+        play.setButtonText (NEEDS_TRANS ("Play"));
+        stopTimer();
+    }
+
+    juce::Timer::callAfterDelay (200, [&]{ repaint(); });
 }

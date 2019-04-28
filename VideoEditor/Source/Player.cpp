@@ -26,11 +26,13 @@ Player::~Player()
 void Player::start()
 {
     transportSource.start();
+    sendChangeMessage();
 }
 
 void Player::stop()
 {
     transportSource.stop();
+    sendChangeMessage();
 }
 
 bool Player::isPlaying()
@@ -42,6 +44,8 @@ void Player::setPosition (double pts)
 {
     if (clip)
         clip->setNextReadPosition (pts * getSampleRate());
+
+    sendChangeMessage();
 }
 
 foleys::Timecode Player::getCurrentTimecode() const
@@ -72,6 +76,8 @@ void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
     transportSource.setSource (clip.get());
 
     preview.setClip (clip);
+
+    sendChangeMessage();
 }
 
 void Player::initialise ()

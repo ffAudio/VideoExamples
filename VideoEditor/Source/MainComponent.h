@@ -72,15 +72,15 @@ private:
     FFAU::LevelMeterLookAndFeel lookAndFeel;
     ApplicationCommandManager   commandManager;
 
-    Library               library;
     foleys::VideoPreview  preview;
+    Player                player  { deviceManager, preview };
+
+    Library               library;
     Properties            properties;
     Viewport              viewport;
     TimeLine              timeline   { videoEngine, player };
     TransportControl      transport  { player };
     FFAU::LevelMeter      levelMeter { FFAU::LevelMeter::Default };
-
-    Player                player  { deviceManager, preview };
 
     File editFileName;
     int  lowerPart = 0;

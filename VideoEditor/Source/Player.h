@@ -15,7 +15,8 @@
 //==============================================================================
 /*
 */
-class Player : public ChangeListener
+class Player  : public ChangeBroadcaster,
+                public ChangeListener
 {
 public:
     Player (AudioDeviceManager& deviceManager, foleys::VideoPreview& preview);

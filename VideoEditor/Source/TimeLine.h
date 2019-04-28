@@ -120,6 +120,8 @@ private:
     const int numVideoLines = 2;
     const int numAudioLines = 5;
 
+    double timelineLength = 60.0;
+
     std::shared_ptr<foleys::ComposedClip> edit;
 
     std::vector<std::unique_ptr<ClipComponent>> clipComponents;

@@ -16,6 +16,7 @@
 /*
 */
 class TransportControl    : public Component,
+                            private ChangeListener,
                             private Timer
 {
 public:
@@ -26,6 +27,8 @@ public:
     void resized() override;
 
     void timerCallback() override;
+
+    void changeListenerCallback (ChangeBroadcaster* sender) override;
 
 private:
     Player& player;

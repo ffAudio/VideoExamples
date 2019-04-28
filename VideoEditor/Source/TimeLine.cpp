@@ -55,6 +55,8 @@ void TimeLine::resized()
     if (sampleRate == 0)
         sampleRate = 48000.0;
 
+    timelineLength = std::max (60.0, edit->getLengthInSeconds() * 1.1);
+
     for (auto& component : clipComponents)
     {
         if (component->isVideoClip())
@@ -225,13 +227,13 @@ std::shared_ptr<foleys::ComposedClip> TimeLine::getEditClip() const
 
 int TimeLine::getXFromTime (double seconds) const
 {
-    return (seconds / 120.0) * getWidth();
+    return (seconds / timelineLength) * getWidth();
 }
 
 double TimeLine::getTimeFromX (int pixels) const
 {
     auto w = getWidth();
-    return w > 0 ? 120.0 * pixels / w : 0;
+    return w > 0 ? timelineLength * pixels / w : 0;
 }
 
 double TimeLine::getSampleRate() const
@@ -300,15 +302,18 @@ void TimeLine::ClipComponent::paint (Graphics& g)
 
 void TimeLine::ClipComponent::resized()
 {
+    if (clip == nullptr)
+        return;
+
     if (filmstrip)
     {
         filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        filmstrip->setStartAndLength (timeline.getTimeFromX (getX()), timeline.getTimeFromX (getWidth()));
+        filmstrip->setStartAndLength (clip->getOffset(), clip->getLength() + clip->getOffset());
     }
     if (audiostrip)
     {
         audiostrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        audiostrip->setStartAndLength (timeline.getTimeFromX (getX()), timeline.getTimeFromX (getWidth()));
+        audiostrip->setStartAndLength (clip->getOffset(), clip->getLength() + clip->getOffset());
     }
 }
 
