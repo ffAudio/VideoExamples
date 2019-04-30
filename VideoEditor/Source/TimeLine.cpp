@@ -179,40 +179,38 @@ void TimeLine::restoreClipComponents()
         return;
 
     auto clips = edit->getClips();
-    for (auto it = clips.begin(); it != clips.end(); ++it)
+    for (auto descriptor : clips)
     {
-        if ((*it)->clip->hasVideo())
+        if (descriptor->clip->hasVideo())
         {
-            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [it](const auto& comp){ return comp->isVideoClip() && comp->clip == *it; });
+            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [descriptor](const auto& comp){ return comp->isVideoClip() && comp->clip == descriptor; });
             if (comp == clipComponents.end())
-            {
-                auto strip = std::make_unique<ClipComponent> (*this, *it, videoEngine.getThreadPool(), true);
-                addAndMakeVisible (strip.get());
-                clipComponents.emplace_back (std::move (strip));
-            }
+                addClipComponent (descriptor, true);
         }
 
-        if ((*it)->clip->hasAudio())
+        if (descriptor->clip->hasAudio())
         {
-            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [it](const auto& comp){ return !comp->isVideoClip() && comp->clip == *it; });
+            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [descriptor](const auto& comp){ return !comp->isVideoClip() && comp->clip == descriptor; });
             if (comp == clipComponents.end())
-            {
-                auto strip = std::make_unique<ClipComponent> (*this, *it, videoEngine.getThreadPool(), false);
-                addAndMakeVisible (strip.get());
-                clipComponents.emplace_back (std::move (strip));
-            }
+                addClipComponent (descriptor, false);
         }
     }
-    for (auto it = clipComponents.begin(); it != clipComponents.end();)
-    {
-        auto clip = std::find_if (clips.begin(), clips.end(), [it](const auto& clip){ return (*it)->clip == clip; });
-        if (clip == clips.end())
-            it = clipComponents.erase (it);
-        else
-            ++it;
-    }
+
+    clipComponents.erase (std::remove_if (clipComponents.begin(),
+                                          clipComponents.end(),
+                                          [&](auto& component)
+                                          {
+                                              return std::find_if (clips.begin(), clips.end(), [&](const auto& clip){ return component->clip == clip; }) == clips.end();
+                                          }), clipComponents.end());
 
     resized();
+}
+
+void TimeLine::addClipComponent (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
+{
+    auto strip = std::make_unique<ClipComponent> (*this, clip, videoEngine.getThreadPool(), video);
+    addAndMakeVisible (strip.get());
+    clipComponents.emplace_back (std::move (strip));
 }
 
 void TimeLine::setEditClip (std::shared_ptr<foleys::ComposedClip> clip)
