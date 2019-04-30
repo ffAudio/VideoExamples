@@ -162,13 +162,13 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
     resized();
 }
 
-void TimeLine::setSelectedClip (std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip)
+void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip)
 {
     selectedClip = clip;
     repaint();
 }
 
-std::shared_ptr<foleys::ComposedClip::ClipDescriptor> TimeLine::getSelectedClip() const
+std::shared_ptr<foleys::ClipDescriptor> TimeLine::getSelectedClip() const
 {
     return selectedClip.lock();
 }
@@ -279,7 +279,7 @@ void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
 //==============================================================================
 
 TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
-                                        std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clipToUse,
+                                        std::shared_ptr<foleys::ClipDescriptor> clipToUse,
                                         ThreadPool& threadPool, bool video)
   : clip (clipToUse),
     timeline (tl)

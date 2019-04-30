@@ -55,15 +55,15 @@ public:
     void setEditClip (std::shared_ptr<foleys::ComposedClip> clip);
     std::shared_ptr<foleys::ComposedClip> getEditClip() const;
 
-    void setSelectedClip (std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip);
-    std::shared_ptr<foleys::ComposedClip::ClipDescriptor> getSelectedClip() const;
+    void setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip);
+    std::shared_ptr<foleys::ClipDescriptor> getSelectedClip() const;
 
     void restoreClipComponents();
 
     class ClipComponent : public Component
     {
     public:
-        ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip, ThreadPool& threadPool, bool video);
+        ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ClipDescriptor> clip, ThreadPool& threadPool, bool video);
         void paint (Graphics& g) override;
         void resized() override;
 
@@ -74,7 +74,7 @@ public:
 
         bool isVideoClip() const;
 
-        std::shared_ptr<foleys::ComposedClip::ClipDescriptor> clip;
+        std::shared_ptr<foleys::ClipDescriptor> clip;
 
     private:
         enum DragMode
@@ -142,7 +142,7 @@ private:
 
     std::vector<std::unique_ptr<ClipComponent>> clipComponents;
 
-    std::weak_ptr<foleys::ComposedClip::ClipDescriptor> selectedClip;
+    std::weak_ptr<foleys::ClipDescriptor> selectedClip;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimeLine)
 };
