@@ -218,12 +218,8 @@ void TimeLine::restoreClipComponents()
                                           clipComponents.end(),
                                           [&](auto& component)
                                           {
-<<<<<<< HEAD
                                               auto findClipWithComponent = [&](const auto& clip){ return clip == component->clip; };
                                               return std::find_if (clips.begin(), clips.end(), findClipWithComponent) == clips.end();
-=======
-                                              return std::find_if (clips.begin(), clips.end(), [&](const auto& clip){ return component->clip == clip; }) == clips.end();
->>>>>>> Some DRY cleanups
                                           }), clipComponents.end());
 
     resized();
