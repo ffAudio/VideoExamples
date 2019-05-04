@@ -156,6 +156,12 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
         descriptor->setAudioLine (jlimit (0, numAudioLines, line));
     }
 
+    if (clip->hasAudio())
+    {
+        auto panning = std::make_unique<foleys::PanningAudioProcessor>();
+        descriptor->addAudioProcessor (std::move (panning));
+    }
+
     restoreClipComponents();
 
     setSelectedClip (descriptor);
