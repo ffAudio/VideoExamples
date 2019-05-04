@@ -177,6 +177,8 @@ void MainComponent::loadEdit()
         updateTitleBar();
 
         videoEngine.getUndoManager()->clearUndoHistory();
+
+        timeline.resized();
     }
 }
 
