@@ -41,10 +41,45 @@ public:
 
     void showProperties (std::unique_ptr<Component> component);
 
+    void showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
+
 private:
 
     std::unique_ptr<Component> component;
     juce::TextButton close { "X" };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Properties)
+};
+
+
+//==============================================================================
+
+class ClipAudioProperties  : public Component
+{
+public:
+    ClipAudioProperties (std::shared_ptr<foleys::ClipDescriptor> clip);
+
+    void paint (Graphics& g) override;
+
+    void resized() override;
+
+private:
+    std::shared_ptr<foleys::ClipDescriptor> clip;
+    std::unique_ptr<AudioProcessorEditor> editor;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipAudioProperties)
+};
+
+
+//==============================================================================
+
+class ClipVideoProperties  : public Component
+{
+public:
+    ClipVideoProperties (std::shared_ptr<foleys::ClipDescriptor> clip);
+
+    void paint (Graphics& g) override;
+
+private:
+    std::shared_ptr<foleys::ClipDescriptor> clip;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipVideoProperties)
 };

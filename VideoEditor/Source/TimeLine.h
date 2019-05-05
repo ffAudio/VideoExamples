@@ -38,7 +38,7 @@ class TimeLine    : public Component,
                     public ValueTree::Listener
 {
 public:
-    TimeLine (foleys::VideoEngine& videoEngine, Player& player);
+    TimeLine (foleys::VideoEngine& videoEngine, Player& player, Properties& properies);
     ~TimeLine();
 
     bool isInterestedInFileDrag (const StringArray& files) override;
@@ -55,7 +55,7 @@ public:
     void setEditClip (std::shared_ptr<foleys::ComposedClip> clip);
     std::shared_ptr<foleys::ComposedClip> getEditClip() const;
 
-    void setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip);
+    void setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
     std::shared_ptr<foleys::ClipDescriptor> getSelectedClip() const;
 
     void restoreClipComponents();
@@ -131,8 +131,9 @@ private:
     void addClipComponent (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
 
     foleys::VideoEngine& videoEngine;
-    Player& player;
-    TimeMarker timemarker;
+    Player&     player;
+    Properties& properties;
+    TimeMarker  timemarker;
 
     const int numVideoLines = 2;
     const int numAudioLines = 5;
