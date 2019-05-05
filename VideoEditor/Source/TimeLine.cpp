@@ -27,12 +27,14 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 #include "Player.h"
+#include "Properties.h"
 #include "TimeLine.h"
 
 //==============================================================================
-TimeLine::TimeLine (foleys::VideoEngine& theVideoEngine, Player& playerToUse)
+TimeLine::TimeLine (foleys::VideoEngine& theVideoEngine, Player& playerToUse, Properties& properiesToUse)
   : videoEngine (theVideoEngine),
-    player (playerToUse)
+    player (playerToUse),
+    properties (properiesToUse)
 {
     addAndMakeVisible (timemarker);
     timemarker.setAlwaysOnTop (true);
@@ -164,13 +166,14 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
 
     restoreClipComponents();
 
-    setSelectedClip (descriptor);
+    setSelectedClip (descriptor, descriptor->clip->hasVideo());
     resized();
 }
 
-void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip)
+void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
 {
     selectedClip = clip;
+    properties.showClipProperties (clip, video);
     repaint();
 }
 
@@ -350,7 +353,7 @@ void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
 void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
 {
     localDragStart = event.getPosition();
-    timeline.setSelectedClip (clip);
+    timeline.setSelectedClip (clip, isVideoClip());
 
     if (event.x > getWidth() - 5)
         dragmode = dragLength;

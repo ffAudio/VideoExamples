@@ -94,7 +94,7 @@ private:
     Library               library;
     Properties            properties;
     Viewport              viewport;
-    TimeLine              timeline   { videoEngine, player };
+    TimeLine              timeline   { videoEngine, player, properties };
     TransportControl      transport  { player };
     FFAU::LevelMeter      levelMeter { FFAU::LevelMeter::Default };
 

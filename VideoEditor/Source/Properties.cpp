@@ -74,3 +74,47 @@ void Properties::showProperties (std::unique_ptr<Component> componentToDisplay)
     addAndMakeVisible (component.get());
     component->setBounds (getLocalBounds().withTop (40).reduced (5));
 }
+
+void Properties::showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
+{
+    if (video)
+        showProperties (std::make_unique<ClipVideoProperties>(clip));
+    else
+        showProperties (std::make_unique<ClipAudioProperties>(clip));
+}
+
+//==============================================================================
+
+ClipAudioProperties::ClipAudioProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse) : clip (clipToUse)
+{
+    if (! clip->audioProcessors.empty())
+    {
+        editor = std::make_unique<GenericAudioProcessorEditor>(clip->audioProcessors.front()->processor.get());
+        addAndMakeVisible (editor.get());
+    }
+}
+
+void ClipAudioProperties::paint (Graphics& g)
+{
+    g.setColour (Colours::silver);
+    g.drawFittedText (NEEDS_TRANS ("Audio: ") + clip->getDescription(), getLocalBounds().removeFromTop (36), Justification::left, 1);
+}
+
+void ClipAudioProperties::resized()
+{
+    if (editor)
+        editor->setBounds (getLocalBounds().withTop (40).reduced (5));
+}
+
+//==============================================================================
+
+ClipVideoProperties::ClipVideoProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse) : clip (clipToUse)
+{
+}
+
+void ClipVideoProperties::paint (Graphics& g)
+{
+    g.setColour (Colours::silver);
+    g.drawFittedText (NEEDS_TRANS ("Video: ") + clip->getDescription(), getLocalBounds().removeFromTop (36), Justification::left, 1);
+}
+
