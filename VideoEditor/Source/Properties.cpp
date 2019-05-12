@@ -87,10 +87,15 @@ void Properties::showClipProperties (std::shared_ptr<foleys::ClipDescriptor> cli
 
 ClipAudioProperties::ClipAudioProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse) : clip (clipToUse)
 {
+    // TODO: display list of processors
     if (! clip->audioProcessors.empty())
     {
-        editor = std::make_unique<GenericAudioProcessorEditor>(clip->audioProcessors.front()->processor.get());
-        addAndMakeVisible (editor.get());
+        auto& descriptor = clip->audioProcessors.front();
+        if (descriptor->processor.get() != nullptr)
+        {
+            editor = std::make_unique<GenericAudioProcessorEditor>(clip->audioProcessors.front()->processor.get());
+            addAndMakeVisible (editor.get());
+        }
     }
 }
 
@@ -117,4 +122,3 @@ void ClipVideoProperties::paint (Graphics& g)
     g.setColour (Colours::silver);
     g.drawFittedText (NEEDS_TRANS ("Video: ") + clip->getDescription(), getLocalBounds().removeFromTop (36), Justification::left, 1);
 }
-

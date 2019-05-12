@@ -160,8 +160,10 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
 
     if (clip->hasAudio())
     {
-        auto panning = std::make_unique<foleys::PanningAudioProcessor>();
-        descriptor->addAudioProcessor (std::move (panning));
+        String error;
+        auto panning = videoEngine.createAudioPluginInstance ("BUILTIN: Panning", edit->getSampleRate(), edit->getDefaultBufferSize(), error);
+        if (panning.get() != nullptr && error.isEmpty())
+            descriptor->addAudioProcessor (std::move (panning));
     }
 
     restoreClipComponents();
