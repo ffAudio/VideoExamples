@@ -143,6 +143,13 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
 {
     auto length = -1.0;
     auto clip = videoEngine.createClipFromFile (file);
+
+    if (clip.get() == nullptr)
+    {
+        AlertWindow::showNativeDialogBox (NEEDS_TRANS ("Loading failed"), NEEDS_TRANS (""), true);
+        return;
+    }
+
     if (std::dynamic_pointer_cast<foleys::ImageClip>(clip) != nullptr)
         length = 3.0;
 
