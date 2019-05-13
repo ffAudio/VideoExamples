@@ -78,9 +78,6 @@ MainComponent::MainComponent()
     commandManager.setFirstCommandTarget (this);
 #if JUCE_MAC
     setMacMainMenu (this);
-#else
-    if (auto* window = dynamic_cast<DocumentWindow*>(getTopLevelComponent()))
-        window->setMenuBar (this);
 #endif
 
     commandManager.getKeyMappings()->resetToDefaultMappings();
@@ -95,9 +92,6 @@ MainComponent::~MainComponent()
 
 #if JUCE_MAC
     setMacMainMenu (nullptr);
-#else
-    if (auto* window = dynamic_cast<DocumentWindow*>(getTopLevelComponent()))
-        window->setMenuBar (nullptr);
 #endif
 
     levelMeter.setLookAndFeel (nullptr);
@@ -341,6 +335,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case CommandIDs::fileSave: saveEdit(false); break;
         case CommandIDs::fileSaveAs: saveEdit(true); break;
         case CommandIDs::fileRender: showRenderDialog(); break;
+        case StandardApplicationCommandIDs::quit: JUCEApplication::getInstance()->systemRequestedQuit(); break;
 
         case StandardApplicationCommandIDs::undo: videoEngine.getUndoManager()->undo(); break;
         case StandardApplicationCommandIDs::redo: videoEngine.getUndoManager()->redo(); break;

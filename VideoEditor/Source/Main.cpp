@@ -90,6 +90,10 @@ public:
             centreWithSize (getWidth(), getHeight());
            #endif
 
+           #if !JUCE_MAC
+            setMenuBar (mainComponent);
+           #endif
+
             addKeyListener (mainComponent->getKeyMappings());
 
             setVisible (true);
