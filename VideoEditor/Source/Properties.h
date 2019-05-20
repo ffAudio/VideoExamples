@@ -54,10 +54,10 @@ private:
 
 //==============================================================================
 
-class ClipAudioProperties  : public Component
+class ClipProcessorProperties  : public Component
 {
 public:
-    ClipAudioProperties (std::shared_ptr<foleys::ClipDescriptor> clip);
+    ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
 
     void paint (Graphics& g) override;
 
@@ -66,20 +66,6 @@ public:
 private:
     std::shared_ptr<foleys::ClipDescriptor> clip;
     std::unique_ptr<AudioProcessorEditor> editor;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipAudioProperties)
-};
-
-
-//==============================================================================
-
-class ClipVideoProperties  : public Component
-{
-public:
-    ClipVideoProperties (std::shared_ptr<foleys::ClipDescriptor> clip);
-
-    void paint (Graphics& g) override;
-
-private:
-    std::shared_ptr<foleys::ClipDescriptor> clip;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipVideoProperties)
+    bool video = false;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipProcessorProperties)
 };

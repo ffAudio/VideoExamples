@@ -77,48 +77,43 @@ void Properties::showProperties (std::unique_ptr<Component> componentToDisplay)
 
 void Properties::showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
 {
-    if (video)
-        showProperties (std::make_unique<ClipVideoProperties>(clip));
-    else
-        showProperties (std::make_unique<ClipAudioProperties>(clip));
+        showProperties (std::make_unique<ClipProcessorProperties>(clip, video));
 }
 
 //==============================================================================
 
-ClipAudioProperties::ClipAudioProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse) : clip (clipToUse)
+ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse, bool showVideo)
+  : clip (clipToUse),
+    video (showVideo)
 {
-    // TODO: display list of processors
-    if (! clip->audioProcessors.empty())
+    if (video)
+        // currently the juce::GenericAudioProcessorEditor only works with AudioProcessor...
+        return;
+
+    auto& processors = video ? clip->videoProcessors : clip->audioProcessors;
+    
+    // TODO: display the whole list of processors
+    if (! processors.empty())
     {
-        auto& descriptor = clip->audioProcessors.front();
+        auto& descriptor = processors.front();
         if (descriptor->processor.get() != nullptr)
         {
-            editor = std::make_unique<GenericAudioProcessorEditor>(clip->audioProcessors.front()->processor.get());
+            editor = std::make_unique<GenericAudioProcessorEditor>(processors.front()->processor.get());
             addAndMakeVisible (editor.get());
         }
     }
 }
 
-void ClipAudioProperties::paint (Graphics& g)
+void ClipProcessorProperties::paint (Graphics& g)
 {
     g.setColour (Colours::silver);
-    g.drawFittedText (NEEDS_TRANS ("Audio: ") + clip->getDescription(), getLocalBounds().removeFromTop (36), Justification::left, 1);
+    g.drawFittedText ((video ? NEEDS_TRANS ("Video: ") : NEEDS_TRANS ("Audio: ")) + clip->getDescription(),
+                      getLocalBounds().removeFromTop (36), Justification::left, 1);
 }
 
-void ClipAudioProperties::resized()
+void ClipProcessorProperties::resized()
 {
     if (editor)
         editor->setBounds (getLocalBounds().withTop (40).reduced (5));
 }
 
-//==============================================================================
-
-ClipVideoProperties::ClipVideoProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse) : clip (clipToUse)
-{
-}
-
-void ClipVideoProperties::paint (Graphics& g)
-{
-    g.setColour (Colours::silver);
-    g.drawFittedText (NEEDS_TRANS ("Video: ") + clip->getDescription(), getLocalBounds().removeFromTop (36), Justification::left, 1);
-}
