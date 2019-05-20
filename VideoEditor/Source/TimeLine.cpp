@@ -165,10 +165,19 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
         descriptor->setAudioLine (jlimit (0, numAudioLines, line));
     }
 
+    if (clip->hasVideo())
+    {
+        String error;
+        auto position = videoEngine.createVideoPluginInstance ("BUILTIN: " + foleys::PositioningVideoProcessor::getPluginName(), error);
+        if (position.get() != nullptr && error.isEmpty())
+            descriptor->addVideoProcessor (std::move (position));
+    }
+
     if (clip->hasAudio())
     {
         String error;
-        auto panning = videoEngine.createAudioPluginInstance ("BUILTIN: Panning", edit->getSampleRate(), edit->getDefaultBufferSize(), error);
+        auto panning = videoEngine.createAudioPluginInstance ("BUILTIN: " + foleys::PanningAudioProcessor::getPluginName(),
+                                                              edit->getSampleRate(), edit->getDefaultBufferSize(), error);
         if (panning.get() != nullptr && error.isEmpty())
             descriptor->addAudioProcessor (std::move (panning));
     }

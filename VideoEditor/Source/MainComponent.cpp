@@ -146,9 +146,8 @@ void MainComponent::loadEdit()
                            "*.videdit");
     if (myChooser.browseForFileToOpen())
     {
-        std::unique_ptr<XmlElement> xml;
-        xml.reset (XmlDocument::parse (myChooser.getResult()));
-        if (xml == nullptr)
+        auto xml = XmlDocument::parse (myChooser.getResult());
+        if (xml.get() == nullptr)
         {
             AlertWindow::showMessageBox (AlertWindow::WarningIcon,
                                          NEEDS_TRANS ("Loading failed"),
