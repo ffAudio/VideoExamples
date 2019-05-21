@@ -286,20 +286,20 @@ double TimeLine::getSampleRate() const
 void TimeLine::valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged,
                                          const juce::Identifier& property)
 {
-    resized();
+    MessageManager::callAsync ([safeComponent = SafePointer<TimeLine> (this)] () mutable { if (safeComponent) safeComponent->resized(); });
 }
 
 void TimeLine::valueTreeChildAdded (juce::ValueTree& parentTree,
                                     juce::ValueTree& childWhichHasBeenAdded)
 {
-    restoreClipComponents();
+    MessageManager::callAsync ([safeComponent = SafePointer<TimeLine> (this)] () mutable { if (safeComponent) safeComponent->restoreClipComponents(); });
 }
 
 void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
                                       juce::ValueTree& childWhichHasBeenRemoved,
                                       int indexFromWhichChildWasRemoved)
 {
-    restoreClipComponents();
+    MessageManager::callAsync ([safeComponent = SafePointer<TimeLine> (this)] () mutable { if (safeComponent) safeComponent->restoreClipComponents(); });
 }
 
 //==============================================================================
