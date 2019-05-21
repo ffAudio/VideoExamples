@@ -95,6 +95,11 @@ public:
     int getXFromTime (double seconds) const;
     double getTimeFromX (int pixels) const;
 
+    int getVideoLine (const std::shared_ptr<foleys::ClipDescriptor> clip) const;
+    int getAudioLine (const std::shared_ptr<foleys::ClipDescriptor> clip) const;
+    void setVideoLine (std::shared_ptr<foleys::ClipDescriptor> clip, int lane) const;
+    void setAudioLine (std::shared_ptr<foleys::ClipDescriptor> clip, int lane) const;
+
     double getSampleRate() const;
 
     class TimeMarker : public Component
