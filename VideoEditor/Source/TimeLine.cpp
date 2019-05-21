@@ -30,6 +30,12 @@
 #include "Properties.h"
 #include "TimeLine.h"
 
+namespace IDs
+{
+    static Identifier videoLine { "videoLine" };
+    static Identifier audioLine { "audioLine" };
+}
+
 //==============================================================================
 TimeLine::TimeLine (foleys::VideoEngine& theVideoEngine, Player& playerToUse, Properties& properiesToUse)
   : videoEngine (theVideoEngine),
@@ -79,13 +85,13 @@ void TimeLine::resized()
     {
         if (component->isVideoClip())
         {
-            auto videoline = component->clip->getVideoLine();
+            int videoline = component->clip->getStatusTree().getProperty (IDs::videoLine, 0);
             component->setBounds (getXFromTime (component->clip->getStart()), 30 + videoline * 90,
                                   getXFromTime (component->clip->getLength()), 80);
         }
         else
         {
-            auto audioline = component->clip->getAudioLine();
+            int audioline = component->clip->getStatusTree().getProperty (IDs::audioLine, 0);
             component->setBounds (getXFromTime (component->clip->getStart()), 250 + audioline * 60,
                                   getXFromTime (component->clip->getLength()), 50);
         }
@@ -157,12 +163,12 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
     if (y < 220)
     {
         int line = (y - 30) / 90.0;
-        descriptor->setVideoLine (jlimit (0, numVideoLines, line));
+        setVideoLine (descriptor, line);
     }
     else
     {
         int line = (y - 250) / 60.0;
-        descriptor->setAudioLine (jlimit (0, numAudioLines, line));
+        setAudioLine (descriptor, line);
     }
 
     if (clip->hasVideo())
@@ -276,6 +282,30 @@ double TimeLine::getTimeFromX (int pixels) const
 {
     auto w = getWidth();
     return w > 0 ? timelineLength * pixels / w : 0;
+}
+
+int TimeLine::getVideoLine (const std::shared_ptr<foleys::ClipDescriptor> descriptor) const
+{
+    return descriptor->getStatusTree().getProperty (IDs::videoLine, 0);
+}
+
+int TimeLine::getAudioLine (const std::shared_ptr<foleys::ClipDescriptor> descriptor) const
+{
+    return descriptor->getStatusTree().getProperty (IDs::audioLine, 0);
+}
+
+void TimeLine::setVideoLine (std::shared_ptr<foleys::ClipDescriptor> descriptor, int lane) const
+{
+    descriptor->getStatusTree().setProperty (IDs::videoLine,
+                                             jlimit (0, numVideoLines - 1, lane),
+                                             videoEngine.getUndoManager());
+}
+
+void TimeLine::setAudioLine (std::shared_ptr<foleys::ClipDescriptor> descriptor, int lane) const
+{
+    descriptor->getStatusTree().setProperty (IDs::audioLine,
+                                             jlimit (0, numAudioLines - 1, lane),
+                                             videoEngine.getUndoManager());
 }
 
 double TimeLine::getSampleRate() const
@@ -393,14 +423,14 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
     if (filmstrip)
     {
         int line = (event.y + getY() - 30) / 90.0;
-        if (line != clip->getVideoLine())
-            clip->setVideoLine (jlimit (0, timeline.numVideoLines - 1, line));
+        if (line != timeline.getVideoLine (clip))
+            timeline.setVideoLine (clip, line);
     }
     else
     {
         int line = (event.y + getY() - 250) / 60.0;
-        if (line != clip->getAudioLine())
-            clip->setAudioLine (jlimit (0, timeline.numAudioLines - 1, line));
+        if (line != timeline.getAudioLine (clip))
+            timeline.setAudioLine (clip, line);
     }
 
     parent->resized();
