@@ -96,9 +96,9 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
     if (! processors.empty())
     {
         auto& descriptor = processors.front();
-        if (descriptor->processor.get() != nullptr)
+        if (auto* audioProcessor = descriptor->getAudioProcessor())
         {
-            editor = std::make_unique<GenericAudioProcessorEditor>(processors.front()->processor.get());
+            editor = std::make_unique<GenericAudioProcessorEditor>(audioProcessor);
             addAndMakeVisible (editor.get());
         }
     }
