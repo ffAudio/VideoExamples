@@ -26,6 +26,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Properties.h"
+#include "ProcessorComponent.h"
 
 //==============================================================================
 
@@ -86,21 +87,13 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
   : clip (clipToUse),
     video (showVideo)
 {
-    if (video)
-        // currently the juce::GenericAudioProcessorEditor only works with AudioProcessor...
-        return;
-
     auto& processors = video ? clip->videoProcessors : clip->audioProcessors;
-    
-    // TODO: display the whole list of processors
-    if (! processors.empty())
+
+    for (auto& processor : processors)
     {
-        auto& descriptor = processors.front();
-        if (auto* audioProcessor = descriptor->getAudioProcessor())
-        {
-            editor = std::make_unique<GenericAudioProcessorEditor>(audioProcessor);
-            addAndMakeVisible (editor.get());
-        }
+        auto editor = std::make_unique<ProcessorComponent>(*processor);
+        addAndMakeVisible (editor.get());
+        editors.push_back (std::move (editor));
     }
 }
 
@@ -113,7 +106,8 @@ void ClipProcessorProperties::paint (Graphics& g)
 
 void ClipProcessorProperties::resized()
 {
-    if (editor)
-        editor->setBounds (getLocalBounds().withTop (40).reduced (5));
-}
+    auto area = getLocalBounds().withTop (40).reduced (5);
 
+    for (auto& editor : editors)
+        editor->setBounds (area.removeFromTop (editor->getHeightForWidth (area.getWidth())));
+}

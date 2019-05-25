@@ -16,6 +16,10 @@
       <FILE id="wfuXd2" name="Library.h" compile="0" resource="0" file="Source/Library.h"/>
       <FILE id="B6jWUu" name="Properties.cpp" compile="1" resource="0" file="Source/Properties.cpp"/>
       <FILE id="Zhc1eN" name="Properties.h" compile="0" resource="0" file="Source/Properties.h"/>
+      <FILE id="hHPcLZ" name="ProcessorComponent.cpp" compile="1" resource="0"
+            file="Source/ProcessorComponent.cpp"/>
+      <FILE id="OQX3TJ" name="ProcessorComponent.h" compile="0" resource="0"
+            file="Source/ProcessorComponent.h"/>
       <FILE id="xBzud2" name="TimeLine.cpp" compile="1" resource="0" file="Source/TimeLine.cpp"/>
       <FILE id="xSXKGD" name="TimeLine.h" compile="0" resource="0" file="Source/TimeLine.h"/>
       <FILE id="C66jwn" name="TransportControl.cpp" compile="1" resource="0"
