@@ -114,11 +114,25 @@ ProcessorComponent::ParameterComponent::ParameterComponent (foleys::ClipDescript
     else
         valueSlider.setRange (0.0, 1.0);
 
-    valueSlider.onDragStart = [this]{ dragging = true; };
-    valueSlider.onDragEnd   = [this]{ dragging = false; };
+    valueSlider.onDragStart = [this]
+    {
+        parameter.startAutomationGesture();
+        dragging = true;
+    };
+
+    valueSlider.onDragEnd = [this]
+    {
+        dragging = false;
+        parameter.finishAutomationGesture();
+    };
+
     valueSlider.onValueChange = [this]
     {
-        parameter.setValue (clip.getCurrentPTS(), valueSlider.getValue());
+        if (dragging)
+        {
+            parameter.setValue (clip.getCurrentPTS(), valueSlider.getValue());
+            clip.getOwningClip().invalidateVideo();
+        }
     };
 
     valueSlider.textFromValueFunction = [this](double value) { return parameter.getText (value); };
