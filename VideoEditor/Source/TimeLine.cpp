@@ -177,6 +177,10 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
         auto position = videoEngine.createVideoPluginInstance ("BUILTIN: " + foleys::PositioningVideoProcessor::getPluginName(), error);
         if (position.get() != nullptr && error.isEmpty())
             descriptor->addVideoProcessor (std::move (position));
+
+        auto colour = videoEngine.createVideoPluginInstance ("BUILTIN: " + foleys::ColourCurveVideoProcessor::getPluginName(), error);
+        if (colour.get() != nullptr && error.isEmpty())
+            descriptor->addVideoProcessor (std::move (colour));
     }
 
     if (clip->hasAudio())

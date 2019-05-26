@@ -68,6 +68,10 @@ public:
 private:
     std::shared_ptr<foleys::ClipDescriptor> clip;
     std::vector<std::unique_ptr<ProcessorComponent>> editors;
+
+    Viewport  scroller;
+    Component container;
+
     bool video = false;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipProcessorProperties)
 };

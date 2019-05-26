@@ -87,12 +87,16 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
   : clip (clipToUse),
     video (showVideo)
 {
+    scroller.setScrollBarsShown (true, false);
+    scroller.setViewedComponent (&container, false);
+    addAndMakeVisible (scroller);
+
     auto& processors = video ? clip->videoProcessors : clip->audioProcessors;
 
     for (auto& processor : processors)
     {
         auto editor = std::make_unique<ProcessorComponent>(*processor);
-        addAndMakeVisible (editor.get());
+        container.addAndMakeVisible (editor.get());
         editors.push_back (std::move (editor));
     }
 }
@@ -107,7 +111,15 @@ void ClipProcessorProperties::paint (Graphics& g)
 void ClipProcessorProperties::resized()
 {
     auto area = getLocalBounds().withTop (40).reduced (5);
+    scroller.setBounds (area);
+
+    int needed = 0;
+    for (auto& editor : editors)
+        needed += editor->getHeightForWidth (area.getWidth());
+
+    Rectangle<int> childRect (0, 0, area.getWidth() - scroller.getScrollBarThickness(), needed);
+    container.setBounds (childRect);
 
     for (auto& editor : editors)
-        editor->setBounds (area.removeFromTop (editor->getHeightForWidth (area.getWidth())));
+        editor->setBounds (childRect.removeFromTop (editor->getHeightForWidth (area.getWidth())));
 }

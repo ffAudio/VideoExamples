@@ -53,7 +53,7 @@ void ProcessorComponent::paint (Graphics& g)
     g.setColour (Colours::grey);
     g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
 
-    g.setColour (Colours::white);
+    g.setColour (Colours::silver);
     g.setFont (14.0f);
 
     auto area = getLocalBounds();
