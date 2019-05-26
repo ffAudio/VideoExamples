@@ -64,7 +64,7 @@ MainComponent::MainComponent()
     addAndMakeVisible (levelMeter);
 
     viewport.setViewedComponent (&timeline);
-    timeline.setSize (2000, 580);
+    timeline.setSize (2000, 510);
 
     const auto area = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
     setBounds (area);

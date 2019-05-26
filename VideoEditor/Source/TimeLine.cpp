@@ -63,11 +63,11 @@ void TimeLine::paint (Graphics& g)
 
     g.setColour (Colours::darkgrey);
     for (int i=0; i < numVideoLines; ++i)
-        g.fillRect (0, 30 + i * 90, getWidth(), 80);
+        g.fillRect (0, 10 + i * 90, getWidth(), 80);
 
     g.setColour (Colours::darkgrey.darker());
     for (int i=0; i < numAudioLines; ++i)
-        g.fillRect (0, 250 + i * 60, getWidth(), 50);
+        g.fillRect (0, 200 + i * 60, getWidth(), 50);
 }
 
 void TimeLine::resized()
@@ -86,13 +86,13 @@ void TimeLine::resized()
         if (component->isVideoClip())
         {
             int videoline = component->clip->getStatusTree().getProperty (IDs::videoLine, 0);
-            component->setBounds (getXFromTime (component->clip->getStart()), 30 + videoline * 90,
+            component->setBounds (getXFromTime (component->clip->getStart()), 10 + videoline * 90,
                                   getXFromTime (component->clip->getLength()), 80);
         }
         else
         {
             int audioline = component->clip->getStatusTree().getProperty (IDs::audioLine, 0);
-            component->setBounds (getXFromTime (component->clip->getStart()), 250 + audioline * 60,
+            component->setBounds (getXFromTime (component->clip->getStart()), 200 + audioline * 60,
                                   getXFromTime (component->clip->getLength()), 50);
         }
     }
@@ -160,14 +160,14 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
         length = 3.0;
 
     auto descriptor = edit->addClip (clip, start, length);
-    if (y < 220)
+    if (y < 190)
     {
-        int line = (y - 30) / 90.0;
+        int line = (y - 10) / 90.0;
         setVideoLine (descriptor, line);
     }
     else
     {
-        int line = (y - 250) / 60.0;
+        int line = (y - 200) / 60.0;
         setAudioLine (descriptor, line);
     }
 
