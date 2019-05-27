@@ -36,8 +36,7 @@ Properties::Properties()
 
     close.onClick = [&]
     {
-        showProperties ({});
-        repaint();
+        closeProperties();
     };
 }
 
@@ -81,6 +80,12 @@ void Properties::showClipProperties (std::shared_ptr<foleys::ClipDescriptor> cli
         showProperties (std::make_unique<ClipProcessorProperties>(clip, video));
 }
 
+void Properties::closeProperties()
+{
+    showProperties ({});
+    repaint();
+}
+
 //==============================================================================
 
 ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse, bool showVideo)
@@ -91,7 +96,7 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
     scroller.setViewedComponent (&container, false);
     addAndMakeVisible (scroller);
 
-    auto& processors = video ? clip->videoProcessors : clip->audioProcessors;
+    const auto& processors = video ? clip->getVideoProcessors() : clip->getAudioProcessors();
 
     for (auto& processor : processors)
     {
@@ -99,6 +104,13 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
         container.addAndMakeVisible (editor.get());
         editors.push_back (std::move (editor));
     }
+
+    clip->addListener (this);
+}
+
+ClipProcessorProperties::~ClipProcessorProperties()
+{
+    clip->removeListener (this);
 }
 
 void ClipProcessorProperties::paint (Graphics& g)
@@ -122,4 +134,11 @@ void ClipProcessorProperties::resized()
 
     for (auto& editor : editors)
         editor->setBounds (childRect.removeFromTop (editor->getHeightForWidth (area.getWidth())));
+}
+
+void ClipProcessorProperties::processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted)
+{
+    editors.erase (std::remove_if (editors.begin(), editors.end(),
+                                   [toBeDeleted](auto& p){ return p->getProcessorController() == toBeDeleted; }),
+                   editors.end());
 }

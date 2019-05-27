@@ -83,7 +83,7 @@ int ProcessorComponent::getHeightForWidth(int width) const
     if (collapsed)
         return 30;
 
-    return int (30 + 40 * controller.getParameters().size());
+    return int (30 + 40 * controller.getNumParameters());
 }
 
 void ProcessorComponent::timecodeChanged (int64_t count, double seconds)
@@ -91,6 +91,11 @@ void ProcessorComponent::timecodeChanged (int64_t count, double seconds)
     auto localTime = controller.getOwningClipDescriptor().getClipTimeInDescriptorTime (seconds);
     for (auto& c : parameterComponents)
         c->updateForTime (localTime);
+}
+
+const foleys::ProcessorController* ProcessorComponent::getProcessorController() const
+{
+    return &controller;
 }
 
 //==============================================================================

@@ -44,6 +44,8 @@ public:
 
     void timecodeChanged (int64_t count, double seconds) override;
 
+    const foleys::ProcessorController* getProcessorController() const;
+
     class ParameterComponent : public juce::Component, private foleys::ProcessorParameter::Listener
     {
     public:

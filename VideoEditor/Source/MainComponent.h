@@ -83,7 +83,7 @@ private:
 
     AudioDeviceManager    deviceManager;
     foleys::VideoEngine   videoEngine;
-    foleys::ClipBouncer   bouncer { videoEngine };
+    foleys::ClipRenderer  renderer { videoEngine };
 
     FFAU::LevelMeterLookAndFeel lookAndFeel;
     ApplicationCommandManager   commandManager;

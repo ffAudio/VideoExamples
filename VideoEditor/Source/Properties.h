@@ -45,6 +45,8 @@ public:
 
     void showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
 
+    void closeProperties();
+
 private:
 
     std::unique_ptr<Component> component;
@@ -56,14 +58,18 @@ private:
 
 //==============================================================================
 
-class ClipProcessorProperties  : public Component
+class ClipProcessorProperties  : public Component,
+                                 private foleys::ClipDescriptor::Listener
 {
 public:
     ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
+    ~ClipProcessorProperties();
 
     void paint (Graphics& g) override;
 
     void resized() override;
+
+    void processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted) override;
 
 private:
     std::shared_ptr<foleys::ClipDescriptor> clip;

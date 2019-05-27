@@ -28,7 +28,7 @@
 #include "RenderDialog.h"
 
 //==============================================================================
-RenderDialog::RenderDialog (foleys::ClipBouncer& rendererToUse) : renderer (rendererToUse)
+RenderDialog::RenderDialog (foleys::ClipRenderer& rendererToUse) : renderer (rendererToUse)
 {
     filename.setColour (Label::outlineColourId, Colours::silver);
     addAndMakeVisible (filename);

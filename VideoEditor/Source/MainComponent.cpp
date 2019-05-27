@@ -213,10 +213,10 @@ void MainComponent::saveEdit (bool saveAs)
 
 void MainComponent::showRenderDialog()
 {
-    if (! bouncer.isRendering())
-        bouncer.setClipToRender (timeline.getEditClip()->createCopy());
+    if (! renderer.isRendering())
+        renderer.setClipToRender (timeline.getEditClip()->createCopy());
 
-    properties.showProperties (std::make_unique<RenderDialog>(bouncer));
+    properties.showProperties (std::make_unique<RenderDialog>(renderer));
 }
 
 void MainComponent::deleteSelectedClip()

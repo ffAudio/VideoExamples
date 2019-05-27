@@ -35,7 +35,7 @@ class RenderDialog    : public Component,
                         private Timer
 {
 public:
-    RenderDialog (foleys::ClipBouncer& renderer);
+    RenderDialog (foleys::ClipRenderer& renderer);
     ~RenderDialog();
 
 //    void paint (Graphics&) override;
@@ -47,7 +47,7 @@ private:
 
     void updateGUI();
 
-    foleys::ClipBouncer& renderer;
+    foleys::ClipRenderer& renderer;
 
     Label       filename;
     TextButton  browse { NEEDS_TRANS ("Browse") };
