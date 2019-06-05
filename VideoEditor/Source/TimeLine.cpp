@@ -426,13 +426,13 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
 
     if (filmstrip)
     {
-        int line = (event.y + getY() - 30) / 90.0;
+        int line = (event.y + getY() - 10) / 90.0;
         if (line != timeline.getVideoLine (clip))
             timeline.setVideoLine (clip, line);
     }
     else
     {
-        int line = (event.y + getY() - 250) / 60.0;
+        int line = (event.y + getY() - 200) / 60.0;
         if (line != timeline.getAudioLine (clip))
             timeline.setAudioLine (clip, line);
     }

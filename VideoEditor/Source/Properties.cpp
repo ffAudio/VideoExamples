@@ -102,6 +102,7 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
     {
         auto editor = std::make_unique<ProcessorComponent>(*processor);
         container.addAndMakeVisible (editor.get());
+        editor->timecodeChanged (0 , clip->getOwningClip().getCurrentTimeInSeconds());
         editors.push_back (std::move (editor));
     }
 
