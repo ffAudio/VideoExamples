@@ -130,7 +130,9 @@ void MainComponent::resized()
 
 void MainComponent::resetEdit()
 {
-    auto edit = videoEngine.createComposedClip();
+    auto edit = std::make_shared<foleys::ComposedClip> (videoEngine);
+    videoEngine.manageLifeTime (edit);
+
     timeline.setEditClip (edit);
     edit->addTimecodeListener (&preview);
     editFileName = File();
@@ -158,7 +160,8 @@ void MainComponent::loadEdit()
         editFileName = myChooser.getResult();
 
         auto tree = ValueTree::fromXml (*xml);
-        auto edit = videoEngine.createComposedClip();
+        auto edit = std::make_shared<foleys::ComposedClip>(videoEngine);
+        videoEngine.manageLifeTime (edit);
 
         for (auto clip : tree)
             edit->getStatusTree().appendChild (clip.createCopy(), nullptr);
