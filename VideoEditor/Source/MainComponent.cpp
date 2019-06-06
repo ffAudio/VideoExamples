@@ -43,7 +43,10 @@ namespace CommandIDs
         playReturn,
         playRecord,
 
-        helpAbout = 400,
+        viewFullScreen = 400,
+        viewExitFullScreen,
+
+        helpAbout = 500,
         helpHelp
     };
 }
@@ -115,17 +118,25 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
-    auto bounds = getLocalBounds().reduced (1);
-    lowerPart = bounds.getHeight() * 0.4;
-    auto lower  = bounds.removeFromBottom (lowerPart);
-    levelMeter.setBounds (lower.removeFromRight (lower.getHeight() / 4).reduced (2));
-    lower.removeFromTop (14); // TODO: ruler
-    viewport.setBounds (lower);
-    auto sides = bounds.getWidth() / 4.0;
-    library.setBounds (bounds.removeFromLeft (sides));
-    properties.setBounds (bounds.removeFromRight (sides));
-    transport.setBounds (bounds.removeFromBottom (24));
-    preview.setBounds (bounds);
+    if (viewerFullScreen)
+    {
+        preview.setBounds (getLocalBounds());
+        preview.toFront (false);
+    }
+    else
+    {
+        auto bounds = getLocalBounds().reduced (1);
+        lowerPart = bounds.getHeight() * 0.4;
+        auto lower  = bounds.removeFromBottom (lowerPart);
+        levelMeter.setBounds (lower.removeFromRight (lower.getHeight() / 4).reduced (2));
+        lower.removeFromTop (14); // TODO: ruler
+        viewport.setBounds (lower);
+        auto sides = bounds.getWidth() / 4.0;
+        library.setBounds (bounds.removeFromLeft (sides));
+        properties.setBounds (bounds.removeFromRight (sides));
+        transport.setBounds (bounds.removeFromBottom (24));
+        preview.setBounds (bounds);
+    }
 }
 
 void MainComponent::resetEdit()
@@ -246,6 +257,12 @@ void MainComponent::updateTitleBar()
     }
 }
 
+void MainComponent::setViewerFullScreen (bool shouldBeFullScreen)
+{
+    viewerFullScreen = shouldBeFullScreen;
+    resized();
+}
+
 //==============================================================================
 
 void MainComponent::getAllCommands (Array<CommandID>& commands)
@@ -254,7 +271,8 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
     commands.add (StandardApplicationCommandIDs::undo, StandardApplicationCommandIDs::redo,
                   StandardApplicationCommandIDs::del, StandardApplicationCommandIDs::copy, StandardApplicationCommandIDs::paste,
                   CommandIDs::editPreferences);
-    commands.add (CommandIDs::playStart);
+    commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
+    commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExitFullScreen);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
 }
 
@@ -262,6 +280,8 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
 {
     auto categoryFile = "file";
     auto categoryEdit = "edit";
+    auto categoryPlay = "play";
+    auto categoryView = "view";
     auto categoryHelp = "help";
 
     switch (commandID)
@@ -314,8 +334,23 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.defaultKeypresses.add (KeyPress (',', ModifierKeys::commandModifier, 0));
             break;
         case CommandIDs::playStart:
-            result.setInfo ("Play", "Start/Pause playback", categoryEdit, 0);
+            result.setInfo ("Play", "Start/Pause playback", categoryPlay, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::spaceKey, ModifierKeys::noModifiers, 0));
+            break;
+        case CommandIDs::playStop:
+            result.setInfo ("Stop", "Stop playback", categoryPlay, 0);
+            break;
+        case CommandIDs::playReturn:
+            result.setInfo ("Return", "Set playhead to begin", categoryPlay, 0);
+            result.defaultKeypresses.add (KeyPress (KeyPress::returnKey, ModifierKeys::noModifiers, 0));
+            break;
+        case CommandIDs::viewFullScreen:
+            result.setInfo ("Fullscreen", "Maximise Viewer", categoryView, 0);
+            result.defaultKeypresses.add (KeyPress (KeyPress::returnKey, ModifierKeys::commandModifier, 0));
+            break;
+        case CommandIDs::viewExitFullScreen:
+            result.setInfo ("Exit Fullscreen", "Normal viewer size", categoryView, 0);
+            result.defaultKeypresses.add (KeyPress (KeyPress::escapeKey, ModifierKeys::noModifiers, 0));
             break;
         case CommandIDs::helpAbout:
             result.setInfo ("About", "Show information about the program", categoryHelp, 0);
@@ -344,8 +379,13 @@ bool MainComponent::perform (const InvocationInfo& info)
         case StandardApplicationCommandIDs::del: deleteSelectedClip(); break;
 
         case CommandIDs::editPreferences: showPreferences(); break;
-        case CommandIDs::playStart: if (player.isPlaying()) player.stop(); else player.start(); break;
 
+        case CommandIDs::playStart: if (player.isPlaying()) player.stop(); else player.start(); break;
+        case CommandIDs::playStop: player.stop(); break;
+        case CommandIDs::playReturn: player.setPosition (0.0) ; break;
+
+        case CommandIDs::viewFullScreen: setViewerFullScreen (! viewerFullScreen); break;
+        case CommandIDs::viewExitFullScreen: setViewerFullScreen (false); break;
         default:
             jassertfalse;
             break;
@@ -355,7 +395,7 @@ bool MainComponent::perform (const InvocationInfo& info)
 
 StringArray MainComponent::getMenuBarNames()
 {
-    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("Help")};
+    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("View"), NEEDS_TRANS ("Help")};
 }
 
 PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
@@ -369,6 +409,7 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
         menu.addCommandItem (&commandManager, CommandIDs::fileOpen);
         menu.addCommandItem (&commandManager, CommandIDs::fileSave);
         menu.addCommandItem (&commandManager, CommandIDs::fileSaveAs);
+        menu.addSeparator();
         menu.addCommandItem (&commandManager, CommandIDs::fileRender);
 #if ! JUCE_MAC
         menu.addSeparator();
@@ -390,9 +431,14 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
     {
         menu.addCommandItem (&commandManager, CommandIDs::playStart);
         menu.addCommandItem (&commandManager, CommandIDs::playStop);
-        menu.addCommandItem (&commandManager, CommandIDs::playRecord);
+        menu.addCommandItem (&commandManager, CommandIDs::playReturn);
     }
     else if (topLevelMenuIndex == 3)
+    {
+        menu.addCommandItem (&commandManager, CommandIDs::viewFullScreen);
+        menu.addCommandItem (&commandManager, CommandIDs::viewExitFullScreen);
+    }
+    else if (topLevelMenuIndex == 4)
     {
         menu.addCommandItem (&commandManager, CommandIDs::helpAbout);
         menu.addCommandItem (&commandManager, CommandIDs::helpHelp);

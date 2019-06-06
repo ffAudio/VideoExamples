@@ -83,7 +83,6 @@ public:
         FFAU::LevelMeterSource meterSource;
 
     private:
-        bool preFader = true;
         bool clipOutput = true;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MeasuredTransportSource)

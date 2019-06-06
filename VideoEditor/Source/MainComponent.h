@@ -52,6 +52,8 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    void setViewerFullScreen (bool shouldBeFullScreen);
+
     void timerCallback() override;
 
     ApplicationCommandTarget* getNextCommandTarget() override { return nullptr; }
@@ -100,6 +102,7 @@ private:
 
     File editFileName;
     int  lowerPart = 0;
+    bool viewerFullScreen = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
