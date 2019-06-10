@@ -112,6 +112,7 @@ void buildFFmpeg(String folder)
     {
         sh """
         cd ${folder}
+        PATH=$PATH:/usr/local/bin
         ./configure --disable-programs --disable-doc --enable-gpl --enable-shared --enable-pthreads --enable-version3 --enable-hardcoded-tables --enable-avresample --cc=clang --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 --enable-libxvid --enable-lzma --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-videotoolbox --prefix=../build/
         make -j 8
         make install
