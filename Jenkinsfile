@@ -22,10 +22,10 @@ pipeline
             }
         }
 
-        stage('Build Projects')
-        {
-            parallel
-            {
+//        stage('Build Projects')
+//        {
+//            parallel
+//            {
                 stage('VideoPlayer')
                 {
                     steps {
@@ -41,8 +41,8 @@ pipeline
                         buildProject("VideoEditor", "VideoEditor", "Release")
                     }
                 }
-            }
-        }
+//            }
+//        }
     }
 }
 
