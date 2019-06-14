@@ -135,7 +135,7 @@ void ClipProcessorProperties::resized()
     container.setBounds (childRect);
 
     for (auto& editor : editors)
-        editor->setBounds (childRect.removeFromTop (editor->getHeightForWidth (area.getWidth())));
+        editor->setBounds (childRect.removeFromTop (editor->getHeightForWidth (area.getWidth())).reduced (5));
 }
 
 void ClipProcessorProperties::processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted)

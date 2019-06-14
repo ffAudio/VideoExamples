@@ -103,9 +103,9 @@ int ProcessorComponent::getHeightForWidth(int width) const
     ignoreUnused (width);
 
     if (collapse.getToggleState())
-        return 30;
+        return 40;
 
-    return int (30 + 40 * controller.getNumParameters());
+    return int (40 + 40 * controller.getNumParameters());
 }
 
 void ProcessorComponent::timecodeChanged (int64_t count, double seconds)
