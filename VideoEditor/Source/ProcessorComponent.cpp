@@ -28,9 +28,26 @@
 #include "ProcessorComponent.h"
 
 //==============================================================================
+
 ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse)
   : controller (controllerToUse)
 {
+    active.setClickingTogglesState (true);
+    active.setToggleState (controller.isActive(), dontSendNotification);
+    addAndMakeVisible (active);
+    active.onStateChange = [&]
+    {
+        controller.setActive (active.getToggleState());
+    };
+    active.setColour (TextButton::buttonOnColourId, Colours::green);
+
+    collapse.setClickingTogglesState (true);
+    addAndMakeVisible (collapse);
+    collapse.onStateChange = [&]
+    {
+        sendChangeMessage();
+    };
+
     for (auto& parameter : controller.getParameters())
     {
         auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter);
@@ -48,29 +65,34 @@ ProcessorComponent::~ProcessorComponent()
 
 void ProcessorComponent::paint (Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
+    g.setColour (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
+    g.fillRoundedRectangle (getLocalBounds().toFloat(), 6.0);
 
     g.setColour (Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
+    g.drawRoundedRectangle (getLocalBounds().toFloat(), 6.0, 1);
 
     g.setColour (Colours::silver);
-    g.setFont (14.0f);
+    g.setFont (16.0f);
 
     auto area = getLocalBounds();
 
-    g.drawText (controller.getName(), area.removeFromTop (24).reduced (3),
-                Justification::top, true);
+    g.drawText (controller.getName(), area.removeFromTop (24).reduced (30, 3),
+                Justification::left, true);
 }
 
 void ProcessorComponent::resized()
 {
     auto area = getLocalBounds().reduced (3);
-    area.removeFromTop (24);
+    auto heading = area.removeFromTop (24);
+    active.setBounds (heading.removeFromLeft (24));
+    collapse.setBounds (heading.removeFromRight (24));
+
+    auto collapsed = collapse.getToggleState();
 
     for (auto& c : parameterComponents)
     {
         c->setVisible (! collapsed);
-        if (! collapsed)
+        if (! collapse.getToggleState())
             c->setBounds (area.removeFromTop (40));
     }
 }
@@ -80,7 +102,7 @@ int ProcessorComponent::getHeightForWidth(int width) const
     // todo: adapt to width
     ignoreUnused (width);
 
-    if (collapsed)
+    if (collapse.getToggleState())
         return 30;
 
     return int (30 + 40 * controller.getNumParameters());

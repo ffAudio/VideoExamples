@@ -31,7 +31,9 @@
 //==============================================================================
 /*
 */
-class ProcessorComponent    : public Component, public foleys::AVClip::TimecodeListener
+class ProcessorComponent    : public Component,
+                              public ChangeBroadcaster,
+                              private foleys::AVClip::TimecodeListener
 {
 public:
     ProcessorComponent (foleys::ProcessorController& controller);
@@ -71,8 +73,10 @@ public:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterComponent)
     };
 private:
+    TextButton active   { "X" };
+    TextButton collapse { "v" };
+
     foleys::ProcessorController& controller;
-    bool collapsed = false;
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProcessorComponent)
 };
