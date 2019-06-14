@@ -103,6 +103,7 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
         auto editor = std::make_unique<ProcessorComponent>(*processor);
         container.addAndMakeVisible (editor.get());
         editor->timecodeChanged (0 , clip->getOwningClip().getCurrentTimeInSeconds());
+        editor->addChangeListener (this);
         editors.push_back (std::move (editor));
     }
 
@@ -139,7 +140,18 @@ void ClipProcessorProperties::resized()
 
 void ClipProcessorProperties::processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted)
 {
-    editors.erase (std::remove_if (editors.begin(), editors.end(),
-                                   [toBeDeleted](auto& p){ return p->getProcessorController() == toBeDeleted; }),
-                   editors.end());
+    auto editor = std::find_if (editors.begin(), editors.end(), [toBeDeleted](auto& p)
+                            {
+                                return p->getProcessorController() == toBeDeleted;
+                            });
+    if (editor != editors.end())
+    {
+        (*editor)->removeChangeListener (this);
+        editors.erase (editor);
+    }
+}
+
+void ClipProcessorProperties::changeListenerCallback (ChangeBroadcaster*)
+{
+    resized();
 }

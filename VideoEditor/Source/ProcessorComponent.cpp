@@ -45,7 +45,7 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
     addAndMakeVisible (collapse);
     collapse.onStateChange = [&]
     {
-        resized();
+        sendChangeMessage();
     };
 
     for (auto& parameter : controller.getParameters())

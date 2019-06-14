@@ -59,6 +59,7 @@ private:
 //==============================================================================
 
 class ClipProcessorProperties  : public Component,
+                                 public ChangeListener,
                                  private foleys::ClipDescriptor::Listener
 {
 public:
@@ -70,6 +71,8 @@ public:
     void resized() override;
 
     void processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted) override;
+
+    void changeListenerCallback (ChangeBroadcaster*) override;
 
 private:
     std::shared_ptr<foleys::ClipDescriptor> clip;

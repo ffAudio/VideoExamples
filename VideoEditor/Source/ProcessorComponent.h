@@ -31,7 +31,9 @@
 //==============================================================================
 /*
 */
-class ProcessorComponent    : public Component, public foleys::AVClip::TimecodeListener
+class ProcessorComponent    : public Component,
+                              public ChangeBroadcaster,
+                              private foleys::AVClip::TimecodeListener
 {
 public:
     ProcessorComponent (foleys::ProcessorController& controller);
