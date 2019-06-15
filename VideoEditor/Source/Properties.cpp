@@ -96,36 +96,50 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
     scroller.setViewedComponent (&container, false);
     addAndMakeVisible (scroller);
 
-    const auto& processors = video ? clip->getVideoProcessors() : clip->getAudioProcessors();
+    auto lockedClip = clip.lock();
+    if (lockedClip == nullptr)
+        return;
+
+    const auto& processors = video ? lockedClip->getVideoProcessors() : lockedClip->getAudioProcessors();
 
     for (auto& processor : processors)
     {
         auto editor = std::make_unique<ProcessorComponent>(*processor);
         container.addAndMakeVisible (editor.get());
-        editor->timecodeChanged (0 , clip->getOwningClip().getCurrentTimeInSeconds());
+        editor->timecodeChanged (0 , lockedClip->getOwningClip().getCurrentTimeInSeconds());
         editor->addChangeListener (this);
         editors.push_back (std::move (editor));
     }
 
-    clip->addListener (this);
+    lockedClip->addListener (this);
 }
 
 ClipProcessorProperties::~ClipProcessorProperties()
 {
-    clip->removeListener (this);
+    auto lockedClip = clip.lock();
+    if (lockedClip != nullptr)
+        lockedClip->removeListener (this);
 }
 
 void ClipProcessorProperties::paint (Graphics& g)
 {
     g.setColour (Colours::silver);
-    g.drawFittedText ((video ? NEEDS_TRANS ("Video: ") : NEEDS_TRANS ("Audio: ")) + clip->getDescription(),
-                      getLocalBounds().removeFromTop (36), Justification::left, 1);
+    auto lockedClip = clip.lock();
+    if (lockedClip != nullptr)
+        g.drawFittedText ((video ? NEEDS_TRANS ("Video: ") : NEEDS_TRANS ("Audio: ")) + lockedClip->getDescription(),
+                          getLocalBounds().removeFromTop (36), Justification::left, 1);
 }
 
 void ClipProcessorProperties::resized()
 {
     auto area = getLocalBounds().withTop (40).reduced (5);
     scroller.setBounds (area);
+
+    if (clip.expired())
+    {
+        editors.clear();
+        return;
+    }
 
     int needed = 0;
     for (auto& editor : editors)

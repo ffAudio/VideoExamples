@@ -75,7 +75,7 @@ public:
     void changeListenerCallback (ChangeBroadcaster*) override;
 
 private:
-    std::shared_ptr<foleys::ClipDescriptor> clip;
+    std::weak_ptr<foleys::ClipDescriptor> clip;
     std::vector<std::unique_ptr<ProcessorComponent>> editors;
 
     Viewport  scroller;
