@@ -73,8 +73,9 @@ public:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterComponent)
     };
 private:
-    TextButton active   { "X" };
+    TextButton active   { "A" };
     TextButton collapse { "v" };
+    TextButton remove   { "X" };
 
     foleys::ProcessorController& controller;
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;

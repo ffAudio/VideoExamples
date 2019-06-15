@@ -144,11 +144,14 @@ void ClipProcessorProperties::processorControllerToBeDeleted (const foleys::Proc
                             {
                                 return p->getProcessorController() == toBeDeleted;
                             });
+
     if (editor != editors.end())
     {
         (*editor)->removeChangeListener (this);
         editors.erase (editor);
     }
+
+    resized();
 }
 
 void ClipProcessorProperties::changeListenerCallback (ChangeBroadcaster*)

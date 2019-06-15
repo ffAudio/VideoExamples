@@ -48,6 +48,12 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
         sendChangeMessage();
     };
 
+    addAndMakeVisible (remove);
+    remove.onClick = [&]
+    {
+        controller.getOwningClipDescriptor().removeProcessor (&controller);
+    };
+
     for (auto& parameter : controller.getParameters())
     {
         auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter);
@@ -76,16 +82,17 @@ void ProcessorComponent::paint (Graphics& g)
 
     auto area = getLocalBounds();
 
-    g.drawText (controller.getName(), area.removeFromTop (24).reduced (30, 3),
+    g.drawText (controller.getName(), area.removeFromTop (24).reduced (33, 3),
                 Justification::left, true);
 }
 
 void ProcessorComponent::resized()
 {
     auto area = getLocalBounds().reduced (3);
-    auto heading = area.removeFromTop (24);
+    auto heading = area.removeFromTop (24).reduced (3, 0);
     active.setBounds (heading.removeFromLeft (24));
     collapse.setBounds (heading.removeFromRight (24));
+    remove.setBounds (heading.removeFromRight (24));
 
     auto collapsed = collapse.getToggleState();
 
