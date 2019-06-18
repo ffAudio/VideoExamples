@@ -41,6 +41,19 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
     };
     active.setColour (TextButton::buttonOnColourId, Colours::green);
 
+    addChildComponent (editor);
+    if (auto* processor = controller.getAudioProcessor())
+    {
+        editor.setVisible (processor->hasEditor());
+        editor.onClick = [&]
+        {
+            if (auto* processor = controller.getAudioProcessor())
+                showProcessorEditor (processor->createEditor(), processor->getName() + " - " + controller.getOwningClipDescriptor().getDescription());
+
+            sendChangeMessage();
+        };
+    }
+
     collapse.setClickingTogglesState (true);
     addAndMakeVisible (collapse);
     collapse.onStateChange = [&]
@@ -93,6 +106,7 @@ void ProcessorComponent::resized()
     active.setBounds (heading.removeFromLeft (24));
     collapse.setBounds (heading.removeFromRight (24));
     remove.setBounds (heading.removeFromRight (24));
+    editor.setBounds (heading.removeFromRight (24));
 
     auto collapsed = collapse.getToggleState();
 
@@ -102,6 +116,12 @@ void ProcessorComponent::resized()
         if (! collapse.getToggleState())
             c->setBounds (area.removeFromTop (40));
     }
+}
+
+void ProcessorComponent::showProcessorEditor (AudioProcessorEditor* editor, const String& title)
+{
+    audioProcessorWindow = std::make_unique<AudioProcessorWindow>(editor, title);
+    audioProcessorWindow->centreAroundComponent (getTopLevelComponent(), audioProcessorWindow->getWidth(), audioProcessorWindow->getHeight());
 }
 
 int ProcessorComponent::getHeightForWidth(int width) const
@@ -198,4 +218,23 @@ void ProcessorComponent::ParameterComponent::updateForTime (double pts)
 {
     if (dragging == false)
         valueSlider.setValue (parameter.getValueForTime (pts));
+}
+
+//==============================================================================
+
+ProcessorComponent::AudioProcessorWindow::AudioProcessorWindow (AudioProcessorEditor* editor, const String& title)
+  : DocumentWindow (title, Colours::darkgrey, DocumentWindow::closeButton, true)
+{
+    setAlwaysOnTop (true);
+    setWantsKeyboardFocus (false);
+    setUsingNativeTitleBar (true);
+    setResizable (editor->isResizable(), false);
+    setContentOwned (editor, true);
+    setVisible (true);
+}
+
+void ProcessorComponent::AudioProcessorWindow::closeButtonPressed()
+{
+    setVisible (false);
+    setContentOwned (nullptr, false);
 }

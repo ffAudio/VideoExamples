@@ -43,7 +43,7 @@ public:
 
     void showProperties (std::unique_ptr<Component> component);
 
-    void showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
+    void showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
 
     void closeProperties();
 
@@ -63,7 +63,7 @@ class ClipProcessorProperties  : public Component,
                                  private foleys::ClipDescriptor::Listener
 {
 public:
-    ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
+    ClipProcessorProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
     ~ClipProcessorProperties();
 
     void paint (Graphics& g) override;
@@ -75,11 +75,16 @@ public:
     void changeListenerCallback (ChangeBroadcaster*) override;
 
 private:
+
+    void updateEditors();
+
+    foleys::VideoEngine& engine;
     std::weak_ptr<foleys::ClipDescriptor> clip;
     std::vector<std::unique_ptr<ProcessorComponent>> editors;
 
-    Viewport  scroller;
-    Component container;
+    TextButton processorSelect { "Add Effect" };
+    Viewport   scroller;
+    Component  container;
 
     bool video = false;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipProcessorProperties)

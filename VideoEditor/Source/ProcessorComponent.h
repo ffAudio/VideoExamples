@@ -42,6 +42,8 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    void showProcessorEditor (AudioProcessorEditor* editor, const String& title);
+
     int getHeightForWidth(int width) const;
 
     void timecodeChanged (int64_t count, double seconds) override;
@@ -74,10 +76,24 @@ public:
     };
 private:
     TextButton active   { "A" };
+    TextButton editor   { "E" };
     TextButton collapse { "v" };
     TextButton remove   { "X" };
 
     foleys::ProcessorController& controller;
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;
+
+    //==============================================================================
+
+    class AudioProcessorWindow  : public DocumentWindow
+    {
+    public:
+        AudioProcessorWindow (AudioProcessorEditor* editor, const String& title);
+        void closeButtonPressed() override;
+    private:
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioProcessorWindow)
+    };
+    std::unique_ptr<AudioProcessorWindow> audioProcessorWindow;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProcessorComponent)
 };

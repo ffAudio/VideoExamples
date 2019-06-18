@@ -85,6 +85,10 @@ MainComponent::MainComponent()
 
     commandManager.getKeyMappings()->resetToDefaultMappings();
 
+    auto settingsFolder = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile (ProjectInfo::companyName).getChildFile (ProjectInfo::projectName);
+    settingsFolder.createDirectory();
+    videoEngine.getAudioPluginManager().setPluginDataFile (settingsFolder.getChildFile ("PluginList.xml"));
+
     startTimerHz (10);
 }
 

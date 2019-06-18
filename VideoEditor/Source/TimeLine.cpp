@@ -201,7 +201,7 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
 void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
 {
     selectedClip = clip;
-    properties.showClipProperties (clip, video);
+    properties.showClipProperties (videoEngine, clip, video);
     repaint();
 }
 

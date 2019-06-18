@@ -75,9 +75,9 @@ void Properties::showProperties (std::unique_ptr<Component> componentToDisplay)
     component->setBounds (getLocalBounds().withTop (40).reduced (5));
 }
 
-void Properties::showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
+void Properties::showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
 {
-        showProperties (std::make_unique<ClipProcessorProperties>(clip, video));
+        showProperties (std::make_unique<ClipProcessorProperties>(engine, clip, video));
 }
 
 void Properties::closeProperties()
@@ -88,17 +88,53 @@ void Properties::closeProperties()
 
 //==============================================================================
 
-ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse, bool showVideo)
-  : clip (clipToUse),
+ClipProcessorProperties::ClipProcessorProperties (foleys::VideoEngine& engineToUse,
+                                                  std::shared_ptr<foleys::ClipDescriptor> clipToUse,
+                                                  bool showVideo)
+  : engine (engineToUse),
+    clip (clipToUse),
     video (showVideo)
 {
+    addAndMakeVisible (processorSelect);
+    processorSelect.onClick = [&]()
+    {
+        auto lockedClip = clip.lock();
+        if (lockedClip == nullptr)
+            return;
+
+        PopupMenu menu;
+        auto& manager = engine.getAudioPluginManager();
+        manager.populatePluginSelection (menu);
+
+        auto description = manager.getPluginDescriptionFromMenuID (menu.show());
+        String error;
+        auto& owningClip = lockedClip->getOwningClip();
+        auto processor = manager.createAudioPluginInstance (description.createIdentifierString(), owningClip.getSampleRate(), owningClip.getDefaultBufferSize(), error);
+        if (processor != nullptr)
+            lockedClip->addAudioProcessor (std::move (processor));
+
+        updateEditors();
+    };
+
     scroller.setScrollBarsShown (true, false);
     scroller.setViewedComponent (&container, false);
     addAndMakeVisible (scroller);
 
+    updateEditors();
     auto lockedClip = clip.lock();
     if (lockedClip == nullptr)
         return;
+
+    lockedClip->addListener (this);
+}
+
+void ClipProcessorProperties::updateEditors()
+{
+    auto lockedClip = clip.lock();
+    if (lockedClip == nullptr)
+        return;
+
+    editors.clear();
 
     const auto& processors = video ? lockedClip->getVideoProcessors() : lockedClip->getAudioProcessors();
 
@@ -111,7 +147,7 @@ ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDe
         editors.push_back (std::move (editor));
     }
 
-    lockedClip->addListener (this);
+    resized();
 }
 
 ClipProcessorProperties::~ClipProcessorProperties()
@@ -127,11 +163,13 @@ void ClipProcessorProperties::paint (Graphics& g)
     auto lockedClip = clip.lock();
     if (lockedClip != nullptr)
         g.drawFittedText ((video ? NEEDS_TRANS ("Video: ") : NEEDS_TRANS ("Audio: ")) + lockedClip->getDescription(),
-                          getLocalBounds().removeFromTop (36), Justification::left, 1);
+                          getLocalBounds().removeFromTop (36).reduced (5), Justification::left, 1);
 }
 
 void ClipProcessorProperties::resized()
 {
+    processorSelect.setBounds (getWidth() - 105, 8, 100, 26);
+
     auto area = getLocalBounds().withTop (40).reduced (5);
     scroller.setBounds (area);
 
