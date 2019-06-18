@@ -29,6 +29,11 @@
 
 //==============================================================================
 
+namespace IDs
+{
+    static Identifier collapsed { "collapsed" };
+}
+
 ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse)
   : controller (controllerToUse)
 {
@@ -55,9 +60,11 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
     }
 
     collapse.setClickingTogglesState (true);
+    collapse.setToggleState (isCollapsed(), dontSendNotification);
     addAndMakeVisible (collapse);
-    collapse.onStateChange = [&]
+    collapse.onClick = [&]
     {
+        controller.getProcessorState().setProperty (IDs::collapsed, collapse.getToggleState(), nullptr);
         sendChangeMessage();
     };
 
@@ -108,12 +115,12 @@ void ProcessorComponent::resized()
     remove.setBounds (heading.removeFromRight (24));
     editor.setBounds (heading.removeFromRight (24));
 
-    auto collapsed = collapse.getToggleState();
+    auto collapsed = isCollapsed();
 
     for (auto& c : parameterComponents)
     {
         c->setVisible (! collapsed);
-        if (! collapse.getToggleState())
+        if (! collapsed)
             c->setBounds (area.removeFromTop (40));
     }
 }
@@ -124,12 +131,17 @@ void ProcessorComponent::showProcessorEditor (AudioProcessorEditor* editor, cons
     audioProcessorWindow->centreAroundComponent (getTopLevelComponent(), audioProcessorWindow->getWidth(), audioProcessorWindow->getHeight());
 }
 
+bool ProcessorComponent::isCollapsed() const
+{
+    return controller.getProcessorState().getProperty (IDs::collapsed, false);
+}
+
 int ProcessorComponent::getHeightForWidth(int width) const
 {
     // todo: adapt to width
     ignoreUnused (width);
 
-    if (collapse.getToggleState())
+    if (isCollapsed())
         return 40;
 
     return int (40 + 40 * controller.getNumParameters());

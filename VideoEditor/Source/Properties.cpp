@@ -96,25 +96,49 @@ ClipProcessorProperties::ClipProcessorProperties (foleys::VideoEngine& engineToU
     video (showVideo)
 {
     addAndMakeVisible (processorSelect);
-    processorSelect.onClick = [&]()
+    if (video)
     {
-        auto lockedClip = clip.lock();
-        if (lockedClip == nullptr)
-            return;
+        processorSelect.onClick = [&]
+        {
+            auto lockedClip = clip.lock();
+            if (lockedClip == nullptr)
+                return;
 
-        PopupMenu menu;
-        auto& manager = engine.getAudioPluginManager();
-        manager.populatePluginSelection (menu);
+            PopupMenu menu;
+            auto& manager = engine.getVideoPluginManager();
+            manager.populatePluginSelection (menu);
 
-        auto description = manager.getPluginDescriptionFromMenuID (menu.show());
-        String error;
-        auto& owningClip = lockedClip->getOwningClip();
-        auto processor = manager.createAudioPluginInstance (description.createIdentifierString(), owningClip.getSampleRate(), owningClip.getDefaultBufferSize(), error);
-        if (processor != nullptr)
-            lockedClip->addAudioProcessor (std::move (processor));
+            auto description = manager.getPluginDescriptionFromMenuID (menu.show());
+            String error;
+            auto processor = manager.createVideoPluginInstance (description, error);
+            if (processor != nullptr)
+                lockedClip->addVideoProcessor (std::move (processor));
 
-        updateEditors();
-    };
+            updateEditors();
+        };
+    }
+    else
+    {
+        processorSelect.onClick = [&]
+        {
+            auto lockedClip = clip.lock();
+            if (lockedClip == nullptr)
+                return;
+
+            PopupMenu menu;
+            auto& manager = engine.getAudioPluginManager();
+            manager.populatePluginSelection (menu);
+
+            auto description = manager.getPluginDescriptionFromMenuID (menu.show());
+            String error;
+            auto& owningClip = lockedClip->getOwningClip();
+            auto processor = manager.createAudioPluginInstance (description.createIdentifierString(), owningClip.getSampleRate(), owningClip.getDefaultBufferSize(), error);
+            if (processor != nullptr)
+                lockedClip->addAudioProcessor (std::move (processor));
+
+            updateEditors();
+        };
+    }
 
     scroller.setScrollBarsShown (true, false);
     scroller.setViewedComponent (&container, false);

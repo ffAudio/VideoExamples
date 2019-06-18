@@ -75,6 +75,9 @@ public:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterComponent)
     };
 private:
+
+    bool isCollapsed() const;
+
     TextButton active   { "A" };
     TextButton editor   { "E" };
     TextButton collapse { "v" };
