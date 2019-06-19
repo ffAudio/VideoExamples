@@ -180,6 +180,7 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
 void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
 {
     selectedClip = clip;
+    selectedIsVideo = video;
     properties.showClipProperties (videoEngine, clip, video);
     repaint();
 }
@@ -187,6 +188,11 @@ void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bo
 std::shared_ptr<foleys::ClipDescriptor> TimeLine::getSelectedClip() const
 {
     return selectedClip.lock();
+}
+
+bool TimeLine::selectedClipIsVideo() const
+{
+    return selectedIsVideo;
 }
 
 void TimeLine::restoreClipComponents()
@@ -348,7 +354,10 @@ void TimeLine::ClipComponent::paint (Graphics& g)
     g.setColour (selected ? colour : colour.darker());
     g.fillRoundedRectangle (getLocalBounds().reduced (1).toFloat(), 5.0);
 
-    g.setColour (selected ? colour.contrasting() : colour);
+    if (selected)
+        g.setColour (timeline.selectedIsVideo == isVideoClip() ? colour.contrasting() : colour.contrasting().withAlpha (0.5f));
+    else
+        g.setColour (colour);
 
     g.drawRoundedRectangle (getLocalBounds().toFloat(), 5.0, 2.0);
     if (clip != nullptr)

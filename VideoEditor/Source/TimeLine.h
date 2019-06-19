@@ -57,6 +57,7 @@ public:
 
     void setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
     std::shared_ptr<foleys::ClipDescriptor> getSelectedClip() const;
+    bool selectedClipIsVideo() const;
 
     void restoreClipComponents();
 
@@ -150,6 +151,7 @@ private:
     std::vector<std::unique_ptr<ClipComponent>> clipComponents;
 
     std::weak_ptr<foleys::ClipDescriptor> selectedClip;
+    bool selectedIsVideo = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimeLine)
 };

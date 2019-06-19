@@ -28,7 +28,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-class ProcessorComponent;
 
 //==============================================================================
 /*
@@ -53,39 +52,4 @@ private:
     juce::TextButton close { "X" };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Properties)
-};
-
-
-//==============================================================================
-
-class ClipProcessorProperties  : public Component,
-                                 public ChangeListener,
-                                 private foleys::ClipDescriptor::Listener
-{
-public:
-    ClipProcessorProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
-    ~ClipProcessorProperties();
-
-    void paint (Graphics& g) override;
-
-    void resized() override;
-
-    void processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted) override;
-
-    void changeListenerCallback (ChangeBroadcaster*) override;
-
-private:
-
-    void updateEditors();
-
-    foleys::VideoEngine& engine;
-    std::weak_ptr<foleys::ClipDescriptor> clip;
-    std::vector<std::unique_ptr<ProcessorComponent>> editors;
-
-    TextButton processorSelect { "Add Effect" };
-    Viewport   scroller;
-    Component  container;
-
-    bool video = false;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipProcessorProperties)
 };
