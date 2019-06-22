@@ -37,6 +37,7 @@ namespace CommandIDs
         fileQuit,
 
         editPreferences = 200,
+        editSplice,
 
         playStart = 300,
         playStop,
@@ -274,7 +275,7 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
     commands.add (CommandIDs::fileNew, CommandIDs::fileOpen, CommandIDs::fileSave, CommandIDs::fileSaveAs, CommandIDs::fileRender, StandardApplicationCommandIDs::quit);
     commands.add (StandardApplicationCommandIDs::undo, StandardApplicationCommandIDs::redo,
                   StandardApplicationCommandIDs::del, StandardApplicationCommandIDs::copy, StandardApplicationCommandIDs::paste,
-                  CommandIDs::editPreferences);
+                  CommandIDs::editSplice, CommandIDs::editPreferences);
     commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
     commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExitFullScreen);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
@@ -333,6 +334,10 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.setInfo ("Paste", "Paste the gesture in the clipboard", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress ('v', ModifierKeys::commandModifier, 0));
             break;
+        case CommandIDs::editSplice:
+            result.setInfo ("Splice", "Split selected clip at play position", categoryEdit, 0);
+            result.defaultKeypresses.add (KeyPress ('b', ModifierKeys::commandModifier, 0));
+            break;
         case CommandIDs::editPreferences:
             result.setInfo ("Preferences", "Open the audio preferences", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress (',', ModifierKeys::commandModifier, 0));
@@ -381,6 +386,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case StandardApplicationCommandIDs::undo: videoEngine.getUndoManager()->undo(); break;
         case StandardApplicationCommandIDs::redo: videoEngine.getUndoManager()->redo(); break;
         case StandardApplicationCommandIDs::del: deleteSelectedClip(); break;
+        case CommandIDs::editSplice: timeline.spliceSelectedClipAtPlayPosition(); break;
 
         case CommandIDs::editPreferences: showPreferences(); break;
 
@@ -428,6 +434,8 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
         menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::del);
         menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::copy);
         menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::paste);
+        menu.addSeparator();
+        menu.addCommandItem (&commandManager, CommandIDs::editSplice);
         menu.addSeparator();
         menu.addCommandItem (&commandManager, CommandIDs::editPreferences);
     }

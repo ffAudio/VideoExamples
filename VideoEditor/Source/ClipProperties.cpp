@@ -68,12 +68,16 @@ video (showVideo)
 
             PopupMenu menu;
             auto& manager = engine.getAudioPluginManager();
-            manager.populatePluginSelection (menu);
+            auto plugins = manager.getKnownPluginDescriptions();
+            KnownPluginList::addToMenu (menu, plugins, KnownPluginList::sortByManufacturer);
 
-            auto description = manager.getPluginDescriptionFromMenuID (menu.show());
+            auto selected = KnownPluginList::getIndexChosenByMenu (plugins, menu.show());
+            if (isPositiveAndBelow (selected, plugins.size()) == false)
+                return;
+
             String error;
             auto& owningClip = lockedClip->getOwningClip();
-            auto processor = manager.createAudioPluginInstance (description.createIdentifierString(), owningClip.getSampleRate(), owningClip.getDefaultBufferSize(), error);
+            auto processor = manager.createAudioPluginInstance (plugins.getReference (selected).createIdentifierString(), owningClip.getSampleRate(), owningClip.getDefaultBufferSize(), error);
             if (processor != nullptr)
                 lockedClip->addAudioProcessor (std::move (processor));
 

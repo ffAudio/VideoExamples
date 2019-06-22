@@ -59,6 +59,9 @@ public:
     std::shared_ptr<foleys::ClipDescriptor> getSelectedClip() const;
     bool selectedClipIsVideo() const;
 
+    void spliceSelectedClipAtPlayPosition();
+    void spliceSelectedClipAtPosition (double pts);
+
     void restoreClipComponents();
 
     class ClipComponent : public Component

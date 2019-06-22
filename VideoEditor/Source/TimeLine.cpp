@@ -195,6 +195,38 @@ bool TimeLine::selectedClipIsVideo() const
     return selectedIsVideo;
 }
 
+void TimeLine::spliceSelectedClipAtPlayPosition()
+{
+    spliceSelectedClipAtPosition (player.getCurrentTimeInSeconds());
+}
+
+void TimeLine::spliceSelectedClipAtPosition (double pts)
+{
+    auto clip = selectedClip.lock();
+    if (clip.get() == nullptr)
+        return;
+
+    auto start  = clip->getStart();
+    auto length = clip->getLength();
+    auto offset = clip->getOffset() + (pts - start);
+
+    edit->getStatusTree().addChild (clip->getStatusTree().createCopy(), -1, videoEngine.getUndoManager());
+    clip->setLength (pts - clip->getStart());
+    clip->updateSampleCounts();
+
+    auto newClip = edit->getClip (int (edit->getClips().size()) - 1);
+    if (newClip.get() == nullptr)
+        return;
+
+    newClip->setStart (pts);
+    newClip->setLength (length - (pts - start));
+    newClip->setOffset (offset);
+    auto description = clip->getDescription();
+
+    newClip->setDescription (description + " #2");
+    newClip->updateSampleCounts();
+}
+
 void TimeLine::restoreClipComponents()
 {
     if (edit == nullptr)
@@ -387,7 +419,6 @@ void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
         setMouseCursor (MouseCursor::LeftRightResizeCursor);
     else
         setMouseCursor (MouseCursor::DraggingHandCursor);
-
 }
 
 void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
