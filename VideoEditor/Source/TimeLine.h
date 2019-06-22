@@ -83,7 +83,10 @@ public:
     private:
         enum DragMode
         {
-            notDragging, dragPosition, dragLength
+            notDragging,
+            dragPosition,
+            dragLength,
+            dragOffset
         };
 
         TimeLine& timeline;

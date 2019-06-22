@@ -415,7 +415,7 @@ void TimeLine::ClipComponent::resized()
 
 void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
 {
-    if (event.x > getWidth() - 5)
+    if (event.x > getWidth() - 5 || event.x < 5)
         setMouseCursor (MouseCursor::LeftRightResizeCursor);
     else
         setMouseCursor (MouseCursor::DraggingHandCursor);
@@ -426,7 +426,9 @@ void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
     localDragStart = event.getPosition();
     timeline.setSelectedClip (clip, isVideoClip());
 
-    if (event.x > getWidth() - 5)
+    if (event.x < 5)
+        dragmode = dragOffset;
+    else if (event.x > getWidth() - 5)
         dragmode = dragLength;
     else
         dragmode = dragPosition;
@@ -442,6 +444,18 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
         clip->setStart (std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()), 0.0));
     else if (dragmode == dragLength)
         clip->setLength (std::min (timeline.getTimeFromX (event.x), clip->clip->getLengthInSeconds()));
+    else if (dragmode == dragOffset)
+    {
+        auto oldPosition = clip->getStart();
+        auto oldOffset   = clip->getOffset();
+        auto oldLength   = clip->getLength();
+        auto delta = std::min (std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()) - oldPosition,
+                                         -oldOffset), oldLength);
+        clip->setStart (oldPosition + delta);
+        clip->setOffset (oldOffset + delta);
+        clip->setLength (oldLength - delta);
+        clip->updateSampleCounts();
+    }
 
     if (filmstrip)
     {
