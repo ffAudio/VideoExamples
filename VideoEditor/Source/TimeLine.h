@@ -59,6 +59,8 @@ public:
     std::shared_ptr<foleys::ClipDescriptor> getSelectedClip() const;
     bool selectedClipIsVideo() const;
 
+    void toggleVisibility();
+
     void spliceSelectedClipAtPlayPosition();
     void spliceSelectedClipAtPosition (double pts);
 

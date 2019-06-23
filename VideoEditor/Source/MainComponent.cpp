@@ -38,6 +38,7 @@ namespace CommandIDs
 
         editPreferences = 200,
         editSplice,
+        editVisibility,
 
         playStart = 300,
         playStop,
@@ -275,7 +276,7 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
     commands.add (CommandIDs::fileNew, CommandIDs::fileOpen, CommandIDs::fileSave, CommandIDs::fileSaveAs, CommandIDs::fileRender, StandardApplicationCommandIDs::quit);
     commands.add (StandardApplicationCommandIDs::undo, StandardApplicationCommandIDs::redo,
                   StandardApplicationCommandIDs::del, StandardApplicationCommandIDs::copy, StandardApplicationCommandIDs::paste,
-                  CommandIDs::editSplice, CommandIDs::editPreferences);
+                  CommandIDs::editSplice, CommandIDs::editVisibility, CommandIDs::editPreferences);
     commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
     commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExitFullScreen);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
@@ -338,6 +339,10 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.setInfo ("Splice", "Split selected clip at play position", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress ('b', ModifierKeys::commandModifier, 0));
             break;
+        case CommandIDs::editVisibility:
+            result.setInfo ("Visible", "Toggle visibility or mute of the selected clip", categoryEdit, 0);
+            result.defaultKeypresses.add (KeyPress ('v', ModifierKeys::noModifiers, 0));
+            break;
         case CommandIDs::editPreferences:
             result.setInfo ("Preferences", "Open the audio preferences", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress (',', ModifierKeys::commandModifier, 0));
@@ -387,6 +392,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case StandardApplicationCommandIDs::redo: videoEngine.getUndoManager()->redo(); break;
         case StandardApplicationCommandIDs::del: deleteSelectedClip(); break;
         case CommandIDs::editSplice: timeline.spliceSelectedClipAtPlayPosition(); break;
+        case CommandIDs::editVisibility: timeline.toggleVisibility(); break;
 
         case CommandIDs::editPreferences: showPreferences(); break;
 
@@ -436,6 +442,7 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
         menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::paste);
         menu.addSeparator();
         menu.addCommandItem (&commandManager, CommandIDs::editSplice);
+        menu.addCommandItem (&commandManager, CommandIDs::editVisibility);
         menu.addSeparator();
         menu.addCommandItem (&commandManager, CommandIDs::editPreferences);
     }

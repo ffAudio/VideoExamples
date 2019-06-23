@@ -195,6 +195,20 @@ bool TimeLine::selectedClipIsVideo() const
     return selectedIsVideo;
 }
 
+void TimeLine::toggleVisibility()
+{
+    auto clip = selectedClip.lock();
+    if (clip.get() == nullptr)
+        return;
+
+    if (selectedIsVideo)
+        clip->setVideoVisible (! clip->getVideoVisible());
+    else
+        clip->setAudioPlaying (! clip->getAudioPlaying());
+
+    repaint();
+}
+
 void TimeLine::spliceSelectedClipAtPlayPosition()
 {
     spliceSelectedClipAtPosition (player.getCurrentTimeInSeconds());
@@ -392,8 +406,16 @@ void TimeLine::ClipComponent::paint (Graphics& g)
         g.setColour (colour);
 
     g.drawRoundedRectangle (getLocalBounds().toFloat(), 5.0, 2.0);
-    if (clip != nullptr)
-        g.drawFittedText (clip->getDescription(), 5, 3, getWidth() - 10, 18, Justification::left, 1);
+    if (clip == nullptr)
+        return;
+
+    g.drawFittedText (clip->getDescription(), 5, 3, getWidth() - 10, 18, Justification::left, 1);
+
+    if (filmstrip.get() != nullptr)
+        filmstrip->setAlpha (clip->getVideoVisible() ? 1.0f : 0.5f);
+
+    if (audiostrip.get() != nullptr)
+        audiostrip->setAlpha (clip->getAudioPlaying() ? 1.0f : 0.3f);
 }
 
 void TimeLine::ClipComponent::resized()
