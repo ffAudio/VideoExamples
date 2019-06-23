@@ -224,6 +224,9 @@ void TimeLine::spliceSelectedClipAtPosition (double pts)
     auto length = clip->getLength();
     auto offset = clip->getOffset() + (pts - start);
 
+    if (pts < start || pts > start + length)
+        return;
+
     edit->getStatusTree().addChild (clip->getStatusTree().createCopy(), -1, videoEngine.getUndoManager());
     clip->setLength (pts - clip->getStart());
     clip->updateSampleCounts();
@@ -235,9 +238,8 @@ void TimeLine::spliceSelectedClipAtPosition (double pts)
     newClip->setStart (pts);
     newClip->setLength (length - (pts - start));
     newClip->setOffset (offset);
-    auto description = clip->getDescription();
 
-    newClip->setDescription (description + " #2");
+    newClip->setDescription (edit->makeUniqueDescription(clip->getDescription()));
     newClip->updateSampleCounts();
 }
 
