@@ -31,10 +31,12 @@
 
 ClipProcessorProperties::ClipProcessorProperties (foleys::VideoEngine& engineToUse,
                                                   std::shared_ptr<foleys::ClipDescriptor> clipToUse,
+                                                  Player& playerToUse,
                                                   bool showVideo)
-: engine (engineToUse),
-clip (clipToUse),
-video (showVideo)
+  : engine (engineToUse),
+    player (playerToUse),
+    clip (clipToUse),
+    video (showVideo)
 {
     addAndMakeVisible (processorSelect);
     if (video)
@@ -109,7 +111,7 @@ void ClipProcessorProperties::updateEditors()
 
     for (auto& processor : processors)
     {
-        auto editor = std::make_unique<ProcessorComponent>(*processor);
+        auto editor = std::make_unique<ProcessorComponent>(*processor, player);
         container.addAndMakeVisible (editor.get());
         editor->timecodeChanged (0 , lockedClip->getOwningClip().getCurrentTimeInSeconds());
         editor->addChangeListener (this);

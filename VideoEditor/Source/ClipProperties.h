@@ -29,14 +29,14 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 class ProcessorComponent;
-
+class Player;
 
 class ClipProcessorProperties  : public Component,
                                  public ChangeListener,
                                  private foleys::ClipDescriptor::Listener
 {
 public:
-    ClipProcessorProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
+    ClipProcessorProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, Player& player, bool video);
     ~ClipProcessorProperties();
 
     void paint (Graphics& g) override;
@@ -52,6 +52,7 @@ private:
     void updateEditors();
 
     foleys::VideoEngine& engine;
+    Player& player;
     std::weak_ptr<foleys::ClipDescriptor> clip;
     std::vector<std::unique_ptr<ProcessorComponent>> editors;
 

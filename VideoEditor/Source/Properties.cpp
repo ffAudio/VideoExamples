@@ -75,9 +75,9 @@ void Properties::showProperties (std::unique_ptr<Component> componentToDisplay)
     component->setBounds (getLocalBounds().withTop (40).reduced (5));
 }
 
-void Properties::showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
+void Properties::showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, Player& player, bool video)
 {
-        showProperties (std::make_unique<ClipProcessorProperties>(engine, clip, video));
+        showProperties (std::make_unique<ClipProcessorProperties>(engine, clip, player, video));
 }
 
 void Properties::closeProperties()

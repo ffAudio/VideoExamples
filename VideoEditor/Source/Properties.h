@@ -28,6 +28,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+class Player;
 
 //==============================================================================
 /*
@@ -42,7 +43,7 @@ public:
 
     void showProperties (std::unique_ptr<Component> component);
 
-    void showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
+    void showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, Player& player, bool video);
 
     void closeProperties();
 

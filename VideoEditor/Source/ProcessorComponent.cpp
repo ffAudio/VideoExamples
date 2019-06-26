@@ -26,6 +26,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "ProcessorComponent.h"
+#include "Player.h"
 
 //==============================================================================
 
@@ -34,7 +35,7 @@ namespace IDs
     static Identifier collapsed { "collapsed" };
 }
 
-ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse)
+ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse, Player& player)
   : controller (controllerToUse)
 {
     active.setClickingTogglesState (true);
@@ -76,7 +77,7 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
 
     for (auto& parameter : controller.getParameters())
     {
-        auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter);
+        auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter, player);
         addAndMakeVisible (component.get());
         parameterComponents.push_back (std::move (component));
     }
@@ -161,53 +162,197 @@ const foleys::ProcessorController* ProcessorComponent::getProcessorController() 
 
 //==============================================================================
 
+class ParameterSlider : public ProcessorComponent::ParameterComponent::ParameterWidget
+{
+public:
+    ParameterSlider (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    {
+        const auto numSteps = parameter.getNumSteps();
+
+        NormalisableRange<double> range;
+        if (numSteps > 0)
+            range.interval = 1.0 / numSteps;
+
+        valueSlider.onDragStart = [&]
+        {
+            parameter.startAutomationGesture();
+            dragging = true;
+        };
+
+        valueSlider.onDragEnd = [&]
+        {
+            dragging = false;
+            parameter.finishAutomationGesture();
+        };
+
+        valueSlider.onValueChange = [&]
+        {
+            if (dragging)
+            {
+                parameter.setValue (clip.getCurrentPTS(), valueSlider.getValue());
+                clip.getOwningClip().invalidateVideo();
+            }
+        };
+
+        valueSlider.textFromValueFunction = [&parameter](double value) { return parameter.getText (value); };
+        valueSlider.valueFromTextFunction = [&parameter](String text) { return parameter.getValueForText (text); };
+
+        valueSlider.setNormalisableRange (range);
+    }
+
+    void setValue (double value) override
+    {
+        if (!dragging)
+            valueSlider.setValue (value);
+    }
+
+    double getValue() const override
+    {
+        return valueSlider.getValue();
+    }
+
+    juce::Component& getComponent() override
+    {
+        return valueSlider;
+    }
+
+private:
+    Slider valueSlider { Slider::LinearHorizontal, Slider::TextBoxRight };
+    bool dragging = false;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterSlider)
+};
+
+class ParameterChoice : public ProcessorComponent::ParameterComponent::ParameterWidget
+{
+public:
+    ParameterChoice (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    {
+        choice.addItemList (parameter.getAllValueStrings(), 1);
+        choice.onChange = [&]
+        {
+            const auto numChoices = choice.getNumItems();
+            parameter.setValue (choice.getSelectedItemIndex() / (numChoices - 1.0));
+        };
+    }
+
+    void setValue (double value) override
+    {
+        auto numChoices = choice.getNumItems();
+        if (numChoices > 1)
+            choice.setSelectedItemIndex (value * (numChoices - 1.0));
+        else
+            choice.setSelectedItemIndex (0);
+    }
+
+    double getValue() const override
+    {
+        auto numChoices = choice.getNumItems();
+        if (numChoices > 1)
+            return roundToInt (choice.getSelectedItemIndex() / (numChoices - 1.0));
+
+        return 0;
+    }
+
+    juce::Component& getComponent() override
+    {
+        return choice;
+    }
+
+private:
+    ComboBox choice;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterChoice)
+};
+
+class ParameterSwitch : public ProcessorComponent::ParameterComponent::ParameterWidget
+{
+public:
+    ParameterSwitch (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    {
+        button.setButtonText (parameter.getText (1.0f));
+        button.setClickingTogglesState (true);
+        button.onClick = [&]
+        {
+            parameter.startAutomationGesture();
+            parameter.setValue (clip.getCurrentPTS(), button.getToggleState() ? 1.0 : 0.0);
+            parameter.finishAutomationGesture();
+        };
+    }
+
+    void setValue (double value) override
+    {
+        button.setToggleState (value > 0.5, dontSendNotification);
+    }
+
+    double getValue() const override
+    {
+        return button.getToggleState() ? 1.0 : 0.0;
+    }
+
+    juce::Component& getComponent() override
+    {
+        return button;
+    }
+
+private:
+    TextButton button;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterSwitch)
+};
+
+//==============================================================================
+
 ProcessorComponent::ParameterComponent::ParameterComponent (foleys::ClipDescriptor& clipToControl,
-                                                            foleys::ParameterAutomation& parameterToControl)
+                                                            foleys::ParameterAutomation& parameterToControl,
+                                                            Player& player)
   : clip (clipToControl),
     parameter (parameterToControl)
 {
     prev.setConnectedEdges (TextButton::ConnectedOnRight);
     next.setConnectedEdges (TextButton::ConnectedOnRight | TextButton::ConnectedOnLeft);
     add.setConnectedEdges (TextButton::ConnectedOnLeft);
-    addAndMakeVisible (valueSlider);
+
     addAndMakeVisible (prev);
     addAndMakeVisible (next);
     addAndMakeVisible (add);
 
     auto numSteps = parameter.getNumSteps();
-    if (numSteps > 0)
-        valueSlider.setRange (0.0, 1.0, 1.0 / parameter.getNumSteps());
+
+    auto options = parameter.getAllValueStrings();
+    if (numSteps == 2)
+    {
+        widget = std::make_unique<ParameterSwitch>(parameter, clip);
+    }
+    else if (! options.isEmpty())
+    {
+        widget = std::make_unique<ParameterChoice>(parameter, clip);
+    }
     else
-        valueSlider.setRange (0.0, 1.0);
-
-    valueSlider.onDragStart = [this]
     {
-        parameter.startAutomationGesture();
-        dragging = true;
-    };
+        widget = std::make_unique<ParameterSlider>(parameter, clip);
+    }
 
-    valueSlider.onDragEnd = [this]
-    {
-        dragging = false;
-        parameter.finishAutomationGesture();
-    };
-
-    valueSlider.onValueChange = [this]
-    {
-        if (dragging)
-        {
-            parameter.setValue (clip.getCurrentPTS(), valueSlider.getValue());
-            clip.getOwningClip().invalidateVideo();
-        }
-    };
-
-    valueSlider.textFromValueFunction = [this](double value) { return parameter.getText (value); };
-    valueSlider.valueFromTextFunction = [this](String text) { return parameter.getValueForText (text); };
+    widget->setValue (parameter.getValue());
+    addAndMakeVisible (widget->getComponent());
 
     add.onClick = [this]
     {
-        parameter.addKeyframe (clip.getCurrentPTS(), valueSlider.getValue());
+        parameter.addKeyframe (clip.getCurrentPTS(), widget->getValue());
     };
+
+    prev.onClick = [&]
+    {
+        auto prev = parameter.getPreviousKeyframeTime (clip.getCurrentPTS());
+        player.setPosition (prev + clip.getStart() - clip.getOffset());
+    };
+
+    next.onClick = [&]
+    {
+        auto next = parameter.getNextKeyframeTime (clip.getCurrentPTS());
+        player.setPosition (next + clip.getStart() - clip.getOffset());
+    };
+
 }
 
 void ProcessorComponent::ParameterComponent::paint (Graphics& g)
@@ -223,13 +368,12 @@ void ProcessorComponent::ParameterComponent::resized()
     add.setBounds (area.removeFromRight (24).withTop (area.getHeight() - 24));
     next.setBounds (area.removeFromRight (24).withTop (area.getHeight() - 24));
     prev.setBounds (area.removeFromRight (24).withTop (area.getHeight() - 24));
-    valueSlider.setBounds (area.withTop (20).withTrimmedRight (3));
+    widget->getComponent().setBounds (area.withTop (20).withTrimmedRight (3));
 }
 
 void ProcessorComponent::ParameterComponent::updateForTime (double pts)
 {
-    if (dragging == false)
-        valueSlider.setValue (parameter.getValueForTime (pts));
+    widget->setValue (parameter.getValueForTime (pts));
 }
 
 //==============================================================================

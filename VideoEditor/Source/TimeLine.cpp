@@ -181,7 +181,7 @@ void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bo
 {
     selectedClip = clip;
     selectedIsVideo = video;
-    properties.showClipProperties (videoEngine, clip, video);
+    properties.showClipProperties (videoEngine, clip, player, video);
     repaint();
 }
 
