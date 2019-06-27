@@ -161,6 +161,11 @@ void ClipProcessorProperties::resized()
         editor->setBounds (childRect.removeFromTop (editor->getHeightForWidth (area.getWidth())).reduced (5));
 }
 
+void ClipProcessorProperties::processorControllerAdded()
+{
+    updateEditors();
+}
+
 void ClipProcessorProperties::processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted)
 {
     auto editor = std::find_if (editors.begin(), editors.end(), [toBeDeleted](auto& p)

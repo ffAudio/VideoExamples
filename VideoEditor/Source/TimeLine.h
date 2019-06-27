@@ -66,10 +66,13 @@ public:
 
     void restoreClipComponents();
 
-    class ClipComponent : public Component
+    class ClipComponent : public Component,
+    private foleys::ClipDescriptor::Listener
     {
     public:
         ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ClipDescriptor> clip, ThreadPool& threadPool, bool video);
+        ~ClipComponent();
+
         void paint (Graphics& g) override;
         void resized() override;
 
@@ -83,6 +86,12 @@ public:
         std::shared_ptr<foleys::ClipDescriptor> clip;
 
     private:
+        void updateProcessorList();
+
+        void processorControllerAdded() override;
+        void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
+        void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
+
         enum DragMode
         {
             notDragging,
@@ -94,6 +103,7 @@ public:
         TimeLine& timeline;
         std::unique_ptr<foleys::FilmStrip>  filmstrip;
         std::unique_ptr<foleys::AudioStrip> audiostrip;
+        ComboBox processorSelect;
 
         DragMode dragmode = notDragging;
         Point<int> localDragStart;

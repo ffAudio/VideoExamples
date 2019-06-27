@@ -389,6 +389,18 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
         audiostrip->setClip (clip->clip);
         addAndMakeVisible (audiostrip.get());
     }
+
+    updateProcessorList();
+    processorSelect.setColour (ComboBox::backgroundColourId, Colours::black.withAlpha (0.2f));
+    addAndMakeVisible (processorSelect);
+
+    clip->addListener (this);
+}
+
+TimeLine::ClipComponent::~ClipComponent()
+{
+    if (clip.get() != nullptr)
+        clip->removeListener (this);
 }
 
 void TimeLine::ClipComponent::paint (Graphics& g)
@@ -425,6 +437,7 @@ void TimeLine::ClipComponent::resized()
     if (clip == nullptr)
         return;
 
+    processorSelect.setBounds (85, 2, 80, 18);
     if (filmstrip)
     {
         filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
@@ -502,7 +515,45 @@ void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
     dragmode = notDragging;
 }
 
+void TimeLine::ClipComponent::updateProcessorList()
+{
+    auto current = processorSelect.getText();
+    processorSelect.clear();
+    if (isVideoClip())
+    {
+        int index = 0;
+        for (const auto& processor : clip->getVideoProcessors())
+            processorSelect.addItem (processor->getName(), ++index);
+    }
+    else
+    {
+        int index = 0;
+        for (const auto& processor : clip->getAudioProcessors())
+            processorSelect.addItem (processor->getName(), ++index);
+    }
+
+    for (int i=0; i < processorSelect.getNumItems(); ++i)
+        if (processorSelect.getItemText (i) == current)
+            processorSelect.setSelectedItemIndex (i);
+}
+
 bool TimeLine::ClipComponent::isVideoClip() const
 {
     return filmstrip.get() != nullptr;
 }
+
+void TimeLine::ClipComponent::processorControllerAdded()
+{
+    updateProcessorList();
+}
+
+void TimeLine::ClipComponent::processorControllerToBeDeleted (const foleys::ProcessorController*)
+{
+    updateProcessorList();
+}
+
+void TimeLine::ClipComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
+{
+    repaint();
+}
+

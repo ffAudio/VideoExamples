@@ -190,7 +190,8 @@ public:
             if (dragging)
             {
                 parameter.setValue (clip.getCurrentPTS(), valueSlider.getValue());
-                clip.getOwningClip().invalidateVideo();
+                if (parameter.isVideoParameter())
+                    clip.getOwningClip().invalidateVideo();
             }
         };
 
