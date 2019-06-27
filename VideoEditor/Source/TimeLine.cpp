@@ -384,12 +384,12 @@ void TimeLine::ClipComponent::resized()
     if (filmstrip)
     {
         filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        filmstrip->setStartAndLength (clip->getOffset(), clip->getLength() + clip->getOffset());
+        filmstrip->setStartAndEnd (clip->getOffset(), clip->getLength() + clip->getOffset());
     }
     if (audiostrip)
     {
         audiostrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        audiostrip->setStartAndLength (clip->getOffset(), clip->getLength() + clip->getOffset());
+        audiostrip->setStartAndEnd (clip->getOffset(), clip->getLength() + clip->getOffset());
     }
 }
 

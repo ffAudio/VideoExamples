@@ -70,6 +70,7 @@ public:
 
     void resized() override;
 
+    void processorControllerAdded() override {}
     void processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted) override;
 
     void changeListenerCallback (ChangeBroadcaster*) override;
