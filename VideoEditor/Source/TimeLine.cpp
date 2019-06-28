@@ -63,11 +63,11 @@ void TimeLine::paint (Graphics& g)
 
     g.setColour (Colours::darkgrey);
     for (int i=0; i < numVideoLines; ++i)
-        g.fillRect (0, 10 + i * 90, getWidth(), 80);
+        g.fillRect (0, margin + i * (videoHeight + margin), getWidth(), videoHeight);
 
     g.setColour (Colours::darkgrey.darker());
     for (int i=0; i < numAudioLines; ++i)
-        g.fillRect (0, 200 + i * 60, getWidth(), 50);
+        g.fillRect (0, numVideoLines * (videoHeight + margin) + margin + i * (audioHeight + margin), getWidth(), audioHeight);
 }
 
 void TimeLine::resized()
@@ -86,14 +86,14 @@ void TimeLine::resized()
         if (component->isVideoClip())
         {
             int videoline = component->clip->getStatusTree().getProperty (IDs::videoLine, 0);
-            component->setBounds (getXFromTime (component->clip->getStart()), 10 + videoline * 90,
-                                  getXFromTime (component->clip->getLength()), 80);
+            component->setBounds (getXFromTime (component->clip->getStart()), margin + videoline * (videoHeight + margin),
+                                  getXFromTime (component->clip->getLength()), videoHeight);
         }
         else
         {
             int audioline = component->clip->getStatusTree().getProperty (IDs::audioLine, 0);
-            component->setBounds (getXFromTime (component->clip->getStart()), 200 + audioline * 60,
-                                  getXFromTime (component->clip->getLength()), 50);
+            component->setBounds (getXFromTime (component->clip->getStart()), numVideoLines * (videoHeight + margin) + margin + audioline * (audioHeight + margin),
+                                  getXFromTime (component->clip->getLength()), audioHeight);
         }
     }
 
@@ -162,12 +162,12 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
     auto descriptor = edit->addClip (clip, start, length);
     if (y < 190)
     {
-        int line = (y - 10) / 90.0;
+        int line = (y - margin) / double (videoHeight + margin);
         setVideoLine (descriptor, line);
     }
     else
     {
-        int line = (y - 200) / 60.0;
+        int line = (y - numVideoLines * (videoHeight + margin) + margin) / (audioHeight + margin);
         setAudioLine (descriptor, line);
     }
 
@@ -393,6 +393,10 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
     updateProcessorList();
     processorSelect.setColour (ComboBox::backgroundColourId, Colours::black.withAlpha (0.2f));
     addAndMakeVisible (processorSelect);
+    processorSelect.onChange = [&]
+    {
+        parameterAutomationChanged (nullptr);
+    };
 
     clip->addListener (this);
 }
@@ -441,13 +445,33 @@ void TimeLine::ClipComponent::resized()
     if (filmstrip)
     {
         filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        filmstrip->setStartAndEnd (clip->getOffset(), clip->getLength() + clip->getOffset());
+        filmstrip->setStartAndEnd (getLeftTime(), getRightTime());
     }
     if (audiostrip)
     {
         audiostrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        audiostrip->setStartAndEnd (clip->getOffset(), clip->getLength() + clip->getOffset());
+        audiostrip->setStartAndEnd (getLeftTime(), getRightTime());
     }
+
+    for (auto& graph : automations)
+        graph->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
+}
+
+
+double TimeLine::ClipComponent::getLeftTime() const
+{
+    if (clip != nullptr)
+        return clip->getOffset();
+
+    return 0;
+}
+
+double TimeLine::ClipComponent::getRightTime() const
+{
+    if (clip != nullptr)
+        return clip->getLength() + clip->getOffset();
+
+    return 0;
 }
 
 void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
@@ -496,13 +520,13 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
 
     if (filmstrip)
     {
-        int line = (event.y + getY() - 10) / 90.0;
+        int line = (event.y + getY() - timeline.margin) / (timeline.videoHeight + timeline.margin);
         if (line != timeline.getVideoLine (clip))
             timeline.setVideoLine (clip, line);
     }
     else
     {
-        int line = (event.y + getY() - 200) / 60.0;
+        int line = (event.y + getY() - timeline.numVideoLines * (timeline.videoHeight + timeline.margin) + timeline.margin) / (timeline.videoHeight + timeline.margin);
         if (line != timeline.getAudioLine (clip))
             timeline.setAudioLine (clip, line);
     }
@@ -519,22 +543,50 @@ void TimeLine::ClipComponent::updateProcessorList()
 {
     auto current = processorSelect.getText();
     processorSelect.clear();
+    automations.clear();
+
     if (isVideoClip())
     {
         int index = 0;
-        for (const auto& processor : clip->getVideoProcessors())
-            processorSelect.addItem (processor->getName(), ++index);
+        for (auto& processor : clip->getVideoProcessors())
+        {
+            ++index;
+            if (processor.get() == nullptr)
+                continue;
+
+            const auto name = processor->getName();
+            processorSelect.addItem (name, index);
+            if (name == current)
+                processorSelect.setSelectedId (index);
+        }
     }
     else
     {
         int index = 0;
-        for (const auto& processor : clip->getAudioProcessors())
-            processorSelect.addItem (processor->getName(), ++index);
-    }
+        for (auto& processor : clip->getAudioProcessors())
+        {
+            ++index;
+            if (processor.get() == nullptr)
+                continue;
 
-    for (int i=0; i < processorSelect.getNumItems(); ++i)
-        if (processorSelect.getItemText (i) == current)
-            processorSelect.setSelectedItemIndex (i);
+            const auto name = processor->getName();
+            processorSelect.addItem (name, index);
+            if (name == current)
+                processorSelect.setSelectedId (index, sendNotification);
+        }
+    }
+}
+
+void TimeLine::ClipComponent::updateParameterGraphs (foleys::ProcessorController& controller)
+{
+    automations.clear();
+    for (const auto& parameter : controller.getParameters())
+    {
+        auto graph = std::make_unique<ParameterGraph>(*this, *parameter.get());
+        addAndMakeVisible (graph.get());
+        automations.push_back (std::move (graph));
+    }
+    resized();
 }
 
 bool TimeLine::ClipComponent::isVideoClip() const
@@ -554,6 +606,53 @@ void TimeLine::ClipComponent::processorControllerToBeDeleted (const foleys::Proc
 
 void TimeLine::ClipComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
 {
+    auto index = processorSelect.getSelectedId() - 1;
+    if (isVideoClip())
+    {
+        if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
+            updateParameterGraphs (*clip->getVideoProcessors() [index]);
+    }
+    else
+    {
+        if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
+            updateParameterGraphs (*clip->getAudioProcessors() [index]);
+    }
+
     repaint();
 }
 
+//==============================================================================
+
+TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToUse,
+                                                         foleys::ParameterAutomation& automationToUse)
+  : owner (ownerToUse),
+    automation (automationToUse)
+{
+    setOpaque (false);
+}
+
+void TimeLine::ClipComponent::ParameterGraph::paint (Graphics& g)
+{
+    g.setColour (Colours::red);
+    auto lastX = 1;
+    auto lastY = mapValue (automation.getValueForTime (owner.getLeftTime()));
+    auto start = owner.getLeftTime();
+    auto end   = owner.getRightTime();
+
+    for (const auto& it : automation.getKeyframes())
+    {
+        auto nextX = jmap (it.first, start, end, 1.0, getWidth() - 2.0);
+        auto nextY = mapValue (it.second);
+        g.drawLine (lastX, lastY, nextX, nextY);
+        g.fillEllipse (nextX - 2, nextY - 2, 4, 4);
+        lastX = nextX;
+        lastY = nextY;
+    }
+
+    g.drawLine (lastX, lastY, getWidth()-2, mapValue (automation.getValueForTime (end)));
+}
+
+int TimeLine::ClipComponent::ParameterGraph::mapValue (double value) const
+{
+    return jmap (value, getHeight()-1.0, 1.0);
+}

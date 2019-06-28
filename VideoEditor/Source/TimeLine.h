@@ -76,6 +76,9 @@ public:
         void paint (Graphics& g) override;
         void resized() override;
 
+        double getLeftTime() const;
+        double getRightTime() const;
+
         void mouseMove (const MouseEvent& event) override;
         void mouseDown (const MouseEvent& event) override;
         void mouseDrag (const MouseEvent& event) override;
@@ -85,8 +88,23 @@ public:
 
         std::shared_ptr<foleys::ClipDescriptor> clip;
 
+        class ParameterGraph : public Component
+        {
+        public:
+            ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
+            void paint (Graphics& g) override;
+
+        private:
+            int mapValue (double value) const;
+
+            ClipComponent& owner;
+            foleys::ParameterAutomation& automation;
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterGraph)
+        };
+
     private:
         void updateProcessorList();
+        void updateParameterGraphs (foleys::ProcessorController&);
 
         void processorControllerAdded() override;
         void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
@@ -107,6 +125,8 @@ public:
 
         DragMode dragmode = notDragging;
         Point<int> localDragStart;
+
+        std::vector<std::unique_ptr<ParameterGraph>> automations;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipComponent)
     };
@@ -160,7 +180,10 @@ private:
     TimeMarker  timemarker;
 
     const int numVideoLines = 2;
-    const int numAudioLines = 5;
+    const int numAudioLines = 3;
+    const int videoHeight = 90;
+    const int audioHeight = 90;
+    const int margin = 10;
 
     double timelineLength = 60.0;
 
