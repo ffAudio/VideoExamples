@@ -395,7 +395,17 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
     addAndMakeVisible (processorSelect);
     processorSelect.onChange = [&]
     {
-        parameterAutomationChanged (nullptr);
+        auto index = processorSelect.getSelectedId() - 1;
+        if (isVideoClip())
+        {
+            if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
+                updateParameterGraphs (*clip->getVideoProcessors() [index]);
+        }
+        else
+        {
+            if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
+                updateParameterGraphs (*clip->getAudioProcessors() [index]);
+        }
     };
 
     clip->addListener (this);
@@ -557,7 +567,7 @@ void TimeLine::ClipComponent::updateProcessorList()
             const auto name = processor->getName();
             processorSelect.addItem (name, index);
             if (name == current)
-                processorSelect.setSelectedId (index);
+                processorSelect.setSelectedId (index, sendNotification);
         }
     }
     else
@@ -606,18 +616,6 @@ void TimeLine::ClipComponent::processorControllerToBeDeleted (const foleys::Proc
 
 void TimeLine::ClipComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
 {
-    auto index = processorSelect.getSelectedId() - 1;
-    if (isVideoClip())
-    {
-        if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
-            updateParameterGraphs (*clip->getVideoProcessors() [index]);
-    }
-    else
-    {
-        if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
-            updateParameterGraphs (*clip->getAudioProcessors() [index]);
-    }
-
     repaint();
 }
 
@@ -635,24 +633,116 @@ void TimeLine::ClipComponent::ParameterGraph::paint (Graphics& g)
 {
     g.setColour (Colours::red);
     auto lastX = 1;
-    auto lastY = mapValue (automation.getValueForTime (owner.getLeftTime()));
-    auto start = owner.getLeftTime();
-    auto end   = owner.getRightTime();
+    auto lastY = mapFromValue (automation.getValueForTime (owner.getLeftTime()));
 
     for (const auto& it : automation.getKeyframes())
     {
-        auto nextX = jmap (it.first, start, end, 1.0, getWidth() - 2.0);
-        auto nextY = mapValue (it.second);
-        g.drawLine (lastX, lastY, nextX, nextY);
-        g.fillEllipse (nextX - 2, nextY - 2, 4, 4);
+        auto nextX = mapFromTime (it.first);
+        auto nextY = mapFromValue (it.second);
+        g.drawLine (lastX, lastY, nextX, nextY, 2.0f);
+        g.fillEllipse (nextX - 3, nextY - 3, 7, 7);
         lastX = nextX;
         lastY = nextY;
     }
 
-    g.drawLine (lastX, lastY, getWidth()-2, mapValue (automation.getValueForTime (end)));
+    const auto end = owner.getRightTime();
+    g.drawLine (lastX, lastY, mapFromTime (end), mapFromValue (automation.getValueForTime (end)), 2.0f);
 }
 
-int TimeLine::ClipComponent::ParameterGraph::mapValue (double value) const
+void TimeLine::ClipComponent::ParameterGraph::mouseDown (const MouseEvent& event)
+{
+    draggingIndex = findClosestKeyFrame (event.x, event.y);
+
+    if (draggingIndex >= 0 && event.mods.isCtrlDown())
+    {
+        automation.deleteKeyframe (draggingIndex);
+        repaint();
+        return;
+    }
+
+    if (draggingIndex < 0)
+    {
+        if (automation.getKeyframes().empty() && event.mods.isCtrlDown() == false)
+        {
+            automation.setValue (mapToValue (event.y));
+        }
+        else
+        {
+            automation.addKeyframe (mapToTime (event.x), mapToValue (event.y));
+            draggingIndex = findClosestKeyFrame (event.x, event.y);
+        }
+    }
+}
+
+void TimeLine::ClipComponent::ParameterGraph::mouseDrag (const MouseEvent& event)
+{
+    if (automation.getKeyframes().empty())
+    {
+        automation.setValue (mapToValue (event.y));
+    }
+    else if (isPositiveAndBelow (draggingIndex, automation.getKeyframes().size()))
+    {
+        const auto time = mapToTime (event.x);
+        const auto value = mapToValue (event.y);
+
+        automation.setKeyframe (draggingIndex, time, value);
+        draggingIndex = findClosestKeyFrame (event.x, jlimit (1, getHeight() - 2, event.y));
+    }
+
+    repaint();
+}
+
+void TimeLine::ClipComponent::ParameterGraph::mouseUp (const MouseEvent&)
+{
+    draggingIndex = -1;
+}
+
+bool TimeLine::ClipComponent::ParameterGraph::hitTest (int x, int y)
+{
+    if (draggingIndex >= 0)
+        return true;
+
+    auto key = findClosestKeyFrame (x, y);
+    if (key >= 0)
+        return true;
+
+    return std::abs (mapFromValue (automation.getValueForTime (mapToTime (x))) - y) < 3.0;
+}
+
+int TimeLine::ClipComponent::ParameterGraph::findClosestKeyFrame (int x, int y) const
+{
+    int index = 0;
+    for (const auto& it : automation.getKeyframes())
+    {
+        if (std::abs (mapFromTime (it.first) - x) < 4 && std::abs (mapFromValue (it.second) - y) < 5)
+            return index;
+
+        ++index;
+    }
+
+    return -1;
+}
+
+int TimeLine::ClipComponent::ParameterGraph::mapFromTime (double time) const
+{
+    return jmap (time, owner.getLeftTime(), owner.getRightTime(), 1.0, getWidth() - 2.0);
+}
+
+int TimeLine::ClipComponent::ParameterGraph::mapFromValue (double value) const
 {
     return jmap (value, getHeight()-1.0, 1.0);
+}
+
+double TimeLine::ClipComponent::ParameterGraph::mapToTime (int x) const
+{
+    return jmap (double (x), 1.0, getWidth() - 2.0, owner.getLeftTime(), owner.getRightTime());
+}
+
+double TimeLine::ClipComponent::ParameterGraph::mapToValue (int y) const
+{
+    const auto h = getHeight();
+    if (h < 2)
+        return 0;
+
+    return 1.0 - (y - 1.0) / (h - 2.0);
 }

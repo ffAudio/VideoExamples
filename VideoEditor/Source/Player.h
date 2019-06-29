@@ -65,11 +65,15 @@ public:
         void getNextAudioBlock (const AudioSourceChannelInfo& info) override
         {
             AudioTransportSource::getNextAudioBlock (info);
-            AudioBuffer<float> proxy (info.buffer->getArrayOfWritePointers(),
-                                      info.buffer->getNumChannels(),
-                                      info.startSample,
-                                      info.numSamples);
-            meterSource.measureBlock (proxy);
+
+            if (isPlaying())
+            {
+                AudioBuffer<float> proxy (info.buffer->getArrayOfWritePointers(),
+                                          info.buffer->getNumChannels(),
+                                          info.startSample,
+                                          info.numSamples);
+                meterSource.measureBlock (proxy);
+            }
 
             if (clipOutput)
             {
@@ -83,7 +87,7 @@ public:
         FFAU::LevelMeterSource meterSource;
 
     private:
-        bool clipOutput = true;
+        const bool clipOutput = true;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MeasuredTransportSource)
     };

@@ -94,11 +94,25 @@ public:
             ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
             void paint (Graphics& g) override;
 
+            bool hitTest (int x, int y) override;
+
+            void mouseDown (const MouseEvent&) override;
+            void mouseDrag (const MouseEvent&) override;
+            void mouseUp (const MouseEvent&) override;
+
         private:
-            int mapValue (double value) const;
+            int mapFromTime (double time) const;
+            int mapFromValue (double value) const;
+
+            double mapToTime (int x) const;
+            double mapToValue (int y) const;
+
+            int findClosestKeyFrame (int x, int y) const;
 
             ClipComponent& owner;
             foleys::ParameterAutomation& automation;
+            int draggingIndex = -1;
+
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterGraph)
         };
 
