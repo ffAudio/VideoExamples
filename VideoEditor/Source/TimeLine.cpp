@@ -536,7 +536,7 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
     }
     else
     {
-        int line = (event.y + getY() - timeline.numVideoLines * (timeline.videoHeight + timeline.margin) + timeline.margin) / (timeline.videoHeight + timeline.margin);
+        int line = (event.y + getY() - (timeline.numVideoLines * (timeline.videoHeight + timeline.margin) + timeline.margin)) / (timeline.videoHeight + timeline.margin);
         if (line != timeline.getAudioLine (clip))
             timeline.setAudioLine (clip, line);
     }
