@@ -83,10 +83,12 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
     }
 
     controller.getOwningClipDescriptor().getOwningClip().addTimecodeListener (this);
+    controller.getOwningClipDescriptor().addListener (this);
 }
 
 ProcessorComponent::~ProcessorComponent()
 {
+    controller.getOwningClipDescriptor().removeListener (this);
     controller.getOwningClipDescriptor().getOwningClip().removeTimecodeListener (this);
 }
 
@@ -153,6 +155,19 @@ void ProcessorComponent::timecodeChanged (int64_t count, double seconds)
     auto localTime = controller.getOwningClipDescriptor().getClipTimeInDescriptorTime (seconds);
     for (auto& c : parameterComponents)
         c->updateForTime (localTime);
+}
+
+void ProcessorComponent::processorControllerToBeDeleted (const foleys::ProcessorController* controllerToBeDeleted)
+{
+    if (controllerToBeDeleted == &controller)
+        audioProcessorWindow.reset();
+}
+
+void ProcessorComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
+{
+    auto seconds = controller.getOwningClipDescriptor().getCurrentPTS();
+    for (auto& c : parameterComponents)
+        c->updateForTime (seconds);
 }
 
 const foleys::ProcessorController* ProcessorComponent::getProcessorController() const

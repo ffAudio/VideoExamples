@@ -35,7 +35,8 @@ class Player;
 */
 class ProcessorComponent    : public Component,
                               public ChangeBroadcaster,
-                              private foleys::AVClip::TimecodeListener
+                              private foleys::AVClip::TimecodeListener,
+                              private foleys::ClipDescriptor::Listener
 {
 public:
     ProcessorComponent (foleys::ProcessorController& controller,
@@ -52,6 +53,11 @@ public:
     void timecodeChanged (int64_t count, double seconds) override;
 
     const foleys::ProcessorController* getProcessorController() const;
+
+    void processorControllerAdded() override {}
+    void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
+
+    void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
 
 
     class ParameterComponent : public juce::Component, private foleys::ProcessorParameter::Listener
