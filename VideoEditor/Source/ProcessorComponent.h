@@ -46,6 +46,8 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    void mouseDrag (const MouseEvent&) override;
+
     void showProcessorEditor (AudioProcessorEditor* editor, const String& title);
 
     int getHeightForWidth(int width) const;

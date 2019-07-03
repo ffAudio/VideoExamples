@@ -82,6 +82,10 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
         parameterComponents.push_back (std::move (component));
     }
 
+    editor.setConnectedEdges (Button::ConnectedOnRight);
+    remove.setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    collapse.setConnectedEdges (Button::ConnectedOnLeft);
+
     controller.getOwningClipDescriptor().getOwningClip().addTimecodeListener (this);
     controller.getOwningClipDescriptor().addListener (this);
 }
@@ -125,6 +129,15 @@ void ProcessorComponent::resized()
         c->setVisible (! collapsed);
         if (! collapsed)
             c->setBounds (area.removeFromTop (40));
+    }
+}
+
+void ProcessorComponent::mouseDrag (const MouseEvent& event)
+{
+    if (event.getDistanceFromDragStart() > 5)
+    {
+        if (auto* dndContainer = findParentComponentOfClass<DragAndDropContainer>())
+            dndContainer->startDragging (controller.getProcessorState().toXmlString(), this);
     }
 }
 

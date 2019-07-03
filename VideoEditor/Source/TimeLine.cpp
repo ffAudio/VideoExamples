@@ -425,7 +425,7 @@ void TimeLine::ClipComponent::paint (Graphics& g)
 
     auto colour = isVideoClip() ? Colours::orange : Colours::darkgreen;
 
-    g.setColour (selected ? colour : colour.darker());
+    g.setColour (highlight ? Colours::red : (selected ? colour : colour.darker()));
     g.fillRoundedRectangle (getLocalBounds().reduced (1).toFloat(), 5.0);
 
     if (selected)
@@ -547,6 +547,40 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
 void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 {
     dragmode = notDragging;
+}
+
+bool TimeLine::ClipComponent::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
+{
+    auto tree = ValueTree::fromXml (dragSourceDetails.description.toString());
+    if (!tree.isValid())
+        return false;
+
+    if (isVideoClip())
+        return tree.getType().toString() == "VideoProcessor";
+    else
+        return tree.getType().toString() == "AudioProcessor";
+}
+
+void TimeLine::ClipComponent::itemDragEnter (const SourceDetails &dragSourceDetails)
+{
+    highlight = isInterestedInDragSource (dragSourceDetails);
+    repaint();
+}
+
+void TimeLine::ClipComponent::itemDragExit (const SourceDetails &dragSourceDetails)
+{
+    highlight = false;
+    repaint();
+}
+
+void TimeLine::ClipComponent::itemDropped (const SourceDetails &dragSourceDetails)
+{
+    highlight = false;
+    auto tree = ValueTree::fromXml (dragSourceDetails.description.toString());
+    if (!tree.isValid() || clip == nullptr)
+        return;
+
+    clip->addProcessor (tree);
 }
 
 void TimeLine::ClipComponent::updateProcessorList()

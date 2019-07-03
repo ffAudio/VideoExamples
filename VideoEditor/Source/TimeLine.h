@@ -66,8 +66,9 @@ public:
 
     void restoreClipComponents();
 
-    class ClipComponent : public Component,
-    private foleys::ClipDescriptor::Listener
+    class ClipComponent   : public Component,
+                            public DragAndDropTarget,
+                            private foleys::ClipDescriptor::Listener
     {
     public:
         ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ClipDescriptor> clip, ThreadPool& threadPool, bool video);
@@ -83,6 +84,11 @@ public:
         void mouseDown (const MouseEvent& event) override;
         void mouseDrag (const MouseEvent& event) override;
         void mouseUp (const MouseEvent& event) override;
+
+        bool isInterestedInDragSource (const SourceDetails &dragSourceDetails) override;
+        void itemDragEnter (const SourceDetails &dragSourceDetails) override;
+        void itemDragExit (const SourceDetails &dragSourceDetails) override;
+        void itemDropped (const SourceDetails &dragSourceDetails) override;
 
         bool isVideoClip() const;
 
@@ -139,6 +145,7 @@ public:
 
         DragMode dragmode = notDragging;
         Point<int> localDragStart;
+        bool highlight = false;
 
         std::vector<std::unique_ptr<ParameterGraph>> automations;
 
