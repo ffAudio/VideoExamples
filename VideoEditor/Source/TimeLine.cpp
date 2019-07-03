@@ -437,7 +437,7 @@ void TimeLine::ClipComponent::paint (Graphics& g)
     if (clip == nullptr)
         return;
 
-    g.drawFittedText (clip->getDescription(), 5, 3, getWidth() - 10, 18, Justification::left, 1);
+    g.drawFittedText (clip->getDescription(), 5, 3, 180, 18, Justification::left, 1);
 
     if (filmstrip.get() != nullptr)
         filmstrip->setAlpha (clip->getVideoVisible() ? 1.0f : 0.5f);
@@ -451,7 +451,7 @@ void TimeLine::ClipComponent::resized()
     if (clip == nullptr)
         return;
 
-    processorSelect.setBounds (85, 2, 80, 18);
+    processorSelect.setBounds (190, 2, 160, 18);
     if (filmstrip)
     {
         filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
