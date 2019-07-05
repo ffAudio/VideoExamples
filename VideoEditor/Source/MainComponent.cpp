@@ -219,6 +219,8 @@ void MainComponent::saveEdit (bool saveAs)
         FileOutputStream output (editFileName);
         if (output.openedOk())
         {
+            edit->readPluginStatesIntoValueTree();
+
             output.setPosition (0);
             output.truncate();
             output.writeString (edit->getStatusTree().toXmlString());

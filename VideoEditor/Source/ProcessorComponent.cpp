@@ -137,7 +137,10 @@ void ProcessorComponent::mouseDrag (const MouseEvent& event)
     if (event.getDistanceFromDragStart() > 5)
     {
         if (auto* dndContainer = findParentComponentOfClass<DragAndDropContainer>())
+        {
+            controller.readPluginStatesIntoValueTree();
             dndContainer->startDragging (controller.getProcessorState().toXmlString(), this);
+        }
     }
 }
 
