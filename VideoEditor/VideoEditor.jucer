@@ -39,7 +39,7 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="FFMPEG_ROOT=../../../libraries/build/"
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="FFMPEG_ROOT=/usr/local/opt/ffmpeg"
                extraCompilerFlags="-I${FFMPEG_ROOT}/include&#10;-Werror -Wall"
                extraLinkerFlags="-L${FFMPEG_ROOT}/lib" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample&#10;avresample"
                smallIcon="t8hwFJ" bigIcon="t8hwFJ">
