@@ -48,7 +48,7 @@ public:
 
     double getCurrentTimeInSeconds() const;
 
-    FFAU::LevelMeterSource& getMeterSource();
+    foleys::LevelMeterSource& getMeterSource();
 
     void initialise();
     void shutDown();
@@ -84,7 +84,7 @@ public:
             }
         }
 
-        FFAU::LevelMeterSource meterSource;
+        foleys::LevelMeterSource meterSource;
 
     private:
         const bool clipOutput = true;

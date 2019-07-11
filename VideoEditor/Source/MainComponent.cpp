@@ -57,9 +57,9 @@ namespace CommandIDs
 //==============================================================================
 MainComponent::MainComponent()
 {
-    levelMeter.setLookAndFeel (&lookAndFeel);
-    lookAndFeel.setColour (FFAU::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
-    lookAndFeel.setColour (FFAU::LevelMeter::lmTicksColour, Colours::silver);
+//    levelMeter.setLookAndFeel (&lookAndFeel);
+//    lookAndFeel.setColour (FFAU::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
+//    lookAndFeel.setColour (FFAU::LevelMeter::lmTicksColour, Colours::silver);
 
     addAndMakeVisible (library);
     addAndMakeVisible (preview);

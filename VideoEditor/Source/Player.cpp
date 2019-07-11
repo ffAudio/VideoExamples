@@ -126,7 +126,7 @@ void Player::changeListenerCallback (ChangeBroadcaster* sender)
             clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
 }
 
-FFAU::LevelMeterSource& Player::getMeterSource()
+foleys::LevelMeterSource& Player::getMeterSource()
 {
     return transportSource.meterSource;
 }
