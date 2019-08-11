@@ -165,34 +165,38 @@ void MainComponent::loadEdit()
                            "*.videdit");
     if (myChooser.browseForFileToOpen())
     {
-        auto xml = XmlDocument::parse (myChooser.getResult());
-        if (xml.get() == nullptr)
-        {
-            AlertWindow::showMessageBox (AlertWindow::WarningIcon,
-                                         NEEDS_TRANS ("Loading failed"),
-                                         "Loading of the file \"" + myChooser.getResult().getFullPathName() + "\" failed.");
-            return;
-        }
-
-        editFileName = myChooser.getResult();
-
-        auto tree = ValueTree::fromXml (*xml);
-        auto edit = std::make_shared<foleys::ComposedClip>(videoEngine);
-        videoEngine.manageLifeTime (edit);
-
-        for (auto clip : tree)
-            edit->getStatusTree().appendChild (clip.createCopy(), nullptr);
-
-        timeline.setEditClip (edit);
-        edit->addTimecodeListener (&preview);
-
-        player.setPosition (0);
-        updateTitleBar();
-
-        videoEngine.getUndoManager()->clearUndoHistory();
-
-        timeline.resized();
+        loadEditFile (myChooser.getResult());
     }
+}
+
+void MainComponent::loadEditFile (const File& file)
+{
+    auto xml = XmlDocument::parse (file);
+    if (xml.get() == nullptr)
+    {
+        AlertWindow::showMessageBox (AlertWindow::WarningIcon,
+                                     NEEDS_TRANS ("Loading failed"),
+                                     "Loading of the file \"" + file.getFullPathName() + "\" failed.");
+        return;
+    }
+
+    editFileName = file;
+    auto tree = ValueTree::fromXml (*xml);
+    auto edit = std::make_shared<foleys::ComposedClip>(videoEngine);
+    videoEngine.manageLifeTime (edit);
+
+    for (auto clip : tree)
+        edit->getStatusTree().appendChild (clip.createCopy(), nullptr);
+
+    timeline.setEditClip (edit);
+    edit->addTimecodeListener (&preview);
+
+    player.setPosition (0);
+    updateTitleBar();
+
+    videoEngine.getUndoManager()->clearUndoHistory();
+
+    timeline.resized();
 }
 
 void MainComponent::saveEdit (bool saveAs)

@@ -69,6 +69,8 @@ public:
 
     KeyPressMappingSet* getKeyMappings() const;
 
+    void loadEditFile (const File& file);
+
 private:
 
     void resetEdit();
