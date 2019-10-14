@@ -168,7 +168,7 @@ public:
         else if (b == &ffwd)
         {
             auto lastPos = clip->getNextReadPosition();
-            ffwdSpeed = ++ffwdSpeed % 7;
+            ffwdSpeed = (ffwdSpeed + 1) % 7;
             auto factor = 0.5 + (ffwdSpeed / 4.0);
             transport->setSource (clip.get(), 0, nullptr, factor, 2);
             clip->setNextReadPosition (lastPos);

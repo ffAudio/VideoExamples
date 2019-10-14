@@ -57,37 +57,97 @@ public:
 
     void setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
     std::shared_ptr<foleys::ClipDescriptor> getSelectedClip() const;
+    bool selectedClipIsVideo() const;
+
+    void toggleVisibility();
+
+    void spliceSelectedClipAtPlayPosition();
+    void spliceSelectedClipAtPosition (double pts);
 
     void restoreClipComponents();
 
-    class ClipComponent : public Component
+    class ClipComponent   : public Component,
+                            public DragAndDropTarget,
+                            private foleys::ClipDescriptor::Listener
     {
     public:
         ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ClipDescriptor> clip, ThreadPool& threadPool, bool video);
+        ~ClipComponent();
+
         void paint (Graphics& g) override;
         void resized() override;
+
+        double getLeftTime() const;
+        double getRightTime() const;
 
         void mouseMove (const MouseEvent& event) override;
         void mouseDown (const MouseEvent& event) override;
         void mouseDrag (const MouseEvent& event) override;
         void mouseUp (const MouseEvent& event) override;
 
+        bool isInterestedInDragSource (const SourceDetails &dragSourceDetails) override;
+        void itemDragEnter (const SourceDetails &dragSourceDetails) override;
+        void itemDragExit (const SourceDetails &dragSourceDetails) override;
+        void itemDropped (const SourceDetails &dragSourceDetails) override;
+
         bool isVideoClip() const;
 
         std::shared_ptr<foleys::ClipDescriptor> clip;
 
+        class ParameterGraph : public Component
+        {
+        public:
+            ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
+            void paint (Graphics& g) override;
+
+            bool hitTest (int x, int y) override;
+
+            void mouseDown (const MouseEvent&) override;
+            void mouseDrag (const MouseEvent&) override;
+            void mouseUp (const MouseEvent&) override;
+
+        private:
+            int mapFromTime (double time) const;
+            int mapFromValue (double value) const;
+
+            double mapToTime (int x) const;
+            double mapToValue (int y) const;
+
+            int findClosestKeyFrame (int x, int y) const;
+
+            ClipComponent& owner;
+            foleys::ParameterAutomation& automation;
+            int draggingIndex = -1;
+
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterGraph)
+        };
+
     private:
+        void updateProcessorList();
+        void updateParameterGraphs (foleys::ProcessorController&);
+
+        void processorControllerAdded() override;
+        void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
+        void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
+
         enum DragMode
         {
-            notDragging, dragPosition, dragLength
+            notDragging,
+            dragPosition,
+            dragLength,
+            dragOffset
         };
 
         TimeLine& timeline;
         std::unique_ptr<foleys::FilmStrip>  filmstrip;
         std::unique_ptr<foleys::AudioStrip> audiostrip;
+        ComboBox processorSelect;
 
         DragMode dragmode = notDragging;
         Point<int> localDragStart;
+        bool highlight = false;
+
+        std::vector<std::unique_ptr<ParameterGraph>> automations;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipComponent)
     };
@@ -141,7 +201,10 @@ private:
     TimeMarker  timemarker;
 
     const int numVideoLines = 2;
-    const int numAudioLines = 5;
+    const int numAudioLines = 3;
+    const int videoHeight = 90;
+    const int audioHeight = 90;
+    const int margin = 10;
 
     double timelineLength = 60.0;
 
@@ -150,6 +213,7 @@ private:
     std::vector<std::unique_ptr<ClipComponent>> clipComponents;
 
     std::weak_ptr<foleys::ClipDescriptor> selectedClip;
+    bool selectedIsVideo = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TimeLine)
 };

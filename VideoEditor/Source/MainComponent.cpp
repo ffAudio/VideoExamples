@@ -37,16 +37,21 @@ namespace CommandIDs
         fileQuit,
 
         editPreferences = 200,
+        editSplice,
+        editVisibility,
 
         playStart = 300,
         playStop,
         playReturn,
         playRecord,
 
-        viewFullScreen = 400,
+        trackAdd = 400,
+        trackRemove,
+
+        viewFullScreen = 500,
         viewExitFullScreen,
 
-        helpAbout = 500,
+        helpAbout = 600,
         helpHelp
     };
 }
@@ -55,9 +60,9 @@ namespace CommandIDs
 //==============================================================================
 MainComponent::MainComponent()
 {
-    levelMeter.setLookAndFeel (&lookAndFeel);
-    lookAndFeel.setColour (FFAU::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
-    lookAndFeel.setColour (FFAU::LevelMeter::lmTicksColour, Colours::silver);
+//    levelMeter.setLookAndFeel (&lookAndFeel);
+//    lookAndFeel.setColour (FFAU::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
+//    lookAndFeel.setColour (FFAU::LevelMeter::lmTicksColour, Colours::silver);
 
     addAndMakeVisible (library);
     addAndMakeVisible (preview);
@@ -84,6 +89,10 @@ MainComponent::MainComponent()
 #endif
 
     commandManager.getKeyMappings()->resetToDefaultMappings();
+
+    auto settingsFolder = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile (ProjectInfo::companyName).getChildFile (ProjectInfo::projectName);
+    settingsFolder.createDirectory();
+    videoEngine.getAudioPluginManager().setPluginDataFile (settingsFolder.getChildFile ("PluginList.xml"));
 
     startTimerHz (10);
 }
@@ -159,34 +168,38 @@ void MainComponent::loadEdit()
                            "*.videdit");
     if (myChooser.browseForFileToOpen())
     {
-        auto xml = XmlDocument::parse (myChooser.getResult());
-        if (xml.get() == nullptr)
-        {
-            AlertWindow::showMessageBox (AlertWindow::WarningIcon,
-                                         NEEDS_TRANS ("Loading failed"),
-                                         "Loading of the file \"" + myChooser.getResult().getFullPathName() + "\" failed.");
-            return;
-        }
-
-        editFileName = myChooser.getResult();
-
-        auto tree = ValueTree::fromXml (*xml);
-        auto edit = std::make_shared<foleys::ComposedClip>(videoEngine);
-        videoEngine.manageLifeTime (edit);
-
-        for (auto clip : tree)
-            edit->getStatusTree().appendChild (clip.createCopy(), nullptr);
-
-        timeline.setEditClip (edit);
-        edit->addTimecodeListener (&preview);
-
-        player.setPosition (0);
-        updateTitleBar();
-
-        videoEngine.getUndoManager()->clearUndoHistory();
-
-        timeline.resized();
+        loadEditFile (myChooser.getResult());
     }
+}
+
+void MainComponent::loadEditFile (const File& file)
+{
+    auto xml = XmlDocument::parse (file);
+    if (xml.get() == nullptr)
+    {
+        AlertWindow::showMessageBox (AlertWindow::WarningIcon,
+                                     NEEDS_TRANS ("Loading failed"),
+                                     "Loading of the file \"" + file.getFullPathName() + "\" failed.");
+        return;
+    }
+
+    editFileName = file;
+    auto tree = ValueTree::fromXml (*xml);
+    auto edit = std::make_shared<foleys::ComposedClip>(videoEngine);
+    videoEngine.manageLifeTime (edit);
+
+    for (auto clip : tree)
+        edit->getStatusTree().appendChild (clip.createCopy(), nullptr);
+
+    timeline.setEditClip (edit);
+    edit->addTimecodeListener (&preview);
+
+    player.setPosition (0);
+    updateTitleBar();
+
+    videoEngine.getUndoManager()->clearUndoHistory();
+
+    timeline.resized();
 }
 
 void MainComponent::saveEdit (bool saveAs)
@@ -213,6 +226,8 @@ void MainComponent::saveEdit (bool saveAs)
         FileOutputStream output (editFileName);
         if (output.openedOk())
         {
+            edit->readPluginStatesIntoValueTree();
+
             output.setPosition (0);
             output.truncate();
             output.writeString (edit->getStatusTree().toXmlString());
@@ -270,19 +285,21 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
     commands.add (CommandIDs::fileNew, CommandIDs::fileOpen, CommandIDs::fileSave, CommandIDs::fileSaveAs, CommandIDs::fileRender, StandardApplicationCommandIDs::quit);
     commands.add (StandardApplicationCommandIDs::undo, StandardApplicationCommandIDs::redo,
                   StandardApplicationCommandIDs::del, StandardApplicationCommandIDs::copy, StandardApplicationCommandIDs::paste,
-                  CommandIDs::editPreferences);
+                  CommandIDs::editSplice, CommandIDs::editVisibility, CommandIDs::editPreferences);
     commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
+    commands.add (CommandIDs::trackAdd, CommandIDs::trackRemove);
     commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExitFullScreen);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
 }
 
 void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo& result)
 {
-    auto categoryFile = "file";
-    auto categoryEdit = "edit";
-    auto categoryPlay = "play";
-    auto categoryView = "view";
-    auto categoryHelp = "help";
+    auto categoryFile  = "file";
+    auto categoryEdit  = "edit";
+    auto categoryPlay  = "play";
+    auto categoryTrack = "track";
+    auto categoryView  = "view";
+    auto categoryHelp  = "help";
 
     switch (commandID)
     {
@@ -329,6 +346,14 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.setInfo ("Paste", "Paste the gesture in the clipboard", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress ('v', ModifierKeys::commandModifier, 0));
             break;
+        case CommandIDs::editSplice:
+            result.setInfo ("Splice", "Split selected clip at play position", categoryEdit, 0);
+            result.defaultKeypresses.add (KeyPress ('b', ModifierKeys::commandModifier, 0));
+            break;
+        case CommandIDs::editVisibility:
+            result.setInfo ("Visible", "Toggle visibility or mute of the selected clip", categoryEdit, 0);
+            result.defaultKeypresses.add (KeyPress ('v', ModifierKeys::noModifiers, 0));
+            break;
         case CommandIDs::editPreferences:
             result.setInfo ("Preferences", "Open the audio preferences", categoryEdit, 0);
             result.defaultKeypresses.add (KeyPress (',', ModifierKeys::commandModifier, 0));
@@ -343,6 +368,13 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
         case CommandIDs::playReturn:
             result.setInfo ("Return", "Set playhead to begin", categoryPlay, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::returnKey, ModifierKeys::noModifiers, 0));
+            break;
+        case CommandIDs::trackAdd:
+            result.setInfo ("Add Track", "Add a new AUX track", categoryTrack, 0);
+            result.defaultKeypresses.add (KeyPress ('t', ModifierKeys::commandModifier | ModifierKeys::shiftModifier, 0));
+            break;
+        case CommandIDs::trackRemove:
+            result.setInfo ("Remove Track", "Remove an AUX track", categoryTrack, 0);
             break;
         case CommandIDs::viewFullScreen:
             result.setInfo ("Fullscreen", "Maximise Viewer", categoryView, 0);
@@ -377,12 +409,17 @@ bool MainComponent::perform (const InvocationInfo& info)
         case StandardApplicationCommandIDs::undo: videoEngine.getUndoManager()->undo(); break;
         case StandardApplicationCommandIDs::redo: videoEngine.getUndoManager()->redo(); break;
         case StandardApplicationCommandIDs::del: deleteSelectedClip(); break;
+        case CommandIDs::editSplice: timeline.spliceSelectedClipAtPlayPosition(); break;
+        case CommandIDs::editVisibility: timeline.toggleVisibility(); break;
 
         case CommandIDs::editPreferences: showPreferences(); break;
 
         case CommandIDs::playStart: if (player.isPlaying()) player.stop(); else player.start(); break;
         case CommandIDs::playStop: player.stop(); break;
         case CommandIDs::playReturn: player.setPosition (0.0) ; break;
+
+        case CommandIDs::trackAdd: break;
+        case CommandIDs::trackRemove: break;
 
         case CommandIDs::viewFullScreen: setViewerFullScreen (! viewerFullScreen); break;
         case CommandIDs::viewExitFullScreen: setViewerFullScreen (false); break;
@@ -395,7 +432,7 @@ bool MainComponent::perform (const InvocationInfo& info)
 
 StringArray MainComponent::getMenuBarNames()
 {
-    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("View"), NEEDS_TRANS ("Help")};
+    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("Track"), NEEDS_TRANS ("View"), NEEDS_TRANS ("Help")};
 }
 
 PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
@@ -425,6 +462,9 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
         menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::copy);
         menu.addCommandItem (&commandManager, StandardApplicationCommandIDs::paste);
         menu.addSeparator();
+        menu.addCommandItem (&commandManager, CommandIDs::editSplice);
+        menu.addCommandItem (&commandManager, CommandIDs::editVisibility);
+        menu.addSeparator();
         menu.addCommandItem (&commandManager, CommandIDs::editPreferences);
     }
     else if (topLevelMenuIndex == 2)
@@ -435,16 +475,20 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
     }
     else if (topLevelMenuIndex == 3)
     {
+        menu.addCommandItem (&commandManager, CommandIDs::trackAdd);
+        menu.addCommandItem (&commandManager, CommandIDs::trackRemove);
+    }
+    else if (topLevelMenuIndex == 4)
+    {
         menu.addCommandItem (&commandManager, CommandIDs::viewFullScreen);
         menu.addCommandItem (&commandManager, CommandIDs::viewExitFullScreen);
     }
-    else if (topLevelMenuIndex == 4)
+    else if (topLevelMenuIndex == 5)
     {
         menu.addCommandItem (&commandManager, CommandIDs::helpAbout);
         menu.addCommandItem (&commandManager, CommandIDs::helpHelp);
     }
     return menu;
-
 }
 
 void MainComponent::timerCallback()

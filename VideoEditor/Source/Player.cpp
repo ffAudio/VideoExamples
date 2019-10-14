@@ -74,14 +74,21 @@ double Player::getCurrentTimeInSeconds() const
 
 void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
 {
+    auto numChannels = 2;
     transportSource.stop();
     transportSource.setSource (nullptr);
     clip = clipToUse;
     if (auto* device = deviceManager.getCurrentAudioDevice())
+    {
         if (clip != nullptr)
+        {
             clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
+            numChannels = device->getOutputChannelNames().size();
+        }
+    }
 
     transportSource.setSource (clip.get());
+    transportSource.meterSource.resize (numChannels, 5);
 
     preview.setClip (clip);
 
@@ -119,7 +126,7 @@ void Player::changeListenerCallback (ChangeBroadcaster* sender)
             clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
 }
 
-FFAU::LevelMeterSource& Player::getMeterSource()
+foleys::LevelMeterSource& Player::getMeterSource()
 {
     return transportSource.meterSource;
 }

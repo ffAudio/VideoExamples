@@ -69,6 +69,8 @@ public:
 
     KeyPressMappingSet* getKeyMappings() const;
 
+    void loadEditFile (const File& file);
+
 private:
 
     void resetEdit();
@@ -87,7 +89,6 @@ private:
     foleys::VideoEngine   videoEngine;
     foleys::ClipRenderer  renderer { videoEngine };
 
-    FFAU::LevelMeterLookAndFeel lookAndFeel;
     ApplicationCommandManager   commandManager;
 
     foleys::VideoPreview  preview;
@@ -98,7 +99,7 @@ private:
     Viewport              viewport;
     TimeLine              timeline   { videoEngine, player, properties };
     TransportControl      transport  { player };
-    FFAU::LevelMeter      levelMeter { FFAU::LevelMeter::Default };
+    foleys::LevelMeter    levelMeter { std::make_unique<foleys::VerticalMultiChannelMeter>() };
 
     File editFileName;
     int  lowerPart = 0;

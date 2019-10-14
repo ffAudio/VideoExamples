@@ -26,7 +26,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Properties.h"
-#include "ProcessorComponent.h"
+#include "ClipProperties.h"
 
 //==============================================================================
 
@@ -75,9 +75,9 @@ void Properties::showProperties (std::unique_ptr<Component> componentToDisplay)
     component->setBounds (getLocalBounds().withTop (40).reduced (5));
 }
 
-void Properties::showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
+void Properties::showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, Player& player, bool video)
 {
-        showProperties (std::make_unique<ClipProcessorProperties>(clip, video));
+        showProperties (std::make_unique<ClipProcessorProperties>(engine, clip, player, video));
 }
 
 void Properties::closeProperties()
@@ -86,75 +86,3 @@ void Properties::closeProperties()
     repaint();
 }
 
-//==============================================================================
-
-ClipProcessorProperties::ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clipToUse, bool showVideo)
-  : clip (clipToUse),
-    video (showVideo)
-{
-    scroller.setScrollBarsShown (true, false);
-    scroller.setViewedComponent (&container, false);
-    addAndMakeVisible (scroller);
-
-    const auto& processors = video ? clip->getVideoProcessors() : clip->getAudioProcessors();
-
-    for (auto& processor : processors)
-    {
-        auto editor = std::make_unique<ProcessorComponent>(*processor);
-        container.addAndMakeVisible (editor.get());
-        editor->timecodeChanged (0 , clip->getOwningClip().getCurrentTimeInSeconds());
-        editor->addChangeListener (this);
-        editors.push_back (std::move (editor));
-    }
-
-    clip->addListener (this);
-}
-
-ClipProcessorProperties::~ClipProcessorProperties()
-{
-    clip->removeListener (this);
-}
-
-void ClipProcessorProperties::paint (Graphics& g)
-{
-    g.setColour (Colours::silver);
-    g.drawFittedText ((video ? NEEDS_TRANS ("Video: ") : NEEDS_TRANS ("Audio: ")) + clip->getDescription(),
-                      getLocalBounds().removeFromTop (36), Justification::left, 1);
-}
-
-void ClipProcessorProperties::resized()
-{
-    auto area = getLocalBounds().withTop (40).reduced (5);
-    scroller.setBounds (area);
-
-    int needed = 0;
-    for (auto& editor : editors)
-        needed += editor->getHeightForWidth (area.getWidth());
-
-    Rectangle<int> childRect (0, 0, area.getWidth() - scroller.getScrollBarThickness(), needed);
-    container.setBounds (childRect);
-
-    for (auto& editor : editors)
-        editor->setBounds (childRect.removeFromTop (editor->getHeightForWidth (area.getWidth())).reduced (5));
-}
-
-void ClipProcessorProperties::processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted)
-{
-    auto editor = std::find_if (editors.begin(), editors.end(), [toBeDeleted](auto& p)
-                            {
-                                return p->getProcessorController() == toBeDeleted;
-                            });
-
-    if (editor != editors.end())
-    {
-        (*editor)->removeChangeListener (this);
-        editors.erase (editor);
-    }
-
-    resized();
-}
-
-void ClipProcessorProperties::changeListenerCallback (ChangeBroadcaster*)
-{
-    resized();
-}

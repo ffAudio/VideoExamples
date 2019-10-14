@@ -28,19 +28,27 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+class Player;
+
 //==============================================================================
 /*
 */
 class ProcessorComponent    : public Component,
                               public ChangeBroadcaster,
-                              private foleys::AVClip::TimecodeListener
+                              private foleys::AVClip::TimecodeListener,
+                              private foleys::ClipDescriptor::Listener
 {
 public:
-    ProcessorComponent (foleys::ProcessorController& controller);
+    ProcessorComponent (foleys::ProcessorController& controller,
+                        Player& player);
     ~ProcessorComponent();
 
     void paint (Graphics&) override;
     void resized() override;
+
+    void mouseDrag (const MouseEvent&) override;
+
+    void showProcessorEditor (AudioProcessorEditor* editor, const String& title);
 
     int getHeightForWidth(int width) const;
 
@@ -48,10 +56,16 @@ public:
 
     const foleys::ProcessorController* getProcessorController() const;
 
+    void processorControllerAdded() override {}
+    void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
+
+    void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
+
+
     class ParameterComponent : public juce::Component, private foleys::ProcessorParameter::Listener
     {
     public:
-        ParameterComponent (foleys::ClipDescriptor& clip, foleys::ParameterAutomation& parameter);
+        ParameterComponent (foleys::ClipDescriptor& clip, foleys::ParameterAutomation& parameter, Player& player);
 
         void paint (Graphics&) override;
         void resized() override;
@@ -62,22 +76,55 @@ public:
 
         void updateForTime (double pts);
 
+        class ParameterWidget
+        {
+        public:
+            ParameterWidget() = default;
+            virtual ~ParameterWidget() = default;
+
+            virtual void setValue (double value) = 0;
+            virtual double getValue() const = 0;
+
+            virtual juce::Component& getComponent() = 0;
+
+        private:
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterWidget)
+        };
+
     private:
         foleys::ClipDescriptor& clip;
         foleys::ParameterAutomation& parameter;
-        bool dragging = false;
-        Slider valueSlider { Slider::LinearHorizontal, Slider::TextBoxRight };
+
+        std::unique_ptr<ParameterWidget> widget;
+
         TextButton prev { "<" };
         TextButton next { ">" };
         TextButton add  { "+" };
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterComponent)
     };
 private:
+
+    bool isCollapsed() const;
+
     TextButton active   { "A" };
+    TextButton editor   { "E" };
     TextButton collapse { "v" };
     TextButton remove   { "X" };
 
     foleys::ProcessorController& controller;
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;
+
+    //==============================================================================
+
+    class AudioProcessorWindow  : public DocumentWindow
+    {
+    public:
+        AudioProcessorWindow (AudioProcessorEditor* editor, const String& title);
+        void closeButtonPressed() override;
+    private:
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioProcessorWindow)
+    };
+    std::unique_ptr<AudioProcessorWindow> audioProcessorWindow;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProcessorComponent)
 };

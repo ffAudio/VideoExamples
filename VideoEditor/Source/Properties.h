@@ -28,7 +28,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-class ProcessorComponent;
+class Player;
 
 //==============================================================================
 /*
@@ -43,7 +43,7 @@ public:
 
     void showProperties (std::unique_ptr<Component> component);
 
-    void showClipProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
+    void showClipProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, Player& player, bool video);
 
     void closeProperties();
 
@@ -55,33 +55,3 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Properties)
 };
 
-
-//==============================================================================
-
-class ClipProcessorProperties  : public Component,
-                                 public ChangeListener,
-                                 private foleys::ClipDescriptor::Listener
-{
-public:
-    ClipProcessorProperties (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
-    ~ClipProcessorProperties();
-
-    void paint (Graphics& g) override;
-
-    void resized() override;
-
-    void processorControllerAdded() override {}
-    void processorControllerToBeDeleted (const foleys::ProcessorController* toBeDeleted) override;
-
-    void changeListenerCallback (ChangeBroadcaster*) override;
-
-private:
-    std::shared_ptr<foleys::ClipDescriptor> clip;
-    std::vector<std::unique_ptr<ProcessorComponent>> editors;
-
-    Viewport  scroller;
-    Component container;
-
-    bool video = false;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipProcessorProperties)
-};

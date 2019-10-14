@@ -34,21 +34,17 @@ public:
 
     const String getApplicationName() override       { return ProjectInfo::projectName; }
     const String getApplicationVersion() override    { return ProjectInfo::versionString; }
-    bool moreThanOneInstanceAllowed() override       { return true; }
+    bool moreThanOneInstanceAllowed() override       { return false; }
 
     //==============================================================================
     void initialise (const String& commandLine) override
     {
-        // This method is where you should put your application's initialisation code..
-
         mainWindow.reset (new MainWindow (getApplicationName()));
     }
 
     void shutdown() override
     {
-        // Add your application's shutdown code here..
-
-        mainWindow = nullptr; // (deletes our window)
+        mainWindow.reset();
     }
 
     //==============================================================================
@@ -64,6 +60,9 @@ public:
         // When another instance of the app is launched while this one is running,
         // this method is invoked, and the commandLine parameter tells you what
         // the other instance's command-line arguments were.
+        File file (commandLine);
+        if (mainWindow.get() != nullptr && file.existsAsFile() && file.getFileExtension() == ".videdit")
+            mainWindow->getMainComponent().loadEditFile (file);
     }
 
     //==============================================================================
@@ -113,6 +112,12 @@ public:
            you really have to override any DocumentWindow methods, make sure your
            subclass also calls the superclass's method.
         */
+
+        MainComponent& getMainComponent()
+        {
+            jassert (getContentComponent());
+            return *dynamic_cast<MainComponent*>(getContentComponent());
+        }
 
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)

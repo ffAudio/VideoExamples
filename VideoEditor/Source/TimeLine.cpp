@@ -63,11 +63,11 @@ void TimeLine::paint (Graphics& g)
 
     g.setColour (Colours::darkgrey);
     for (int i=0; i < numVideoLines; ++i)
-        g.fillRect (0, 10 + i * 90, getWidth(), 80);
+        g.fillRect (0, margin + i * (videoHeight + margin), getWidth(), videoHeight);
 
     g.setColour (Colours::darkgrey.darker());
     for (int i=0; i < numAudioLines; ++i)
-        g.fillRect (0, 200 + i * 60, getWidth(), 50);
+        g.fillRect (0, numVideoLines * (videoHeight + margin) + margin + i * (audioHeight + margin), getWidth(), audioHeight);
 }
 
 void TimeLine::resized()
@@ -86,14 +86,14 @@ void TimeLine::resized()
         if (component->isVideoClip())
         {
             int videoline = component->clip->getStatusTree().getProperty (IDs::videoLine, 0);
-            component->setBounds (getXFromTime (component->clip->getStart()), 10 + videoline * 90,
-                                  getXFromTime (component->clip->getLength()), 80);
+            component->setBounds (getXFromTime (component->clip->getStart()), margin + videoline * (videoHeight + margin),
+                                  getXFromTime (component->clip->getLength()), videoHeight);
         }
         else
         {
             int audioline = component->clip->getStatusTree().getProperty (IDs::audioLine, 0);
-            component->setBounds (getXFromTime (component->clip->getStart()), 200 + audioline * 60,
-                                  getXFromTime (component->clip->getLength()), 50);
+            component->setBounds (getXFromTime (component->clip->getStart()), numVideoLines * (videoHeight + margin) + margin + audioline * (audioHeight + margin),
+                                  getXFromTime (component->clip->getLength()), audioHeight);
         }
     }
 
@@ -162,34 +162,13 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
     auto descriptor = edit->addClip (clip, start, length);
     if (y < 190)
     {
-        int line = (y - 10) / 90.0;
+        int line = (y - margin) / double (videoHeight + margin);
         setVideoLine (descriptor, line);
     }
     else
     {
-        int line = (y - 200) / 60.0;
+        int line = (y - numVideoLines * (videoHeight + margin) + margin) / (audioHeight + margin);
         setAudioLine (descriptor, line);
-    }
-
-    if (clip->hasVideo())
-    {
-        String error;
-        auto position = videoEngine.createVideoPluginInstance ("BUILTIN: " + foleys::PositioningVideoProcessor::getPluginName(), error);
-        if (position.get() != nullptr && error.isEmpty())
-            descriptor->addVideoProcessor (std::move (position));
-
-        auto colour = videoEngine.createVideoPluginInstance ("BUILTIN: " + foleys::ColourCurveVideoProcessor::getPluginName(), error);
-        if (colour.get() != nullptr && error.isEmpty())
-            descriptor->addVideoProcessor (std::move (colour));
-    }
-
-    if (clip->hasAudio())
-    {
-        String error;
-        auto panning = videoEngine.createAudioPluginInstance ("BUILTIN: " + foleys::PanningAudioProcessor::getPluginName(),
-                                                              edit->getSampleRate(), edit->getDefaultBufferSize(), error);
-        if (panning.get() != nullptr && error.isEmpty())
-            descriptor->addAudioProcessor (std::move (panning));
     }
 
     restoreClipComponents();
@@ -201,13 +180,67 @@ void TimeLine::addClipToEdit (juce::File file, double start, int y)
 void TimeLine::setSelectedClip (std::shared_ptr<foleys::ClipDescriptor> clip, bool video)
 {
     selectedClip = clip;
-    properties.showClipProperties (clip, video);
+    selectedIsVideo = video;
+    properties.showClipProperties (videoEngine, clip, player, video);
     repaint();
 }
 
 std::shared_ptr<foleys::ClipDescriptor> TimeLine::getSelectedClip() const
 {
     return selectedClip.lock();
+}
+
+bool TimeLine::selectedClipIsVideo() const
+{
+    return selectedIsVideo;
+}
+
+void TimeLine::toggleVisibility()
+{
+    auto clip = selectedClip.lock();
+    if (clip.get() == nullptr)
+        return;
+
+    if (selectedIsVideo)
+        clip->setVideoVisible (! clip->getVideoVisible());
+    else
+        clip->setAudioPlaying (! clip->getAudioPlaying());
+
+    repaint();
+}
+
+void TimeLine::spliceSelectedClipAtPlayPosition()
+{
+    spliceSelectedClipAtPosition (player.getCurrentTimeInSeconds());
+}
+
+void TimeLine::spliceSelectedClipAtPosition (double pts)
+{
+    auto clip = selectedClip.lock();
+    if (clip.get() == nullptr)
+        return;
+
+    auto start  = clip->getStart();
+    auto length = clip->getLength();
+    auto offset = clip->getOffset() + (pts - start);
+
+    if (pts < start || pts > start + length)
+        return;
+
+    edit->getStatusTree().addChild (clip->getStatusTree().createCopy(), -1, videoEngine.getUndoManager());
+    clip->setLength (pts - clip->getStart());
+    clip->updateSampleCounts();
+
+    auto newClip = edit->getClip (int (edit->getClips().size()) - 1);
+    if (newClip.get() == nullptr)
+        return;
+
+    newClip->setStart (pts);
+    newClip->setLength (length - (pts - start));
+    newClip->setOffset (offset);
+
+    newClip->setDescription (edit->makeUniqueDescription(clip->getDescription()));
+    newClip->updateSampleCounts();
 }
 
 void TimeLine::restoreClipComponents()
@@ -356,6 +389,32 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
         audiostrip->setClip (clip->clip);
         addAndMakeVisible (audiostrip.get());
     }
+
+    updateProcessorList();
+    processorSelect.setColour (ComboBox::backgroundColourId, Colours::black.withAlpha (0.2f));
+    addAndMakeVisible (processorSelect);
+    processorSelect.onChange = [&]
+    {
+        auto index = processorSelect.getSelectedId() - 1;
+        if (isVideoClip())
+        {
+            if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
+                updateParameterGraphs (*clip->getVideoProcessors() [index]);
+        }
+        else
+        {
+            if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
+                updateParameterGraphs (*clip->getAudioProcessors() [index]);
+        }
+    };
+
+    clip->addListener (this);
+}
+
+TimeLine::ClipComponent::~ClipComponent()
+{
+    if (clip.get() != nullptr)
+        clip->removeListener (this);
 }
 
 void TimeLine::ClipComponent::paint (Graphics& g)
@@ -366,14 +425,25 @@ void TimeLine::ClipComponent::paint (Graphics& g)
 
     auto colour = isVideoClip() ? Colours::orange : Colours::darkgreen;
 
-    g.setColour (selected ? colour : colour.darker());
+    g.setColour (highlight ? Colours::red : (selected ? colour : colour.darker()));
     g.fillRoundedRectangle (getLocalBounds().reduced (1).toFloat(), 5.0);
 
-    g.setColour (selected ? colour.contrasting() : colour);
+    if (selected)
+        g.setColour (timeline.selectedIsVideo == isVideoClip() ? colour.contrasting() : colour.contrasting().withAlpha (0.5f));
+    else
+        g.setColour (colour);
 
     g.drawRoundedRectangle (getLocalBounds().toFloat(), 5.0, 2.0);
-    if (clip != nullptr)
-        g.drawFittedText (clip->getDescription(), 5, 3, getWidth() - 10, 18, Justification::left, 1);
+    if (clip == nullptr)
+        return;
+
+    g.drawFittedText (clip->getDescription(), 5, 3, 180, 18, Justification::left, 1);
+
+    if (filmstrip.get() != nullptr)
+        filmstrip->setAlpha (clip->getVideoVisible() ? 1.0f : 0.5f);
+
+    if (audiostrip.get() != nullptr)
+        audiostrip->setAlpha (clip->getAudioPlaying() ? 1.0f : 0.3f);
 }
 
 void TimeLine::ClipComponent::resized()
@@ -381,25 +451,45 @@ void TimeLine::ClipComponent::resized()
     if (clip == nullptr)
         return;
 
+    processorSelect.setBounds (190, 2, 160, 18);
     if (filmstrip)
     {
         filmstrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        filmstrip->setStartAndEnd (clip->getOffset(), clip->getLength() + clip->getOffset());
+        filmstrip->setStartAndEnd (getLeftTime(), getRightTime());
     }
     if (audiostrip)
     {
         audiostrip->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
-        audiostrip->setStartAndEnd (clip->getOffset(), clip->getLength() + clip->getOffset());
+        audiostrip->setStartAndEnd (getLeftTime(), getRightTime());
     }
+
+    for (auto& graph : automations)
+        graph->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
+}
+
+
+double TimeLine::ClipComponent::getLeftTime() const
+{
+    if (clip != nullptr)
+        return clip->getOffset();
+
+    return 0;
+}
+
+double TimeLine::ClipComponent::getRightTime() const
+{
+    if (clip != nullptr)
+        return clip->getLength() + clip->getOffset();
+
+    return 0;
 }
 
 void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
 {
-    if (event.x > getWidth() - 5)
+    if (event.x > getWidth() - 5 || event.x < 5)
         setMouseCursor (MouseCursor::LeftRightResizeCursor);
     else
         setMouseCursor (MouseCursor::DraggingHandCursor);
-
 }
 
 void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
@@ -407,7 +497,9 @@ void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
     localDragStart = event.getPosition();
     timeline.setSelectedClip (clip, isVideoClip());
 
-    if (event.x > getWidth() - 5)
+    if (event.x < 5)
+        dragmode = dragOffset;
+    else if (event.x > getWidth() - 5)
         dragmode = dragLength;
     else
         dragmode = dragPosition;
@@ -423,16 +515,28 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
         clip->setStart (std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()), 0.0));
     else if (dragmode == dragLength)
         clip->setLength (std::min (timeline.getTimeFromX (event.x), clip->clip->getLengthInSeconds()));
+    else if (dragmode == dragOffset)
+    {
+        auto oldPosition = clip->getStart();
+        auto oldOffset   = clip->getOffset();
+        auto oldLength   = clip->getLength();
+        auto delta = std::min (std::max (timeline.getTimeFromX ((event.x - localDragStart.x) + getX()) - oldPosition,
+                                         -oldOffset), oldLength);
+        clip->setStart (oldPosition + delta);
+        clip->setOffset (oldOffset + delta);
+        clip->setLength (oldLength - delta);
+        clip->updateSampleCounts();
+    }
 
     if (filmstrip)
     {
-        int line = (event.y + getY() - 10) / 90.0;
+        int line = (event.y + getY() - timeline.margin) / (timeline.videoHeight + timeline.margin);
         if (line != timeline.getVideoLine (clip))
             timeline.setVideoLine (clip, line);
     }
     else
     {
-        int line = (event.y + getY() - 200) / 60.0;
+        int line = (event.y + getY() - (timeline.numVideoLines * (timeline.videoHeight + timeline.margin) + timeline.margin)) / (timeline.videoHeight + timeline.margin);
         if (line != timeline.getAudioLine (clip))
             timeline.setAudioLine (clip, line);
     }
@@ -445,7 +549,234 @@ void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
     dragmode = notDragging;
 }
 
+bool TimeLine::ClipComponent::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
+{
+    auto tree = ValueTree::fromXml (dragSourceDetails.description.toString());
+    if (!tree.isValid())
+        return false;
+
+    if (isVideoClip())
+        return tree.getType().toString() == "VideoProcessor";
+    else
+        return tree.getType().toString() == "AudioProcessor";
+}
+
+void TimeLine::ClipComponent::itemDragEnter (const SourceDetails &dragSourceDetails)
+{
+    highlight = isInterestedInDragSource (dragSourceDetails);
+    repaint();
+}
+
+void TimeLine::ClipComponent::itemDragExit (const SourceDetails &dragSourceDetails)
+{
+    highlight = false;
+    repaint();
+}
+
+void TimeLine::ClipComponent::itemDropped (const SourceDetails &dragSourceDetails)
+{
+    highlight = false;
+    auto tree = ValueTree::fromXml (dragSourceDetails.description.toString());
+    if (!tree.isValid() || clip == nullptr)
+        return;
+
+    clip->addProcessor (tree);
+}
+
+void TimeLine::ClipComponent::updateProcessorList()
+{
+    auto current = processorSelect.getText();
+    processorSelect.clear();
+    automations.clear();
+
+    if (isVideoClip())
+    {
+        int index = 0;
+        for (auto& processor : clip->getVideoProcessors())
+        {
+            ++index;
+            if (processor.get() == nullptr)
+                continue;
+
+            const auto name = processor->getName();
+            processorSelect.addItem (name, index);
+            if (name == current)
+                processorSelect.setSelectedId (index, sendNotification);
+        }
+    }
+    else
+    {
+        int index = 0;
+        for (auto& processor : clip->getAudioProcessors())
+        {
+            ++index;
+            if (processor.get() == nullptr)
+                continue;
+
+            const auto name = processor->getName();
+            processorSelect.addItem (name, index);
+            if (name == current)
+                processorSelect.setSelectedId (index, sendNotification);
+        }
+    }
+}
+
+void TimeLine::ClipComponent::updateParameterGraphs (foleys::ProcessorController& controller)
+{
+    automations.clear();
+    for (const auto& parameter : controller.getParameters())
+    {
+        auto graph = std::make_unique<ParameterGraph>(*this, *parameter.get());
+        addAndMakeVisible (graph.get());
+        automations.push_back (std::move (graph));
+    }
+    resized();
+}
+
 bool TimeLine::ClipComponent::isVideoClip() const
 {
     return filmstrip.get() != nullptr;
+}
+
+void TimeLine::ClipComponent::processorControllerAdded()
+{
+    updateProcessorList();
+}
+
+void TimeLine::ClipComponent::processorControllerToBeDeleted (const foleys::ProcessorController*)
+{
+    updateProcessorList();
+}
+
+void TimeLine::ClipComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
+{
+    repaint();
+}
+
+//==============================================================================
+
+TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToUse,
+                                                         foleys::ParameterAutomation& automationToUse)
+  : owner (ownerToUse),
+    automation (automationToUse)
+{
+    setOpaque (false);
+}
+
+void TimeLine::ClipComponent::ParameterGraph::paint (Graphics& g)
+{
+    g.setColour (Colours::red);
+    auto lastX = 1;
+    auto lastY = mapFromValue (automation.getValueForTime (owner.getLeftTime()));
+
+    for (const auto& it : automation.getKeyframes())
+    {
+        auto nextX = mapFromTime (it.first);
+        auto nextY = mapFromValue (it.second);
+        g.drawLine (lastX, lastY, nextX, nextY, 2.0f);
+        g.fillEllipse (nextX - 3, nextY - 3, 7, 7);
+        lastX = nextX;
+        lastY = nextY;
+    }
+
+    const auto end = owner.getRightTime();
+    g.drawLine (lastX, lastY, mapFromTime (end), mapFromValue (automation.getValueForTime (end)), 2.0f);
+}
+
+void TimeLine::ClipComponent::ParameterGraph::mouseDown (const MouseEvent& event)
+{
+    draggingIndex = findClosestKeyFrame (event.x, event.y);
+
+    if (draggingIndex >= 0 && event.mods.isCtrlDown())
+    {
+        automation.deleteKeyframe (draggingIndex);
+        repaint();
+        return;
+    }
+
+    if (draggingIndex < 0)
+    {
+        if (automation.getKeyframes().empty() && event.mods.isCtrlDown() == false)
+        {
+            automation.setValue (mapToValue (event.y));
+        }
+        else
+        {
+            automation.addKeyframe (mapToTime (event.x), mapToValue (event.y));
+            draggingIndex = findClosestKeyFrame (event.x, event.y);
+        }
+    }
+}
+
+void TimeLine::ClipComponent::ParameterGraph::mouseDrag (const MouseEvent& event)
+{
+    if (automation.getKeyframes().empty())
+    {
+        automation.setValue (mapToValue (event.y));
+    }
+    else if (isPositiveAndBelow (draggingIndex, automation.getKeyframes().size()))
+    {
+        const auto time = mapToTime (event.x);
+        const auto value = mapToValue (event.y);
+
+        automation.setKeyframe (draggingIndex, time, value);
+        draggingIndex = findClosestKeyFrame (event.x, jlimit (1, getHeight() - 2, event.y));
+    }
+
+    repaint();
+}
+
+void TimeLine::ClipComponent::ParameterGraph::mouseUp (const MouseEvent&)
+{
+    draggingIndex = -1;
+}
+
+bool TimeLine::ClipComponent::ParameterGraph::hitTest (int x, int y)
+{
+    if (draggingIndex >= 0)
+        return true;
+
+    auto key = findClosestKeyFrame (x, y);
+    if (key >= 0)
+        return true;
+
+    return std::abs (mapFromValue (automation.getValueForTime (mapToTime (x))) - y) < 3.0;
+}
+
+int TimeLine::ClipComponent::ParameterGraph::findClosestKeyFrame (int x, int y) const
+{
+    int index = 0;
+    for (const auto& it : automation.getKeyframes())
+    {
+        if (std::abs (mapFromTime (it.first) - x) < 4 && std::abs (mapFromValue (it.second) - y) < 5)
+            return index;
+
+        ++index;
+    }
+
+    return -1;
+}
+
+int TimeLine::ClipComponent::ParameterGraph::mapFromTime (double time) const
+{
+    return jmap (time, owner.getLeftTime(), owner.getRightTime(), 1.0, getWidth() - 2.0);
+}
+
+int TimeLine::ClipComponent::ParameterGraph::mapFromValue (double value) const
+{
+    return jmap (value, getHeight()-1.0, 1.0);
+}
+
+double TimeLine::ClipComponent::ParameterGraph::mapToTime (int x) const
+{
+    return jmap (double (x), 1.0, getWidth() - 2.0, owner.getLeftTime(), owner.getRightTime());
+}
+
+double TimeLine::ClipComponent::ParameterGraph::mapToValue (int y) const
+{
+    const auto h = getHeight();
+    if (h < 2)
+        return 0;
+
+    return 1.0 - (y - 1.0) / (h - 2.0);
 }
