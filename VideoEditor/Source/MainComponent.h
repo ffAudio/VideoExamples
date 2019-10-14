@@ -89,7 +89,6 @@ private:
     foleys::VideoEngine   videoEngine;
     foleys::ClipRenderer  renderer { videoEngine };
 
-//    FFAU::LevelMeterLookAndFeel lookAndFeel;
     ApplicationCommandManager   commandManager;
 
     foleys::VideoPreview  preview;

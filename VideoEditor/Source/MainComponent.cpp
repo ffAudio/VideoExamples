@@ -45,10 +45,13 @@ namespace CommandIDs
         playReturn,
         playRecord,
 
-        viewFullScreen = 400,
+        trackAdd = 400,
+        trackRemove,
+
+        viewFullScreen = 500,
         viewExitFullScreen,
 
-        helpAbout = 500,
+        helpAbout = 600,
         helpHelp
     };
 }
@@ -284,17 +287,19 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
                   StandardApplicationCommandIDs::del, StandardApplicationCommandIDs::copy, StandardApplicationCommandIDs::paste,
                   CommandIDs::editSplice, CommandIDs::editVisibility, CommandIDs::editPreferences);
     commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
+    commands.add (CommandIDs::trackAdd, CommandIDs::trackRemove);
     commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExitFullScreen);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
 }
 
 void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo& result)
 {
-    auto categoryFile = "file";
-    auto categoryEdit = "edit";
-    auto categoryPlay = "play";
-    auto categoryView = "view";
-    auto categoryHelp = "help";
+    auto categoryFile  = "file";
+    auto categoryEdit  = "edit";
+    auto categoryPlay  = "play";
+    auto categoryTrack = "track";
+    auto categoryView  = "view";
+    auto categoryHelp  = "help";
 
     switch (commandID)
     {
@@ -364,6 +369,13 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.setInfo ("Return", "Set playhead to begin", categoryPlay, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::returnKey, ModifierKeys::noModifiers, 0));
             break;
+        case CommandIDs::trackAdd:
+            result.setInfo ("Add Track", "Add a new AUX track", categoryTrack, 0);
+            result.defaultKeypresses.add (KeyPress ('t', ModifierKeys::commandModifier | ModifierKeys::shiftModifier, 0));
+            break;
+        case CommandIDs::trackRemove:
+            result.setInfo ("Remove Track", "Remove an AUX track", categoryTrack, 0);
+            break;
         case CommandIDs::viewFullScreen:
             result.setInfo ("Fullscreen", "Maximise Viewer", categoryView, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::returnKey, ModifierKeys::commandModifier, 0));
@@ -406,6 +418,9 @@ bool MainComponent::perform (const InvocationInfo& info)
         case CommandIDs::playStop: player.stop(); break;
         case CommandIDs::playReturn: player.setPosition (0.0) ; break;
 
+        case CommandIDs::trackAdd: break;
+        case CommandIDs::trackRemove: break;
+
         case CommandIDs::viewFullScreen: setViewerFullScreen (! viewerFullScreen); break;
         case CommandIDs::viewExitFullScreen: setViewerFullScreen (false); break;
         default:
@@ -417,7 +432,7 @@ bool MainComponent::perform (const InvocationInfo& info)
 
 StringArray MainComponent::getMenuBarNames()
 {
-    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("View"), NEEDS_TRANS ("Help")};
+    return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("Track"), NEEDS_TRANS ("View"), NEEDS_TRANS ("Help")};
 }
 
 PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
@@ -460,16 +475,20 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
     }
     else if (topLevelMenuIndex == 3)
     {
+        menu.addCommandItem (&commandManager, CommandIDs::trackAdd);
+        menu.addCommandItem (&commandManager, CommandIDs::trackRemove);
+    }
+    else if (topLevelMenuIndex == 4)
+    {
         menu.addCommandItem (&commandManager, CommandIDs::viewFullScreen);
         menu.addCommandItem (&commandManager, CommandIDs::viewExitFullScreen);
     }
-    else if (topLevelMenuIndex == 4)
+    else if (topLevelMenuIndex == 5)
     {
         menu.addCommandItem (&commandManager, CommandIDs::helpAbout);
         menu.addCommandItem (&commandManager, CommandIDs::helpHelp);
     }
     return menu;
-
 }
 
 void MainComponent::timerCallback()
