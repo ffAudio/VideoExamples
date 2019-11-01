@@ -123,7 +123,9 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
     if (files.isEmpty() || edit == nullptr)
         return;
 
-    addClipToEdit (files [0], getTimeFromX (x), y);
+    auto clip = videoEngine.createClipFromFile (files [0]);
+    if (clip.get() != nullptr)
+        addClipToEdit (clip, getTimeFromX (x), y);
 }
 
 bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -131,7 +133,7 @@ bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
     if (edit == nullptr)
         return false;
 
-    return (dragSourceDetails.description == "media");
+    return (dragSourceDetails.description == "media" || juce::URL (dragSourceDetails.description.toString()).isWellFormed());
 }
 
 void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
@@ -141,23 +143,54 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
-        addClipToEdit (source->getSelectedFile(), getTimeFromX (dragSourceDetails.localPosition.x), dragSourceDetails.localPosition.y);
-    }
-}
+        auto clip = videoEngine.createClipFromFile (URL (source->getSelectedFile()));
 
-void TimeLine::addClipToEdit (juce::File file, double start, int y)
-{
-    auto length = -1.0;
-    auto clip = videoEngine.createClipFromFile (file);
+        if (clip.get() == nullptr)
+        {
+            AlertWindow::showNativeDialogBox (NEEDS_TRANS ("Loading failed"), NEEDS_TRANS (""), true);
+            return;
+        }
 
-    if (clip.get() == nullptr)
-    {
-        AlertWindow::showNativeDialogBox (NEEDS_TRANS ("Loading failed"), NEEDS_TRANS (""), true);
+        addClipToEdit (clip, getTimeFromX (dragSourceDetails.localPosition.x), dragSourceDetails.localPosition.y);
         return;
     }
 
+    auto url = dragSourceDetails.description.toString();
+
+    auto clip = videoEngine.createClipFromFile (juce::URL (url));
+    if (clip.get() != nullptr)
+        addClipToEdit (clip, getTimeFromX (dragSourceDetails.localPosition.x), dragSourceDetails.localPosition.y);
+}
+
+bool TimeLine::isInterestedInTextDrag (const String& text)
+{
+    juce::URL url (text);
+    return url.isWellFormed();
+}
+
+void TimeLine::textDropped (const String& text, int x, int y)
+{
+    if (edit.get() == nullptr)
+        return;
+
+    auto clip = videoEngine.createClipFromFile (juce::URL (text));
+    if (clip.get() != nullptr)
+        addClipToEdit (clip, getTimeFromX (x), y);
+}
+
+void TimeLine::addClipToEdit (std::shared_ptr<foleys::AVClip> clip, double start, int y)
+{
+    auto length = -1.0;
+
     if (std::dynamic_pointer_cast<foleys::ImageClip>(clip) != nullptr)
+    {
         length = 3.0;
+    }
+    else if (clip->hasVideo() == false)
+    {
+        const auto editLength = edit->getLengthInSeconds();
+        length = editLength > start ? std::min (editLength - start, 60.0) : 60.0;
+    }
 
     auto descriptor = edit->addClip (clip, start, length);
     if (y < 190)
@@ -466,7 +499,6 @@ void TimeLine::ClipComponent::resized()
     for (auto& graph : automations)
         graph->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
 }
-
 
 double TimeLine::ClipComponent::getLeftTime() const
 {

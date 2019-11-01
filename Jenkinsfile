@@ -66,7 +66,7 @@ void buildProjucer(String jucepath)
     {
         bat """
         cd "${jucepath}\\extras\\Projucer"
-        "${env.MSBUILD2017}" /p:Configuration=Release Builds\\VisualStudio2017\\Projucer.sln
+        "${env.MSBUILD2019}" /p:Configuration=Release Builds\\VisualStudio2019\\Projucer.sln
         """
     }
 }
@@ -78,7 +78,7 @@ void createProject(String project, String jucepath)
     else if (env.BUILD_SERVER_PLATFORM == 'linux')
         sh "xvfb-run ${jucepath}/extras/Projucer/Builds/LinuxMakefile/build/Projucer --resave ${project}.jucer"
     else if (env.BUILD_SERVER_PLATFORM == 'windows')
-        bat "${jucepath}\\extras\\Projucer\\Builds\\VisualStudio2017\\x64\\Release\\App\\Projucer.exe --resave ${project}.jucer"
+        bat "${jucepath}\\extras\\Projucer\\Builds\\VisualStudio2019\\x64\\Release\\App\\Projucer.exe --resave ${project}.jucer"
 }
 
 void buildProject(String folder, String project, String configuration)
@@ -101,7 +101,7 @@ void buildProject(String folder, String project, String configuration)
     {
         bat """
         cd "${folder}"
-        "${env.MSBUILD2017}" /p:Configuration=${configuration} Builds\\VisualStudio2017\\${project}.sln
+        "${env.MSBUILD2019}" /p:Configuration=${configuration} Builds\\VisualStudio2019\\${project}.sln
         """
     }
 }
@@ -113,7 +113,7 @@ void buildFFmpeg(String folder)
         sh """
         cd ${folder}
         PATH=$PATH:/usr/local/bin
-        ./configure --disable-programs --disable-doc --enable-gpl --enable-shared --enable-pthreads --enable-version3 --enable-hardcoded-tables --enable-avresample --cc=clang --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 --enable-libxvid --enable-lzma --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-videotoolbox --prefix=../build/
+        ./configure --disable-programs --disable-doc --enable-gpl --enable-shared --enable-pthreads --enable-version3 --enable-hardcoded-tables --enable-avresample --cc=clang --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 --enable-libxvid --enable-lzma --enable-libopenjpeg --enable-libspeex --enable-videotoolbox --prefix=../build/
         make -j 8
         make install
         """

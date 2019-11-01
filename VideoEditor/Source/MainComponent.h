@@ -94,7 +94,7 @@ private:
     foleys::VideoPreview  preview;
     Player                player  { deviceManager, preview };
 
-    Library               library;
+    Library               library    { deviceManager, videoEngine };
     Properties            properties;
     Viewport              viewport;
     TimeLine              timeline   { videoEngine, player, properties };

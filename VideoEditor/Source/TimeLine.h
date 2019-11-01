@@ -34,6 +34,7 @@
 class TimeLine    : public Component,
                     public DragAndDropTarget,
                     public FileDragAndDropTarget,
+                    public TextDragAndDropTarget,
                     public foleys::AVClip::TimecodeListener,
                     public ValueTree::Listener
 {
@@ -45,6 +46,8 @@ public:
     void filesDropped (const StringArray& files, int x, int y) override;
     bool isInterestedInDragSource (const SourceDetails &dragSourceDetails) override;
     void itemDropped (const SourceDetails &dragSourceDetails) override;
+    bool isInterestedInTextDrag (const String& text) override;
+    void textDropped (const String& text, int x, int y) override;
 
     void mouseDown (const MouseEvent& event) override;
 
@@ -192,7 +195,7 @@ public:
 
 private:
 
-    void addClipToEdit (juce::File file, double start, int y);
+    void addClipToEdit (std::shared_ptr<foleys::AVClip> clip, double start, int y);
     void addClipComponent (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
 
     foleys::VideoEngine& videoEngine;
