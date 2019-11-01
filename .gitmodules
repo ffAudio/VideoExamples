@@ -15,3 +15,6 @@
 	url = https://git.ffmpeg.org/ffmpeg.git
 	shallow = true
 
+[submodule "filmstro_modules"]
+	path = filmstro_modules
+	url = git@github.com:ffAudio/filmstro_modules.git

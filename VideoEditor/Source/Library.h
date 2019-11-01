@@ -34,7 +34,7 @@
 class Library    : public Component
 {
 public:
-    Library();
+    Library (AudioDeviceManager& manager);
     ~Library();
 
     void paint (Graphics&) override;
@@ -57,6 +57,8 @@ private:
     TimeSliceThread directoryThread { "Directory read thread" };
 
     TabbedComponent tabs { TabbedButtonBar::TabsAtTop };
+
+    AudioDeviceManager& deviceManager;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Library)
 };

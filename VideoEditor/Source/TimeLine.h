@@ -192,7 +192,7 @@ public:
 
 private:
 
-    void addClipToEdit (juce::File file, double start, int y);
+    void addClipToEdit (std::shared_ptr<foleys::AVClip> clip, double start, int y);
     void addClipComponent (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
 
     foleys::VideoEngine& videoEngine;

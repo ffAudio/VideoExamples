@@ -28,7 +28,8 @@
 #include "Library.h"
 
 //==============================================================================
-Library::Library()
+Library::Library (AudioDeviceManager& manager)
+  : deviceManager (manager)
 {
     directoryThread.startThread (3);
 
@@ -36,6 +37,12 @@ Library::Library()
                  new MediaList (directoryThread,
                                 File::getSpecialLocation (File::userMoviesDirectory),
                                 std::make_unique<WildcardFileFilter> ("*", "*", "All")), true);
+
+#if defined (JUCE_MODULE_AVAILABLE_filmstro_av_clip) && JUCE_MODULE_AVAILABLE_filmstro_av_clip==1
+    // FILMSTRO:
+    tabs.addTab ("Filmstro", Colours::darkgrey,
+                 new FilmstroComponent (deviceManager), true);
+#endif
 
     tabs.addTab (NEEDS_TRANS ("Music"), Colours::darkgrey,
                  new MediaList (directoryThread,

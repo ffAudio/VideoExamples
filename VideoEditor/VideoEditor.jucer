@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="EUnLYn" name="VideoEditor" projectType="guiapp" jucerVersion="5.4.4"
+<JUCERPROJECT id="EUnLYn" name="VideoEditor" projectType="guiapp" jucerVersion="5.4.5"
               companyName="Foleys Finest" companyCopyright="2019 by Foleys Finest Audio"
               companyWebsite="https://foleysfinest.com" companyEmail="info@foleysfinest.com"
-              cppLanguageStandard="17">
+              cppLanguageStandard="17" projectLineFeed="&#10;">
   <MAINGROUP id="r4Bi02" name="VideoEditor">
     <GROUP id="{E81F3B37-CAD9-A723-6FDE-B69EFB1DEF5C}" name="Source">
       <FILE id="ABGRJ3" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -63,6 +63,11 @@
         <MODULEPATH id="foleys_video_engine" path="../modules"/>
         <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
         <MODULEPATH id="ff_meters" path="../modules"/>
+        <MODULEPATH id="filmstro_av_clip" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_themes" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audiobasics" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audioeffects" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_library_browser" path="../filmstro_modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2017 targetFolder="Builds/VisualStudio2017" smallIcon="t8hwFJ" bigIcon="t8hwFJ"
@@ -89,6 +94,11 @@
         <MODULEPATH id="foleys_video_engine" path="../modules"/>
         <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
         <MODULEPATH id="ff_meters" path="../modules"/>
+        <MODULEPATH id="filmstro_av_clip" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_themes" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audiobasics" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audioeffects" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_library_browser" path="../filmstro_modules"/>
       </MODULEPATHS>
     </VS2017>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraCompilerFlags="-I${FFMPEG_ROOT}/include"
@@ -115,6 +125,11 @@
         <MODULEPATH id="foleys_video_engine" path="../modules"/>
         <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
         <MODULEPATH id="ff_meters" path="../modules"/>
+        <MODULEPATH id="filmstro_av_clip" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_themes" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audiobasics" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audioeffects" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_library_browser" path="../filmstro_modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
     <CODEBLOCKS_LINUX targetFolder="Builds/CodeBlocksLinux" extraCompilerFlags="-I${FFMPEG_ROOT}/include"
@@ -141,11 +156,22 @@
         <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
         <MODULEPATH id="foleys_video_engine" path="../modules"/>
         <MODULEPATH id="ff_meters" path="../modules"/>
+        <MODULEPATH id="filmstro_av_clip" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_themes" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audiobasics" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_audioeffects" path="../filmstro_modules"/>
+        <MODULEPATH id="filmstro_library_browser" path="../filmstro_modules"/>
       </MODULEPATHS>
     </CODEBLOCKS_LINUX>
   </EXPORTFORMATS>
   <MODULES>
     <MODULE id="ff_meters" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="filmstro_audiobasics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="filmstro_audioeffects" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="filmstro_av_clip" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="filmstro_library_browser" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="0"/>
+    <MODULE id="filmstro_themes" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="foleys_video_engine" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>

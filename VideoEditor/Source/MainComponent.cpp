@@ -94,6 +94,10 @@ MainComponent::MainComponent()
     settingsFolder.createDirectory();
     videoEngine.getAudioPluginManager().setPluginDataFile (settingsFolder.getChildFile ("PluginList.xml"));
 
+#if defined (JUCE_MODULE_AVAILABLE_filmstro_av_clip) && JUCE_MODULE_AVAILABLE_filmstro_av_clip==1
+    videoEngine.getFormatManager().registerFactory ("filmstro", filmstro::FilmstroClip::getFactory());
+#endif
+
     startTimerHz (10);
 }
 
@@ -243,7 +247,7 @@ void MainComponent::saveEdit (bool saveAs)
 void MainComponent::showRenderDialog()
 {
     if (! renderer.isRendering())
-        renderer.setClipToRender (timeline.getEditClip()->createCopy());
+        renderer.setClipToRender (timeline.getEditClip()->createCopy (foleys::StreamTypes::all()));
 
     properties.showProperties (std::make_unique<RenderDialog>(renderer));
 }
