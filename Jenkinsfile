@@ -66,7 +66,7 @@ void buildProjucer(String jucepath)
     {
         bat """
         cd "${jucepath}\\extras\\Projucer"
-        "${env.MSBUILD2017}" /p:Configuration=Release Builds\\VisualStudio2017\\Projucer.sln
+        "${env.MSBUILD2019}" /p:Configuration=Release Builds\\VisualStudio2019\\Projucer.sln
         """
     }
 }
@@ -101,7 +101,7 @@ void buildProject(String folder, String project, String configuration)
     {
         bat """
         cd "${folder}"
-        "${env.MSBUILD2017}" /p:Configuration=${configuration} Builds\\VisualStudio2017\\${project}.sln
+        "${env.MSBUILD2019}" /p:Configuration=${configuration} Builds\\VisualStudio2019\\${project}.sln
         """
     }
 }
