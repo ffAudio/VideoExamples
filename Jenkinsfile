@@ -78,7 +78,7 @@ void createProject(String project, String jucepath)
     else if (env.BUILD_SERVER_PLATFORM == 'linux')
         sh "xvfb-run ${jucepath}/extras/Projucer/Builds/LinuxMakefile/build/Projucer --resave ${project}.jucer"
     else if (env.BUILD_SERVER_PLATFORM == 'windows')
-        bat "${jucepath}\\extras\\Projucer\\Builds\\VisualStudio2017\\x64\\Release\\App\\Projucer.exe --resave ${project}.jucer"
+        bat "${jucepath}\\extras\\Projucer\\Builds\\VisualStudio2019\\x64\\Release\\App\\Projucer.exe --resave ${project}.jucer"
 }
 
 void buildProject(String folder, String project, String configuration)
