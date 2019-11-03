@@ -579,6 +579,9 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
 void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 {
     dragmode = notDragging;
+
+    if (event.mouseWasDraggedSinceMouseDown() == false)
+        timeline.player.setPosition (timeline.getTimeFromX (timeline.getLocalPoint (this, event.getPosition()).getX()));
 }
 
 bool TimeLine::ClipComponent::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
