@@ -94,10 +94,6 @@ MainComponent::MainComponent()
     settingsFolder.createDirectory();
     videoEngine.getAudioPluginManager().setPluginDataFile (settingsFolder.getChildFile ("PluginList.xml"));
 
-#if defined (JUCE_MODULE_AVAILABLE_filmstro_av_clip) && JUCE_MODULE_AVAILABLE_filmstro_av_clip==1
-    videoEngine.getFormatManager().registerFactory ("filmstro", filmstro::FilmstroClip::getFactory());
-#endif
-
     startTimerHz (10);
 }
 

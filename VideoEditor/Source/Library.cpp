@@ -28,8 +28,9 @@
 #include "Library.h"
 
 //==============================================================================
-Library::Library (AudioDeviceManager& manager)
-  : deviceManager (manager)
+Library::Library (AudioDeviceManager& manager, foleys::VideoEngine& engine)
+  : deviceManager (manager),
+    videoEngine (engine)
 {
     directoryThread.startThread (3);
 
@@ -40,6 +41,7 @@ Library::Library (AudioDeviceManager& manager)
 
 #if defined (JUCE_MODULE_AVAILABLE_filmstro_av_clip) && JUCE_MODULE_AVAILABLE_filmstro_av_clip==1
     // FILMSTRO:
+    videoEngine.getFormatManager().registerFactory ("filmstro", filmstro::FilmstroClip::getFactory());
     tabs.addTab ("Filmstro", Colours::darkgrey,
                  new FilmstroComponent (deviceManager), true);
 #endif
