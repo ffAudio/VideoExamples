@@ -28,8 +28,11 @@
 #include "Player.h"
 
 //==============================================================================
-Player::Player (AudioDeviceManager& deviceManagerToUse, foleys::VideoPreview& previewToUse)
+Player::Player (AudioDeviceManager& deviceManagerToUse,
+                foleys::VideoEngine& engine,
+                foleys::VideoPreview& previewToUse)
   : deviceManager (deviceManagerToUse),
+    videoEngine (engine),
     preview (previewToUse)
 {
 }
@@ -41,6 +44,8 @@ Player::~Player()
 
 void Player::start()
 {
+    stopAudition();
+
     transportSource.start();
     sendChangeMessage();
 }
@@ -58,6 +63,9 @@ bool Player::isPlaying()
 
 void Player::setPosition (double pts)
 {
+    if (isAuditioning())
+        stopAudition();
+
     if (clip)
         clip->setNextReadPosition (pts * getSampleRate());
 
@@ -93,6 +101,46 @@ void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
     preview.setClip (clip);
 
     sendChangeMessage();
+}
+
+void Player::setAuditionFile (const File& file)
+{
+    auto* reader = videoEngine.getAudioFormatManager().createReaderFor (file);
+    if (reader != nullptr)
+    {
+        auto sampleRate = reader->sampleRate;
+        setAuditionSource (std::make_unique<AudioFormatReaderSource>(reader, true), sampleRate);
+    }
+}
+
+void Player::setAuditionSource (std::unique_ptr<PositionableAudioSource> source, double sampleRate)
+{
+    transportSource.stop();
+    transportSource.setSource (nullptr);
+
+    auditionSource = std::move (source);
+    if (auditionSource.get() == nullptr)
+        return;
+
+    if (auto* device = deviceManager.getCurrentAudioDevice())
+        auditionSource->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
+
+    transportSource.setSource (auditionSource.get(), 0, nullptr, sampleRate);
+    transportSource.start();
+}
+
+void Player::stopAudition()
+{
+    transportSource.stop();
+    if (clip.get() != nullptr)
+        setClip (clip);
+
+    auditionSource.reset();
+}
+
+bool Player::isAuditioning() const
+{
+    return auditionSource.get() != nullptr;
 }
 
 void Player::initialise ()

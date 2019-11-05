@@ -35,7 +35,7 @@ class Player  : public ChangeBroadcaster,
                 public ChangeListener
 {
 public:
-    Player (AudioDeviceManager& deviceManager, foleys::VideoPreview& preview);
+    Player (AudioDeviceManager& deviceManager, foleys::VideoEngine& engine, foleys::VideoPreview& preview);
     ~Player();
 
     void setClip (std::shared_ptr<foleys::AVClip> clip);
@@ -47,6 +47,11 @@ public:
     void setPosition (double pts);
 
     double getCurrentTimeInSeconds() const;
+
+    void setAuditionFile (const File& file);
+    void setAuditionSource (std::unique_ptr<PositionableAudioSource> source, double sampleRate);
+    void stopAudition();
+    bool isAuditioning() const;
 
     foleys::LevelMeterSource& getMeterSource();
 
@@ -93,8 +98,11 @@ public:
     };
 private:
     AudioDeviceManager& deviceManager;
+    foleys::VideoEngine& videoEngine;
 
     std::shared_ptr<foleys::AVClip> clip;
+    std::unique_ptr<juce::PositionableAudioSource> auditionSource;
+
     MeasuredTransportSource     transportSource;
     AudioSourcePlayer           sourcePlayer;
     foleys::VideoPreview&       preview;
