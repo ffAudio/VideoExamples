@@ -35,7 +35,8 @@ namespace IDs
     static Identifier collapsed { "collapsed" };
 }
 
-ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse, Player& player)
+ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse,
+                                        Player& player)
   : controller (controllerToUse)
 {
     active.setClickingTogglesState (true);
