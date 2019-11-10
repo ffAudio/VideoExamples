@@ -101,6 +101,9 @@ public:
         {
         public:
             ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
+
+            void setColour (juce::Colour colour);
+
             void paint (Graphics& g) override;
 
             bool hitTest (int x, int y) override;
@@ -122,12 +125,14 @@ public:
             foleys::ParameterAutomation& automation;
             int draggingIndex = -1;
 
+            juce::Colour colour { juce::Colours::silver };
+
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterGraph)
         };
 
     private:
         void updateProcessorList();
-        void updateParameterGraphs (foleys::ProcessorController&);
+        void updateParameterGraphs (foleys::ControllableBase&);
 
         void processorControllerAdded() override;
         void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
@@ -154,6 +159,7 @@ public:
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipComponent)
     };
+    friend ClipComponent;
 
     int getXFromTime (double seconds) const;
     double getTimeFromX (int pixels) const;

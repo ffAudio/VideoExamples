@@ -92,9 +92,9 @@ private:
     ApplicationCommandManager   commandManager;
 
     foleys::VideoPreview  preview;
-    Player                player  { deviceManager, preview };
+    Player                player  { deviceManager, videoEngine, preview };
 
-    Library               library    { deviceManager, videoEngine };
+    Library               library    { player, videoEngine };
     Properties            properties;
     Viewport              viewport;
     TimeLine              timeline   { videoEngine, player, properties };

@@ -28,8 +28,11 @@
 #include "Player.h"
 
 //==============================================================================
-Player::Player (AudioDeviceManager& deviceManagerToUse, foleys::VideoPreview& previewToUse)
+Player::Player (AudioDeviceManager& deviceManagerToUse,
+                foleys::VideoEngine& engine,
+                foleys::VideoPreview& previewToUse)
   : deviceManager (deviceManagerToUse),
+    videoEngine (engine),
     preview (previewToUse)
 {
 }
@@ -41,6 +44,8 @@ Player::~Player()
 
 void Player::start()
 {
+    stopAudition();
+
     transportSource.start();
     sendChangeMessage();
 }
@@ -58,6 +63,9 @@ bool Player::isPlaying()
 
 void Player::setPosition (double pts)
 {
+    if (isAuditioning())
+        stopAudition();
+
     if (clip)
         clip->setNextReadPosition (pts * getSampleRate());
 
@@ -72,15 +80,15 @@ double Player::getCurrentTimeInSeconds() const
     return {};
 }
 
-void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
+void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse, bool needsPrepare)
 {
     auto numChannels = 2;
     transportSource.stop();
     transportSource.setSource (nullptr);
     clip = clipToUse;
-    if (auto* device = deviceManager.getCurrentAudioDevice())
+    if (needsPrepare && clip != nullptr)
     {
-        if (clip != nullptr)
+        if (auto* device = deviceManager.getCurrentAudioDevice())
         {
             clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
             numChannels = device->getOutputChannelNames().size();
@@ -95,12 +103,54 @@ void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse)
     sendChangeMessage();
 }
 
+void Player::setAuditionFile (const File& file)
+{
+    auto* reader = videoEngine.getAudioFormatManager().createReaderFor (file);
+    if (reader != nullptr)
+    {
+        auto sampleRate = reader->sampleRate;
+        setAuditionSource (std::make_unique<AudioFormatReaderSource>(reader, true), sampleRate);
+    }
+}
+
+void Player::setAuditionSource (std::unique_ptr<PositionableAudioSource> source, double sampleRate)
+{
+    transportSource.stop();
+    auditionTransport.setSource (nullptr);
+
+    auditionSource = std::move (source);
+    if (auditionSource.get() == nullptr)
+        return;
+
+    if (auto* device = deviceManager.getCurrentAudioDevice())
+        auditionSource->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
+
+    auditionTransport.setSource (auditionSource.get(), 0, nullptr, sampleRate);
+    auditionTransport.start();
+}
+
+void Player::stopAudition()
+{
+    auditionTransport.stop();
+}
+
+bool Player::isAuditioning() const
+{
+    return auditionTransport.isPlaying();
+}
+
 void Player::initialise ()
 {
     deviceManager.initialise (0, 2, nullptr, true);
     deviceManager.addChangeListener (this);
 
-    sourcePlayer.setSource (&transportSource);
+    mixingSource.addInputSource (&transportSource, false);
+    mixingSource.addInputSource (&auditionTransport, false);
+
+    if (auto* device = deviceManager.getCurrentAudioDevice())
+        mixingSource.prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
+
+    sourcePlayer.setSource (&mixingSource);
     deviceManager.addAudioCallback (&sourcePlayer);
 }
 
@@ -122,8 +172,12 @@ double Player::getSampleRate() const
 void Player::changeListenerCallback (ChangeBroadcaster* sender)
 {
     if (auto* device = deviceManager.getCurrentAudioDevice())
+    {
         if (clip != nullptr)
             clip->prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
+
+        mixingSource.prepareToPlay (device->getDefaultBufferSize(), device->getCurrentSampleRate());
+    }
 }
 
 foleys::LevelMeterSource& Player::getMeterSource()

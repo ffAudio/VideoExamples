@@ -335,7 +335,7 @@ void TimeLine::setEditClip (std::shared_ptr<foleys::ComposedClip> clip)
 
     restoreClipComponents();
 
-    player.setClip (edit);
+    player.setClip (edit, true);
 }
 
 std::shared_ptr<foleys::ComposedClip> TimeLine::getEditClip() const
@@ -428,16 +428,27 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
     addAndMakeVisible (processorSelect);
     processorSelect.onChange = [&]
     {
-        auto index = processorSelect.getSelectedId() - 1;
-        if (isVideoClip())
+        if (processorSelect.getSelectedId() == 1)
         {
-            if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
-                updateParameterGraphs (*clip->getVideoProcessors() [index]);
+            if (isVideoClip())
+                updateParameterGraphs (clip->getVideoParameterController());
+            else
+                updateParameterGraphs (clip->getAudioParameterController());
         }
         else
         {
-            if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
-                updateParameterGraphs (*clip->getAudioProcessors() [index]);
+            auto index = processorSelect.getSelectedId()-10;
+
+            if (isVideoClip())
+            {
+                if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
+                    updateParameterGraphs (*clip->getVideoProcessors() [index]);
+            }
+            else
+            {
+                if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
+                    updateParameterGraphs (*clip->getAudioProcessors() [index]);
+            }
         }
     };
 
@@ -579,6 +590,9 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
 void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 {
     dragmode = notDragging;
+
+    if (event.mouseWasDraggedSinceMouseDown() == false)
+        timeline.player.setPosition (timeline.getTimeFromX (timeline.getLocalPoint (this, event.getPosition()).getX()));
 }
 
 bool TimeLine::ClipComponent::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -623,10 +637,11 @@ void TimeLine::ClipComponent::updateProcessorList()
 
     if (isVideoClip())
     {
-        int index = 0;
+        processorSelect.addItem (clip->clip->getClipType(), 1);
+
+        int index = 10;
         for (auto& processor : clip->getVideoProcessors())
         {
-            ++index;
             if (processor.get() == nullptr)
                 continue;
 
@@ -634,14 +649,17 @@ void TimeLine::ClipComponent::updateProcessorList()
             processorSelect.addItem (name, index);
             if (name == current)
                 processorSelect.setSelectedId (index, sendNotification);
+
+            ++index;
         }
     }
     else
     {
-        int index = 0;
+        processorSelect.addItem (clip->clip->getClipType(), 1);
+
+        int index = 10;
         for (auto& processor : clip->getAudioProcessors())
         {
-            ++index;
             if (processor.get() == nullptr)
                 continue;
 
@@ -649,16 +667,23 @@ void TimeLine::ClipComponent::updateProcessorList()
             processorSelect.addItem (name, index);
             if (name == current)
                 processorSelect.setSelectedId (index, sendNotification);
+
+            ++index;
         }
     }
+
+    if (current.isEmpty())
+        processorSelect.setSelectedId (1);
 }
 
-void TimeLine::ClipComponent::updateParameterGraphs (foleys::ProcessorController& controller)
+void TimeLine::ClipComponent::updateParameterGraphs (foleys::ControllableBase& controller)
 {
     automations.clear();
     for (const auto& parameter : controller.getParameters())
     {
-        auto graph = std::make_unique<ParameterGraph>(*this, *parameter.get());
+        auto colour = juce::Colour::fromString (parameter.second->getParameterProperties().getWithDefault("Colour", "ffA0A0A0").toString());
+        auto graph = std::make_unique<ParameterGraph>(*this, *parameter.second);
+        graph->setColour (colour);
         addAndMakeVisible (graph.get());
         automations.push_back (std::move (graph));
     }
@@ -695,9 +720,15 @@ TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToU
     setOpaque (false);
 }
 
+void TimeLine::ClipComponent::ParameterGraph::setColour (juce::Colour colourToUse)
+{
+    colour = colourToUse;
+    repaint();
+}
+
 void TimeLine::ClipComponent::ParameterGraph::paint (Graphics& g)
 {
-    g.setColour (Colours::red);
+    g.setColour (colour);
     auto lastX = 1;
     auto lastY = mapFromValue (automation.getValueForTime (owner.getLeftTime()));
 
