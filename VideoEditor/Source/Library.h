@@ -53,7 +53,7 @@ public:
 
         void selectionChanged() override {}
         void fileClicked (const File &file, const MouseEvent &e) override;
-        void fileDoubleClicked (const File &file) override {}
+        void fileDoubleClicked (const File &file) override;
         void browserRootChanged (const File &newRoot) override {}
 
     private:

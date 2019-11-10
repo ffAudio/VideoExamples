@@ -104,7 +104,12 @@ void Library::MediaList::resized()
     fileTree.setBounds (getLocalBounds());
 }
 
-void Library::MediaList::fileClicked (const File& file, const MouseEvent&)
+void Library::MediaList::fileDoubleClicked (const File& file)
 {
     player.setAuditionFile (file);
+}
+
+void Library::MediaList::fileClicked (const File& file, const MouseEvent&)
+{
+    player.stopAudition();
 }

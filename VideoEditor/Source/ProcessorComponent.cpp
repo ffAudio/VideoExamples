@@ -78,7 +78,7 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
 
     for (auto& parameter : controller.getParameters())
     {
-        auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter, player);
+        auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter.second, player);
         addAndMakeVisible (component.get());
         parameterComponents.push_back (std::move (component));
     }
