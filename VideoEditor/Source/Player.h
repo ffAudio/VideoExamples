@@ -35,10 +35,10 @@ class Player  : public ChangeBroadcaster,
                 public ChangeListener
 {
 public:
-    Player (AudioDeviceManager& deviceManager, foleys::VideoPreview& preview);
+    Player (AudioDeviceManager& deviceManager, foleys::VideoEngine& engine, foleys::VideoPreview& preview);
     ~Player();
 
-    void setClip (std::shared_ptr<foleys::AVClip> clip);
+    void setClip (std::shared_ptr<foleys::AVClip> clip, bool needsPrepare);
 
     void start();
     void stop();
@@ -47,6 +47,11 @@ public:
     void setPosition (double pts);
 
     double getCurrentTimeInSeconds() const;
+
+    void setAuditionFile (const File& file);
+    void setAuditionSource (std::unique_ptr<PositionableAudioSource> source, double sampleRate);
+    void stopAudition();
+    bool isAuditioning() const;
 
     foleys::LevelMeterSource& getMeterSource();
 
@@ -93,11 +98,16 @@ public:
     };
 private:
     AudioDeviceManager& deviceManager;
+    foleys::VideoEngine& videoEngine;
 
+    juce::MixerAudioSource      mixingSource;
     std::shared_ptr<foleys::AVClip> clip;
     MeasuredTransportSource     transportSource;
     AudioSourcePlayer           sourcePlayer;
     foleys::VideoPreview&       preview;
+
+    std::unique_ptr<juce::PositionableAudioSource> auditionSource;
+    juce::AudioTransportSource  auditionTransport;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Player)
 };

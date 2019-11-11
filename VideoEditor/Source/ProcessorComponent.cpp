@@ -35,7 +35,8 @@ namespace IDs
     static Identifier collapsed { "collapsed" };
 }
 
-ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse, Player& player)
+ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse,
+                                        Player& player)
   : controller (controllerToUse)
 {
     active.setClickingTogglesState (true);
@@ -77,7 +78,7 @@ ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerT
 
     for (auto& parameter : controller.getParameters())
     {
-        auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter, player);
+        auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter.second, player);
         addAndMakeVisible (component.get());
         parameterComponents.push_back (std::move (component));
     }

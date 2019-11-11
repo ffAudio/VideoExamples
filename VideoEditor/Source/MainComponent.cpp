@@ -243,7 +243,7 @@ void MainComponent::saveEdit (bool saveAs)
 void MainComponent::showRenderDialog()
 {
     if (! renderer.isRendering())
-        renderer.setClipToRender (timeline.getEditClip()->createCopy());
+        renderer.setClipToRender (timeline.getEditClip()->createCopy (foleys::StreamTypes::all()));
 
     properties.showProperties (std::make_unique<RenderDialog>(renderer));
 }

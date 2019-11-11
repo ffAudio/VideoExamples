@@ -1,17 +1,13 @@
 [submodule "JUCE"]
 	path = JUCE
 	url = https://github.com/WeAreRoli/JUCE.git
-	shallow = true
 [submodule "modules/foleys_video_engine"]
 	path = modules/foleys_video_engine
 	url = https://github.com/ffAudio/foleys_video_engine.git
-	shallow = true
 [submodule "modules/ff_meters"]
 	path = modules/ff_meters
 	url = https://github.com/ffAudio/ff_meters.git
-	shallow = true
 [submodule "libraries/ffmpeg"]
 	path = libraries/ffmpeg
 	url = https://git.ffmpeg.org/ffmpeg.git
-	shallow = true
 

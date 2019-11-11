@@ -34,6 +34,7 @@
 class TimeLine    : public Component,
                     public DragAndDropTarget,
                     public FileDragAndDropTarget,
+                    public TextDragAndDropTarget,
                     public foleys::AVClip::TimecodeListener,
                     public ValueTree::Listener
 {
@@ -45,6 +46,8 @@ public:
     void filesDropped (const StringArray& files, int x, int y) override;
     bool isInterestedInDragSource (const SourceDetails &dragSourceDetails) override;
     void itemDropped (const SourceDetails &dragSourceDetails) override;
+    bool isInterestedInTextDrag (const String& text) override;
+    void textDropped (const String& text, int x, int y) override;
 
     void mouseDown (const MouseEvent& event) override;
 
@@ -98,6 +101,9 @@ public:
         {
         public:
             ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
+
+            void setColour (juce::Colour colour);
+
             void paint (Graphics& g) override;
 
             bool hitTest (int x, int y) override;
@@ -119,12 +125,14 @@ public:
             foleys::ParameterAutomation& automation;
             int draggingIndex = -1;
 
+            juce::Colour colour { juce::Colours::silver };
+
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterGraph)
         };
 
     private:
         void updateProcessorList();
-        void updateParameterGraphs (foleys::ProcessorController&);
+        void updateParameterGraphs (foleys::ControllableBase&);
 
         void processorControllerAdded() override;
         void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
@@ -151,6 +159,7 @@ public:
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipComponent)
     };
+    friend ClipComponent;
 
     int getXFromTime (double seconds) const;
     double getTimeFromX (int pixels) const;
@@ -192,7 +201,7 @@ public:
 
 private:
 
-    void addClipToEdit (juce::File file, double start, int y);
+    void addClipToEdit (std::shared_ptr<foleys::AVClip> clip, double start, int y);
     void addClipComponent (std::shared_ptr<foleys::ClipDescriptor> clip, bool video);
 
     foleys::VideoEngine& videoEngine;

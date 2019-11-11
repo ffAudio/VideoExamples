@@ -123,7 +123,9 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
     if (files.isEmpty() || edit == nullptr)
         return;
 
-    addClipToEdit (files [0], getTimeFromX (x), y);
+    auto clip = videoEngine.createClipFromFile (files [0]);
+    if (clip.get() != nullptr)
+        addClipToEdit (clip, getTimeFromX (x), y);
 }
 
 bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -131,7 +133,7 @@ bool TimeLine::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
     if (edit == nullptr)
         return false;
 
-    return (dragSourceDetails.description == "media");
+    return (dragSourceDetails.description == "media" || juce::URL (dragSourceDetails.description.toString()).isWellFormed());
 }
 
 void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
@@ -141,23 +143,54 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 
     if (auto* source = dynamic_cast<FileTreeComponent*> (dragSourceDetails.sourceComponent.get()))
     {
-        addClipToEdit (source->getSelectedFile(), getTimeFromX (dragSourceDetails.localPosition.x), dragSourceDetails.localPosition.y);
-    }
-}
+        auto clip = videoEngine.createClipFromFile (URL (source->getSelectedFile()));
 
-void TimeLine::addClipToEdit (juce::File file, double start, int y)
-{
-    auto length = -1.0;
-    auto clip = videoEngine.createClipFromFile (file);
+        if (clip.get() == nullptr)
+        {
+            AlertWindow::showNativeDialogBox (NEEDS_TRANS ("Loading failed"), NEEDS_TRANS (""), true);
+            return;
+        }
 
-    if (clip.get() == nullptr)
-    {
-        AlertWindow::showNativeDialogBox (NEEDS_TRANS ("Loading failed"), NEEDS_TRANS (""), true);
+        addClipToEdit (clip, getTimeFromX (dragSourceDetails.localPosition.x), dragSourceDetails.localPosition.y);
         return;
     }
 
+    auto url = dragSourceDetails.description.toString();
+
+    auto clip = videoEngine.createClipFromFile (juce::URL (url));
+    if (clip.get() != nullptr)
+        addClipToEdit (clip, getTimeFromX (dragSourceDetails.localPosition.x), dragSourceDetails.localPosition.y);
+}
+
+bool TimeLine::isInterestedInTextDrag (const String& text)
+{
+    juce::URL url (text);
+    return url.isWellFormed();
+}
+
+void TimeLine::textDropped (const String& text, int x, int y)
+{
+    if (edit.get() == nullptr)
+        return;
+
+    auto clip = videoEngine.createClipFromFile (juce::URL (text));
+    if (clip.get() != nullptr)
+        addClipToEdit (clip, getTimeFromX (x), y);
+}
+
+void TimeLine::addClipToEdit (std::shared_ptr<foleys::AVClip> clip, double start, int y)
+{
+    auto length = -1.0;
+
     if (std::dynamic_pointer_cast<foleys::ImageClip>(clip) != nullptr)
+    {
         length = 3.0;
+    }
+    else if (clip->hasVideo() == false)
+    {
+        const auto editLength = edit->getLengthInSeconds();
+        length = editLength > start ? std::min (editLength - start, 60.0) : 60.0;
+    }
 
     auto descriptor = edit->addClip (clip, start, length);
     if (y < 190)
@@ -302,7 +335,7 @@ void TimeLine::setEditClip (std::shared_ptr<foleys::ComposedClip> clip)
 
     restoreClipComponents();
 
-    player.setClip (edit);
+    player.setClip (edit, true);
 }
 
 std::shared_ptr<foleys::ComposedClip> TimeLine::getEditClip() const
@@ -395,16 +428,27 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
     addAndMakeVisible (processorSelect);
     processorSelect.onChange = [&]
     {
-        auto index = processorSelect.getSelectedId() - 1;
-        if (isVideoClip())
+        if (processorSelect.getSelectedId() == 1)
         {
-            if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
-                updateParameterGraphs (*clip->getVideoProcessors() [index]);
+            if (isVideoClip())
+                updateParameterGraphs (clip->getVideoParameterController());
+            else
+                updateParameterGraphs (clip->getAudioParameterController());
         }
         else
         {
-            if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
-                updateParameterGraphs (*clip->getAudioProcessors() [index]);
+            auto index = processorSelect.getSelectedId()-10;
+
+            if (isVideoClip())
+            {
+                if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
+                    updateParameterGraphs (*clip->getVideoProcessors() [index]);
+            }
+            else
+            {
+                if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
+                    updateParameterGraphs (*clip->getAudioProcessors() [index]);
+            }
         }
     };
 
@@ -466,7 +510,6 @@ void TimeLine::ClipComponent::resized()
     for (auto& graph : automations)
         graph->setBounds (1, 20, getWidth() - 2, getHeight() - 25);
 }
-
 
 double TimeLine::ClipComponent::getLeftTime() const
 {
@@ -547,6 +590,9 @@ void TimeLine::ClipComponent::mouseDrag (const MouseEvent& event)
 void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 {
     dragmode = notDragging;
+
+    if (event.mouseWasDraggedSinceMouseDown() == false)
+        timeline.player.setPosition (timeline.getTimeFromX (timeline.getLocalPoint (this, event.getPosition()).getX()));
 }
 
 bool TimeLine::ClipComponent::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -591,10 +637,11 @@ void TimeLine::ClipComponent::updateProcessorList()
 
     if (isVideoClip())
     {
-        int index = 0;
+        processorSelect.addItem (clip->clip->getClipType(), 1);
+
+        int index = 10;
         for (auto& processor : clip->getVideoProcessors())
         {
-            ++index;
             if (processor.get() == nullptr)
                 continue;
 
@@ -602,14 +649,17 @@ void TimeLine::ClipComponent::updateProcessorList()
             processorSelect.addItem (name, index);
             if (name == current)
                 processorSelect.setSelectedId (index, sendNotification);
+
+            ++index;
         }
     }
     else
     {
-        int index = 0;
+        processorSelect.addItem (clip->clip->getClipType(), 1);
+
+        int index = 10;
         for (auto& processor : clip->getAudioProcessors())
         {
-            ++index;
             if (processor.get() == nullptr)
                 continue;
 
@@ -617,16 +667,23 @@ void TimeLine::ClipComponent::updateProcessorList()
             processorSelect.addItem (name, index);
             if (name == current)
                 processorSelect.setSelectedId (index, sendNotification);
+
+            ++index;
         }
     }
+
+    if (current.isEmpty())
+        processorSelect.setSelectedId (1);
 }
 
-void TimeLine::ClipComponent::updateParameterGraphs (foleys::ProcessorController& controller)
+void TimeLine::ClipComponent::updateParameterGraphs (foleys::ControllableBase& controller)
 {
     automations.clear();
     for (const auto& parameter : controller.getParameters())
     {
-        auto graph = std::make_unique<ParameterGraph>(*this, *parameter.get());
+        auto colour = juce::Colour::fromString (parameter.second->getParameterProperties().getWithDefault("Colour", "ffA0A0A0").toString());
+        auto graph = std::make_unique<ParameterGraph>(*this, *parameter.second);
+        graph->setColour (colour);
         addAndMakeVisible (graph.get());
         automations.push_back (std::move (graph));
     }
@@ -663,9 +720,15 @@ TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToU
     setOpaque (false);
 }
 
+void TimeLine::ClipComponent::ParameterGraph::setColour (juce::Colour colourToUse)
+{
+    colour = colourToUse;
+    repaint();
+}
+
 void TimeLine::ClipComponent::ParameterGraph::paint (Graphics& g)
 {
-    g.setColour (Colours::red);
+    g.setColour (colour);
     auto lastX = 1;
     auto lastY = mapFromValue (automation.getValueForTime (owner.getLeftTime()));
 

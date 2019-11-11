@@ -28,25 +28,36 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+class Player;
+
 //==============================================================================
 /*
 */
 class Library    : public Component
 {
 public:
-    Library();
+    Library (Player& player, foleys::VideoEngine& engine);
     ~Library();
 
     void paint (Graphics&) override;
     void resized() override;
 
-    class MediaList : public Component
+    class MediaList  : public Component,
+                       private FileBrowserListener
     {
     public:
-        MediaList (TimeSliceThread& readThread, const File& root, std::unique_ptr<FileFilter> filter);
+        MediaList (Player& player, TimeSliceThread& readThread, const File& root, std::unique_ptr<FileFilter> filter);
+        ~MediaList();
+
         void resized() override;
 
+        void selectionChanged() override {}
+        void fileClicked (const File &file, const MouseEvent &e) override;
+        void fileDoubleClicked (const File &file) override;
+        void browserRootChanged (const File &newRoot) override {}
+
     private:
+        Player&                     player;
         std::unique_ptr<FileFilter> filter;
         DirectoryContentsList       contents;
         FileTreeComponent           fileTree  { contents };
@@ -57,6 +68,8 @@ private:
     TimeSliceThread directoryThread { "Directory read thread" };
 
     TabbedComponent tabs { TabbedButtonBar::TabsAtTop };
+
+    foleys::VideoEngine& videoEngine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Library)
 };

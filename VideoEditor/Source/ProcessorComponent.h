@@ -111,7 +111,8 @@ private:
     TextButton collapse { "v" };
     TextButton remove   { "X" };
 
-    foleys::ProcessorController& controller;
+    foleys::ProcessorController&    controller;
+    std::shared_ptr<foleys::AVClip> clip;
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;
 
     //==============================================================================
