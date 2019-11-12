@@ -537,6 +537,8 @@ void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
 
 void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
 {
+    wasSelected = timeline.getSelectedClip() == clip;
+
     localDragStart = event.getPosition();
     timeline.setSelectedClip (clip, isVideoClip());
 
@@ -591,7 +593,7 @@ void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 {
     dragmode = notDragging;
 
-    if (event.mouseWasDraggedSinceMouseDown() == false)
+    if (event.mouseWasDraggedSinceMouseDown() == false && wasSelected)
         timeline.player.setPosition (timeline.getTimeFromX (timeline.getLocalPoint (this, event.getPosition()).getX()));
 }
 

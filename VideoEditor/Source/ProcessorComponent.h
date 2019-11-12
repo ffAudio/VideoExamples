@@ -33,22 +33,21 @@ class Player;
 //==============================================================================
 /*
 */
-class ProcessorComponent    : public Component,
+class AutomationComponent   : public Component,
                               public ChangeBroadcaster,
-                              private foleys::AVClip::TimecodeListener,
-                              private foleys::ClipDescriptor::Listener
+                              private ChangeListener,
+                              private foleys::ClipDescriptor::Listener,
+                              private foleys::AVClip::TimecodeListener
 {
 public:
-    ProcessorComponent (foleys::ProcessorController& controller,
-                        Player& player);
-    ~ProcessorComponent();
+    AutomationComponent (foleys::ControllableBase& controller,
+                         Player& player);
+    ~AutomationComponent();
 
     void paint (Graphics&) override;
     void resized() override;
 
     void mouseDrag (const MouseEvent&) override;
-
-    void showProcessorEditor (AudioProcessorEditor* editor, const String& title);
 
     int getHeightForWidth(int width) const;
 
@@ -57,10 +56,10 @@ public:
     const foleys::ProcessorController* getProcessorController() const;
 
     void processorControllerAdded() override {}
-    void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
-
+    void processorControllerToBeDeleted (const foleys::ProcessorController*) override {}
     void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
 
+    void changeListenerCallback (ChangeBroadcaster* sender) override;
 
     class ParameterComponent : public juce::Component, private foleys::ProcessorParameter::Listener
     {
@@ -104,16 +103,12 @@ public:
     };
 private:
 
-    bool isCollapsed() const;
+    foleys::ControllableBase&    controller;
+    foleys::ClipDescriptor*      descriptor = nullptr;
 
-    TextButton active   { "A" };
-    TextButton editor   { "E" };
-    TextButton collapse { "v" };
-    TextButton remove   { "X" };
-
-    foleys::ProcessorController&    controller;
-    std::shared_ptr<foleys::AVClip> clip;
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;
+
+    String title;
 
     //==============================================================================
 
@@ -125,7 +120,40 @@ private:
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioProcessorWindow)
     };
-    std::unique_ptr<AudioProcessorWindow> audioProcessorWindow;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProcessorComponent)
+    //==============================================================================
+
+    class ProcessorControls  : public Component,
+                               public ChangeBroadcaster,
+                               private foleys::ClipDescriptor::Listener
+    {
+    public:
+        ProcessorControls (foleys::ProcessorController& controller);
+        ~ProcessorControls();
+
+        void showProcessorEditor (AudioProcessorEditor* editor, const String& title);
+        void resized() override;
+
+        bool isCollapsed() const;
+
+        void processorControllerAdded() override {}
+        void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
+
+        foleys::ProcessorController& getProcessorController();
+
+    private:
+        foleys::ProcessorController&    controller;
+
+        TextButton active   { "A" };
+        TextButton editor   { "E" };
+        TextButton collapse { "v" };
+        TextButton remove   { "X" };
+
+        std::unique_ptr<AudioProcessorWindow> audioProcessorWindow;
+
+        JUCE_DECLARE_NON_COPYABLE (ProcessorControls)
+    };
+    std::unique_ptr<ProcessorControls> processorControls;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AutomationComponent)
 };

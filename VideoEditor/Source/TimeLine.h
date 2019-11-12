@@ -151,9 +151,10 @@ public:
         std::unique_ptr<foleys::AudioStrip> audiostrip;
         ComboBox processorSelect;
 
-        DragMode dragmode = notDragging;
         Point<int> localDragStart;
-        bool highlight = false;
+        DragMode dragmode = notDragging;
+        bool highlight    = false;
+        bool wasSelected  = false;
 
         std::vector<std::unique_ptr<ParameterGraph>> automations;
 
