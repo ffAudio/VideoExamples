@@ -707,11 +707,6 @@ void TimeLine::ClipComponent::processorControllerToBeDeleted (const foleys::Proc
     updateProcessorList();
 }
 
-void TimeLine::ClipComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
-{
-    repaint();
-}
-
 //==============================================================================
 
 TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToUse,
@@ -720,6 +715,12 @@ TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToU
     automation (automationToUse)
 {
     setOpaque (false);
+    automation.getControllable().addListener (this);
+}
+
+TimeLine::ClipComponent::ParameterGraph::~ParameterGraph()
+{
+    automation.getControllable().removeListener (this);
 }
 
 void TimeLine::ClipComponent::ParameterGraph::setColour (juce::Colour colourToUse)
@@ -844,4 +845,10 @@ double TimeLine::ClipComponent::ParameterGraph::mapToValue (int y) const
         return 0;
 
     return 1.0 - (y - 1.0) / (h - 2.0);
+}
+
+void TimeLine::ClipComponent::ParameterGraph::parameterAutomationChanged (const foleys::ParameterAutomation* a)
+{
+    if (a == &automation)
+        repaint();
 }

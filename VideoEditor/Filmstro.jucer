@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="EUnLYn" name="Filmstro" projectType="guiapp" jucerVersion="5.4.5"
+<JUCERPROJECT id="EUnLYn" name="Filmstro-NG" projectType="guiapp" jucerVersion="5.4.5"
               companyName="Foleys Finest" companyCopyright="2019 by Foleys Finest Audio"
               companyWebsite="https://foleysfinest.com" companyEmail="info@foleysfinest.com"
               cppLanguageStandard="17" projectLineFeed="&#10;">
-  <MAINGROUP id="r4Bi02" name="Filmstro">
+  <MAINGROUP id="r4Bi02" name="Filmstro-NG">
     <GROUP id="{E81F3B37-CAD9-A723-6FDE-B69EFB1DEF5C}" name="Source">
       <FILE id="ABGRJ3" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="fJYbQ1" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
@@ -44,8 +44,7 @@
     <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="FFMPEG_ROOT=/usr/local/opt/ffmpeg"
                extraCompilerFlags="-I${FFMPEG_ROOT}/include&#10;-Werror -Wall"
                extraLinkerFlags="-L${FFMPEG_ROOT}/lib" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample&#10;avresample"
-               smallIcon="AfcHXw" bigIcon="AfcHXw" documentExtensions=".videdit"
-               iosDevelopmentTeamID="S6TGF8CL35">
+               smallIcon="AfcHXw" bigIcon="AfcHXw" documentExtensions=".videdit">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" osxCompatibility="10.9 SDK"/>
         <CONFIGURATION isDebug="0" name="Release" osxCompatibility="10.9 SDK"/>

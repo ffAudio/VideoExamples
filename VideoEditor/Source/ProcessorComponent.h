@@ -36,7 +36,7 @@ class Player;
 class AutomationComponent   : public Component,
                               public ChangeBroadcaster,
                               private ChangeListener,
-                              private foleys::ClipDescriptor::Listener,
+                              private foleys::ControllableBase::Listener,
                               private foleys::AVClip::TimecodeListener
 {
 public:
@@ -55,8 +55,6 @@ public:
 
     const foleys::ProcessorController* getProcessorController() const;
 
-    void processorControllerAdded() override {}
-    void processorControllerToBeDeleted (const foleys::ProcessorController*) override {}
     void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
 
     void changeListenerCallback (ChangeBroadcaster* sender) override;

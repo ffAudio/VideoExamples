@@ -62,18 +62,27 @@ AutomationComponent::AutomationComponent (foleys::ControllableBase& controllerTo
         return;
     }
 
-    for (auto& parameter : controller.getParameters())
+    std::vector<foleys::ParameterAutomation*> automations;
+    for (auto& pair : controller.getParameters())
+        automations.push_back (pair.second.get());
+
+    std::sort (automations.begin(), automations.end(), [](const auto& a, const auto& b) { return a->getParameterIndex() < b->getParameterIndex(); });
+
+    for (auto* automation : automations)
     {
-        auto component = std::make_unique<ParameterComponent>(*descriptor, *parameter.second, player);
+        auto component = std::make_unique<ParameterComponent>(*descriptor, *automation, player);
         addAndMakeVisible (component.get());
         parameterComponents.push_back (std::move (component));
     }
 
+    controller.addListener (this);
     descriptor->getOwningClip().addTimecodeListener (this);
 }
 
 AutomationComponent::~AutomationComponent()
 {
+    controller.removeListener (this);
+
     if (processorControls.get() != nullptr)
         processorControls->removeChangeListener (this);
 

@@ -97,10 +97,13 @@ public:
 
         std::shared_ptr<foleys::ClipDescriptor> clip;
 
-        class ParameterGraph : public Component
+        class ParameterGraph  : public Component,
+                                public foleys::ControllableBase::Listener,
+                                public foleys::ClipDescriptor::Listener
         {
         public:
             ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
+            ~ParameterGraph();
 
             void setColour (juce::Colour colour);
 
@@ -111,6 +114,10 @@ public:
             void mouseDown (const MouseEvent&) override;
             void mouseDrag (const MouseEvent&) override;
             void mouseUp (const MouseEvent&) override;
+
+            void processorControllerAdded() override {}
+            void processorControllerToBeDeleted (const foleys::ProcessorController*) override {}
+            void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
 
         private:
             int mapFromTime (double time) const;
@@ -136,7 +143,6 @@ public:
 
         void processorControllerAdded() override;
         void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
-        void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
 
         enum DragMode
         {
