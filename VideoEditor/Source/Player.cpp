@@ -72,6 +72,24 @@ void Player::setPosition (double pts)
     sendChangeMessage();
 }
 
+void Player::nextFrame()
+{
+    if (clip.get() == nullptr || transportSource.isPlaying())
+        return;
+
+    auto samples = clip->getNextReadPosition();
+    clip->setNextReadPosition (samples + clip->getFrameDurationInSeconds() * getSampleRate());
+}
+
+void Player::previousFrame()
+{
+    if (clip.get() == nullptr || transportSource.isPlaying())
+        return;
+
+    auto samples = clip->getNextReadPosition();
+    clip->setNextReadPosition (samples - clip->getFrameDurationInSeconds() * getSampleRate());
+}
+
 double Player::getCurrentTimeInSeconds() const
 {
     if (clip)

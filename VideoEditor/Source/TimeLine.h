@@ -50,6 +50,7 @@ public:
     void textDropped (const String& text, int x, int y) override;
 
     void mouseDown (const MouseEvent& event) override;
+    bool keyPressed (const KeyPress& key) override;
 
     void paint (Graphics&) override;
     void resized() override;
@@ -87,6 +88,7 @@ public:
         void mouseDown (const MouseEvent& event) override;
         void mouseDrag (const MouseEvent& event) override;
         void mouseUp (const MouseEvent& event) override;
+        bool keyPressed (const KeyPress& key) override;
 
         bool isInterestedInDragSource (const SourceDetails &dragSourceDetails) override;
         void itemDragEnter (const SourceDetails &dragSourceDetails) override;

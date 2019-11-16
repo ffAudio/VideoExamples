@@ -42,6 +42,8 @@ TimeLine::TimeLine (foleys::VideoEngine& theVideoEngine, Player& playerToUse, Pr
     player (playerToUse),
     properties (properiesToUse)
 {
+    setWantsKeyboardFocus (true);
+
     addAndMakeVisible (timemarker);
     timemarker.setAlwaysOnTop (true);
 }
@@ -111,6 +113,23 @@ void TimeLine::timecodeChanged (int64_t count, double seconds)
 void TimeLine::mouseDown (const MouseEvent& event)
 {
     player.setPosition (getTimeFromX (event.x));
+}
+
+bool TimeLine::keyPressed (const KeyPress& key)
+{
+    if (key.isKeyCode (KeyPress::leftKey))
+    {
+        player.previousFrame();
+        return true;
+    }
+
+    if (key.isKeyCode (KeyPress::rightKey))
+    {
+        player.nextFrame();
+        return true;
+    }
+
+    return false;
 }
 
 bool TimeLine::isInterestedInFileDrag (const StringArray& files)
@@ -410,6 +429,8 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
   : clip (clipToUse),
     timeline (tl)
 {
+    setWantsKeyboardFocus (true);
+
     if (video)
     {
         filmstrip = std::make_unique<foleys::FilmStrip>();
@@ -595,6 +616,11 @@ void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 
     if (event.mouseWasDraggedSinceMouseDown() == false && wasSelected)
         timeline.player.setPosition (timeline.getTimeFromX (timeline.getLocalPoint (this, event.getPosition()).getX()));
+}
+
+bool TimeLine::ClipComponent::keyPressed (const KeyPress& key)
+{
+    return timeline.keyPressed (key);
 }
 
 bool TimeLine::ClipComponent::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
