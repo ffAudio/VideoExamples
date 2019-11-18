@@ -37,10 +37,11 @@ class AutomationComponent   : public Component,
                               public ChangeBroadcaster,
                               private ChangeListener,
                               private foleys::ControllableBase::Listener,
-                              private foleys::AVClip::TimecodeListener
+                              private foleys::TimeCodeAware::Listener
 {
 public:
-    AutomationComponent (foleys::ControllableBase& controller,
+    AutomationComponent (const juce::String& title,
+                         foleys::ControllableBase& controller,
                          Player& player);
     ~AutomationComponent();
 
@@ -62,7 +63,7 @@ public:
     class ParameterComponent : public juce::Component, private foleys::ProcessorParameter::Listener
     {
     public:
-        ParameterComponent (foleys::ClipDescriptor& clip, foleys::ParameterAutomation& parameter, Player& player);
+        ParameterComponent (foleys::TimeCodeAware& timeReference, foleys::ParameterAutomation& parameter, Player& player);
 
         void paint (Graphics&) override;
         void resized() override;
@@ -89,7 +90,7 @@ public:
         };
 
     private:
-        foleys::ClipDescriptor& clip;
+        foleys::TimeCodeAware& timeReference;
         foleys::ParameterAutomation& parameter;
 
         std::unique_ptr<ParameterWidget> widget;
@@ -102,7 +103,6 @@ public:
 private:
 
     foleys::ControllableBase&    controller;
-    foleys::ClipDescriptor*      descriptor = nullptr;
 
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;
 

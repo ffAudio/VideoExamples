@@ -35,7 +35,7 @@ class TimeLine    : public Component,
                     public DragAndDropTarget,
                     public FileDragAndDropTarget,
                     public TextDragAndDropTarget,
-                    public foleys::AVClip::TimecodeListener,
+                    public foleys::TimeCodeAware::Listener,
                     public ValueTree::Listener
 {
 public:

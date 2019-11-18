@@ -35,31 +35,17 @@ namespace IDs
     static Identifier collapsed { "collapsed" };
 }
 
-AutomationComponent::AutomationComponent (foleys::ControllableBase& controllerToUse,
+AutomationComponent::AutomationComponent (const juce::String& titleToUse,
+                                          foleys::ControllableBase& controllerToUse,
                                           Player& player)
-  : controller (controllerToUse)
+  : controller (controllerToUse),
+    title (titleToUse)
 {
     if (auto* processorController = dynamic_cast<foleys::ProcessorController*>(&controller))
     {
-        title = processorController->getName();
-
         processorControls = std::make_unique<ProcessorControls>(*processorController);
         addAndMakeVisible (processorControls.get());
         processorControls->addChangeListener (this);
-
-        descriptor = &processorController->getOwningClipDescriptor();
-    }
-    else if (auto* clipController = dynamic_cast<foleys::ClipDescriptor::ClipParameterController*>(&controller))
-    {
-        descriptor = &clipController->getOwningClipDescriptor();
-        title = descriptor->getDescription();
-    }
-
-    if (descriptor == nullptr)
-    {
-        // There shouldn't be a ControllableBase, that has no descriptor linked
-        jassertfalse;
-        return;
     }
 
     std::vector<foleys::ParameterAutomation*> automations;
@@ -70,24 +56,22 @@ AutomationComponent::AutomationComponent (foleys::ControllableBase& controllerTo
 
     for (auto* automation : automations)
     {
-        auto component = std::make_unique<ParameterComponent>(*descriptor, *automation, player);
+        auto component = std::make_unique<ParameterComponent>(controller.getTimeReference(), *automation, player);
         addAndMakeVisible (component.get());
         parameterComponents.push_back (std::move (component));
     }
 
     controller.addListener (this);
-    descriptor->getOwningClip().addTimecodeListener (this);
+    controller.getTimeReference().addTimecodeListener (this);
 }
 
 AutomationComponent::~AutomationComponent()
 {
+    controller.getTimeReference().removeTimecodeListener (this);
     controller.removeListener (this);
 
     if (processorControls.get() != nullptr)
         processorControls->removeChangeListener (this);
-
-    if (descriptor != nullptr)
-        descriptor->getOwningClip().removeTimecodeListener (this);
 }
 
 void AutomationComponent::paint (Graphics& g)
@@ -196,7 +180,7 @@ void AutomationComponent::changeListenerCallback (ChangeBroadcaster*)
 class ParameterSlider : public AutomationComponent::ParameterComponent::ParameterWidget
 {
 public:
-    ParameterSlider (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    ParameterSlider (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware& timeReference)
     {
         const auto numSteps = parameter.getNumSteps();
 
@@ -219,11 +203,7 @@ public:
         valueSlider.onValueChange = [&]
         {
             if (dragging)
-            {
-                parameter.setValue (clip.getCurrentPTS(), valueSlider.getValue());
-                if (parameter.isVideoParameter())
-                    clip.getOwningClip().invalidateVideo();
-            }
+                parameter.setValue (timeReference.getCurrentTimeInSeconds(), valueSlider.getValue());
         };
 
         valueSlider.textFromValueFunction = [&parameter](double value) { return parameter.getText (value); };
@@ -261,7 +241,7 @@ private:
 class ParameterChoice : public AutomationComponent::ParameterComponent::ParameterWidget
 {
 public:
-    ParameterChoice (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    ParameterChoice (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware& timeReference)
     {
         choice.addItemList (parameter.getAllValueStrings(), 1);
         choice.onChange = [&]
@@ -303,14 +283,14 @@ private:
 class ParameterSwitch : public AutomationComponent::ParameterComponent::ParameterWidget
 {
 public:
-    ParameterSwitch (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    ParameterSwitch (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware& timeReference)
     {
         button.setButtonText (parameter.getText (1.0f));
         button.setClickingTogglesState (true);
         button.onClick = [&]
         {
             parameter.startAutomationGesture();
-            parameter.setValue (clip.getCurrentPTS(), button.getToggleState() ? 1.0 : 0.0);
+            parameter.setValue (timeReference.getCurrentTimeInSeconds(), button.getToggleState() ? 1.0 : 0.0);
             parameter.finishAutomationGesture();
         };
     }
@@ -338,10 +318,10 @@ private:
 
 //==============================================================================
 
-AutomationComponent::ParameterComponent::ParameterComponent (foleys::ClipDescriptor& clipToControl,
+AutomationComponent::ParameterComponent::ParameterComponent (foleys::TimeCodeAware& reference,
                                                             foleys::ParameterAutomation& parameterToControl,
                                                             Player& player)
-  : clip (clipToControl),
+  : timeReference (reference),
     parameter (parameterToControl)
 {
     prev.setConnectedEdges (TextButton::ConnectedOnRight);
@@ -357,15 +337,15 @@ AutomationComponent::ParameterComponent::ParameterComponent (foleys::ClipDescrip
     auto options = parameter.getAllValueStrings();
     if (numSteps == 2)
     {
-        widget = std::make_unique<ParameterSwitch>(parameter, clip);
+        widget = std::make_unique<ParameterSwitch>(parameter, timeReference);
     }
     else if (! options.isEmpty())
     {
-        widget = std::make_unique<ParameterChoice>(parameter, clip);
+        widget = std::make_unique<ParameterChoice>(parameter, timeReference);
     }
     else
     {
-        widget = std::make_unique<ParameterSlider>(parameter, clip);
+        widget = std::make_unique<ParameterSlider>(parameter, timeReference);
     }
 
     widget->setValue (parameter.getValue());
@@ -373,19 +353,21 @@ AutomationComponent::ParameterComponent::ParameterComponent (foleys::ClipDescrip
 
     add.onClick = [this]
     {
-        parameter.addKeyframe (clip.getCurrentPTS(), widget->getValue());
+        parameter.addKeyframe (timeReference.getCurrentTimeInSeconds(), widget->getValue());
     };
 
     prev.onClick = [&]
     {
-        auto prev = parameter.getPreviousKeyframeTime (clip.getCurrentPTS());
-        player.setPosition (prev + clip.getStart() - clip.getOffset());
+        auto prev = parameter.getPreviousKeyframeTime (timeReference.getCurrentTimeInSeconds());
+        if (auto* descriptor = dynamic_cast<foleys::ClipDescriptor*>(&reference))
+            player.setPosition (prev + descriptor->getStart() - descriptor->getOffset());
     };
 
     next.onClick = [&]
     {
-        auto next = parameter.getNextKeyframeTime (clip.getCurrentPTS());
-        player.setPosition (next + clip.getStart() - clip.getOffset());
+        auto next = parameter.getNextKeyframeTime (timeReference.getCurrentTimeInSeconds());
+        if (auto* descriptor = dynamic_cast<foleys::ClipDescriptor*>(&reference))
+            player.setPosition (next + descriptor->getStart() - descriptor->getOffset());
     };
 
 }
