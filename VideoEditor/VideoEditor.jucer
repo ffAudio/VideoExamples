@@ -39,10 +39,10 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="FFMPEG_ROOT=/usr/local/opt/ffmpeg"
-               extraCompilerFlags="-I${FFMPEG_ROOT}/include&#10;-Werror -Wall"
-               extraLinkerFlags="-L${FFMPEG_ROOT}/lib" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample&#10;avresample"
-               smallIcon="t8hwFJ" bigIcon="t8hwFJ" documentExtensions=".videdit">
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror -Wall"
+               extraLinkerFlags="-L../../../libraries/build/ffmpeg_libs" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
+               smallIcon="t8hwFJ" bigIcon="t8hwFJ" documentExtensions=".videdit"
+               customXcodeResourceFolders="../libraries/build/ffmpeg_libs">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" osxCompatibility="10.9 SDK"/>
         <CONFIGURATION isDebug="0" name="Release" osxCompatibility="10.9 SDK"/>
