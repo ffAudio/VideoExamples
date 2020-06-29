@@ -70,7 +70,11 @@ RenderDialog::RenderDialog (foleys::ClipRenderer& rendererToUse) : renderer (ren
                                "*.mp4");
         if (myChooser.browseForFileToSave (false))
         {
-            renderer.setOutputFile (myChooser.getResult());
+            auto newFileName = myChooser.getResult();
+            if (newFileName.existsAsFile())
+                newFileName.deleteFile();
+
+            renderer.setOutputFile (newFileName);
             updateGUI();
         }
     };

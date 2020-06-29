@@ -71,6 +71,8 @@ public:
 
     void loadEditFile (const File& file);
 
+    bool handleQuitRequest();
+
 private:
 
     void resetEdit();
@@ -99,7 +101,9 @@ private:
     Viewport              viewport;
     TimeLine              timeline   { videoEngine, player, properties };
     TransportControl      transport  { player };
-    foleys::LevelMeter    levelMeter { std::make_unique<foleys::VerticalMultiChannelMeter>() };
+
+    foleys::LevelMeterLookAndFeel   lmLookAndFeel;
+    foleys::LevelMeter              levelMeter;
 
     File editFileName;
     int  lowerPart = 0;

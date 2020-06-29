@@ -170,6 +170,8 @@ void Player::initialise ()
 
     sourcePlayer.setSource (&mixingSource);
     deviceManager.addAudioCallback (&sourcePlayer);
+
+    transportSource.meterSource.resize (2, 10);
 }
 
 void Player::shutDown ()

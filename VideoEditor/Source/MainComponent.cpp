@@ -78,6 +78,11 @@ MainComponent::MainComponent()
     setBounds (area);
 
     player.initialise();
+    lmLookAndFeel.setColour (foleys::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
+    lmLookAndFeel.setColour (foleys::LevelMeter::lmOutlineColour, Colours::transparentBlack);
+    lmLookAndFeel.setColour (foleys::LevelMeter::lmMeterOutlineColour, Colours::transparentBlack);
+    lmLookAndFeel.setColour (foleys::LevelMeter::lmTicksColour, Colours::silver);
+    levelMeter.setLookAndFeel (&lmLookAndFeel);
     levelMeter.setMeterSource (&player.getMeterSource());
 
     resetEdit();
@@ -137,7 +142,7 @@ void MainComponent::resized()
         auto bounds = getLocalBounds().reduced (1);
         lowerPart = bounds.getHeight() * 0.4;
         auto lower  = bounds.removeFromBottom (lowerPart);
-        levelMeter.setBounds (lower.removeFromRight (lower.getHeight() / 4).reduced (2));
+        levelMeter.setBounds (lower.removeFromRight (120).reduced (2));
         lower.removeFromTop (14); // TODO: ruler
         viewport.setBounds (lower);
         auto sides = bounds.getWidth() / 4.0;
@@ -238,6 +243,19 @@ void MainComponent::saveEdit (bool saveAs)
         }
         updateTitleBar();
     }
+}
+
+bool MainComponent::handleQuitRequest()
+{
+    if (renderer.isRendering())
+    {
+        if (AlertWindow::showOkCancelBox (AlertWindow::WarningIcon, NEEDS_TRANS("Quit application"), "Cancel rendering to quit?"))
+            renderer.cancelRendering();
+        else
+            return false;
+    }
+
+    return true;
 }
 
 void MainComponent::showRenderDialog()

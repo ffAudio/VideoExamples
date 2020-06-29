@@ -52,7 +52,8 @@ public:
     {
         // This is called when the app is being asked to quit: you can ignore this
         // request and let the app carry on running, or call quit() to allow the app to close.
-        quit();
+        if (mainWindow->getMainComponent().handleQuitRequest())
+            quit();
     }
 
     void anotherInstanceStarted (const String& commandLine) override
