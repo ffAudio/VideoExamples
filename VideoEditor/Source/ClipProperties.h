@@ -28,7 +28,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-class ProcessorComponent;
+class AutomationComponent;
 class Player;
 
 class ClipProcessorProperties  : public Component,
@@ -55,7 +55,7 @@ private:
     foleys::VideoEngine& engine;
     Player& player;
     std::weak_ptr<foleys::ClipDescriptor> clip;
-    std::vector<std::unique_ptr<ProcessorComponent>> editors;
+    std::vector<std::unique_ptr<AutomationComponent>> editors;
 
     TextButton processorSelect { "Add Effect" };
     Viewport   scroller;

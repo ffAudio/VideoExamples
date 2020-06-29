@@ -35,7 +35,7 @@ class TimeLine    : public Component,
                     public DragAndDropTarget,
                     public FileDragAndDropTarget,
                     public TextDragAndDropTarget,
-                    public foleys::AVClip::TimecodeListener,
+                    public foleys::TimeCodeAware::Listener,
                     public ValueTree::Listener
 {
 public:
@@ -50,6 +50,7 @@ public:
     void textDropped (const String& text, int x, int y) override;
 
     void mouseDown (const MouseEvent& event) override;
+    bool keyPressed (const KeyPress& key) override;
 
     void paint (Graphics&) override;
     void resized() override;
@@ -87,6 +88,7 @@ public:
         void mouseDown (const MouseEvent& event) override;
         void mouseDrag (const MouseEvent& event) override;
         void mouseUp (const MouseEvent& event) override;
+        bool keyPressed (const KeyPress& key) override;
 
         bool isInterestedInDragSource (const SourceDetails &dragSourceDetails) override;
         void itemDragEnter (const SourceDetails &dragSourceDetails) override;
@@ -97,10 +99,13 @@ public:
 
         std::shared_ptr<foleys::ClipDescriptor> clip;
 
-        class ParameterGraph : public Component
+        class ParameterGraph  : public Component,
+                                public foleys::ControllableBase::Listener,
+                                public foleys::ClipDescriptor::Listener
         {
         public:
             ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
+            ~ParameterGraph();
 
             void setColour (juce::Colour colour);
 
@@ -111,6 +116,10 @@ public:
             void mouseDown (const MouseEvent&) override;
             void mouseDrag (const MouseEvent&) override;
             void mouseUp (const MouseEvent&) override;
+
+            void processorControllerAdded() override {}
+            void processorControllerToBeDeleted (const foleys::ProcessorController*) override {}
+            void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
 
         private:
             int mapFromTime (double time) const;
@@ -136,7 +145,6 @@ public:
 
         void processorControllerAdded() override;
         void processorControllerToBeDeleted (const foleys::ProcessorController*) override;
-        void parameterAutomationChanged (const foleys::ParameterAutomation*) override;
 
         enum DragMode
         {
@@ -151,9 +159,10 @@ public:
         std::unique_ptr<foleys::AudioStrip> audiostrip;
         ComboBox processorSelect;
 
-        DragMode dragmode = notDragging;
         Point<int> localDragStart;
-        bool highlight = false;
+        DragMode dragmode = notDragging;
+        bool highlight    = false;
+        bool wasSelected  = false;
 
         std::vector<std::unique_ptr<ParameterGraph>> automations;
 

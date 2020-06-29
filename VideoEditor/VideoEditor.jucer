@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="EUnLYn" name="VideoEditor" projectType="guiapp" jucerVersion="5.4.5"
+<JUCERPROJECT id="EUnLYn" name="VideoEditor" projectType="guiapp" jucerVersion="5.4.7"
               companyName="Foleys Finest" companyCopyright="2019 by Foleys Finest Audio"
               companyWebsite="https://foleysfinest.com" companyEmail="info@foleysfinest.com"
               cppLanguageStandard="17" projectLineFeed="&#10;">

@@ -45,6 +45,8 @@ public:
     bool isPlaying();
 
     void setPosition (double pts);
+    void nextFrame();
+    void previousFrame();
 
     double getCurrentTimeInSeconds() const;
 

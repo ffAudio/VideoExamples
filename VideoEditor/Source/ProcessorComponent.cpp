@@ -35,69 +35,46 @@ namespace IDs
     static Identifier collapsed { "collapsed" };
 }
 
-ProcessorComponent::ProcessorComponent (foleys::ProcessorController& controllerToUse,
-                                        Player& player)
-  : controller (controllerToUse)
+AutomationComponent::AutomationComponent (const juce::String& titleToUse,
+                                          foleys::ControllableBase& controllerToUse,
+                                          Player& player)
+  : controller (controllerToUse),
+    title (titleToUse)
 {
-    active.setClickingTogglesState (true);
-    active.setToggleState (controller.isActive(), dontSendNotification);
-    addAndMakeVisible (active);
-    active.onStateChange = [&]
+    if (auto* processorController = dynamic_cast<foleys::ProcessorController*>(&controller))
     {
-        controller.setActive (active.getToggleState());
-    };
-    active.setColour (TextButton::buttonOnColourId, Colours::green);
-
-    addChildComponent (editor);
-    if (auto* processor = controller.getAudioProcessor())
-    {
-        editor.setVisible (processor->hasEditor());
-        editor.onClick = [&]
-        {
-            if (auto* processor = controller.getAudioProcessor())
-                showProcessorEditor (processor->createEditor(), processor->getName() + " - " + controller.getOwningClipDescriptor().getDescription());
-
-            sendChangeMessage();
-        };
+        processorControls = std::make_unique<ProcessorControls>(*processorController);
+        addAndMakeVisible (processorControls.get());
+        processorControls->addChangeListener (this);
     }
 
-    collapse.setClickingTogglesState (true);
-    collapse.setToggleState (isCollapsed(), dontSendNotification);
-    addAndMakeVisible (collapse);
-    collapse.onClick = [&]
-    {
-        controller.getProcessorState().setProperty (IDs::collapsed, collapse.getToggleState(), nullptr);
-        sendChangeMessage();
-    };
+    std::vector<foleys::ParameterAutomation*> automations;
+    for (auto& pair : controller.getParameters())
+        automations.push_back (pair.second.get());
 
-    addAndMakeVisible (remove);
-    remove.onClick = [&]
-    {
-        controller.getOwningClipDescriptor().removeProcessor (&controller);
-    };
+    std::sort (automations.begin(), automations.end(), [](const auto& a, const auto& b) { return a->getParameterIndex() < b->getParameterIndex(); });
 
-    for (auto& parameter : controller.getParameters())
+    for (auto* automation : automations)
     {
-        auto component = std::make_unique<ParameterComponent>(controller.getOwningClipDescriptor(), *parameter.second, player);
+        auto component = std::make_unique<ParameterComponent>(controller.getTimeReference(), *automation, player);
         addAndMakeVisible (component.get());
         parameterComponents.push_back (std::move (component));
     }
 
-    editor.setConnectedEdges (Button::ConnectedOnRight);
-    remove.setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    collapse.setConnectedEdges (Button::ConnectedOnLeft);
-
-    controller.getOwningClipDescriptor().getOwningClip().addTimecodeListener (this);
-    controller.getOwningClipDescriptor().addListener (this);
+    controller.addListener (this);
+    controller.getTimeReference().addTimecodeListener (this);
 }
 
-ProcessorComponent::~ProcessorComponent()
+AutomationComponent::~AutomationComponent()
 {
-    controller.getOwningClipDescriptor().removeListener (this);
-    controller.getOwningClipDescriptor().getOwningClip().removeTimecodeListener (this);
+    controller.getTimeReference().removeTimecodeListener (this);
+    controller.removeListener (this);
+
+    if (processorControls.get() != nullptr)
+        processorControls->removeChangeListener (this);
 }
 
-void ProcessorComponent::paint (Graphics& g)
+void AutomationComponent::paint (Graphics& g)
 {
     g.setColour (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
     g.fillRoundedRectangle (getLocalBounds().toFloat(), 6.0);
@@ -110,94 +87,100 @@ void ProcessorComponent::paint (Graphics& g)
 
     auto area = getLocalBounds();
 
-    g.drawText (controller.getName(), area.removeFromTop (24).reduced (33, 3),
+    g.drawText (title, area.removeFromTop (24).reduced (33, 3),
                 Justification::left, true);
 }
 
-void ProcessorComponent::resized()
+void AutomationComponent::resized()
 {
     auto area = getLocalBounds().reduced (3);
-    auto heading = area.removeFromTop (24).reduced (3, 0);
-    active.setBounds (heading.removeFromLeft (24));
-    collapse.setBounds (heading.removeFromRight (24));
-    remove.setBounds (heading.removeFromRight (24));
-    editor.setBounds (heading.removeFromRight (24));
 
-    auto collapsed = isCollapsed();
+    if (processorControls.get() != nullptr)
+        processorControls->setBounds (area.removeFromTop (24).reduced (3, 0));
+    else
+        area.removeFromTop (24);
+
+    auto collapsed = (processorControls.get() != nullptr) ? processorControls->isCollapsed() : false;
 
     for (auto& c : parameterComponents)
     {
-        c->setVisible (! collapsed);
-        if (! collapse.getToggleState())
-            c->setBounds (area.removeFromTop (40));
-    }
-}
-
-void ProcessorComponent::mouseDrag (const MouseEvent& event)
-{
-    if (event.getDistanceFromDragStart() > 5)
-    {
-        if (auto* dndContainer = findParentComponentOfClass<DragAndDropContainer>())
+        if (! collapsed)
         {
-            controller.readPluginStatesIntoValueTree();
-            dndContainer->startDragging (controller.getProcessorState().toXmlString(), this);
+            c->setVisible (true);
+            c->setBounds (area.removeFromTop (40));
+        }
+        else
+        {
+            c->setVisible (false);
         }
     }
 }
 
-void ProcessorComponent::showProcessorEditor (AudioProcessorEditor* editor, const String& title)
+void AutomationComponent::mouseDrag (const MouseEvent& event)
 {
-    audioProcessorWindow = std::make_unique<AudioProcessorWindow>(editor, title);
-    audioProcessorWindow->centreAroundComponent (getTopLevelComponent(), audioProcessorWindow->getWidth(), audioProcessorWindow->getHeight());
+    if (event.getDistanceFromDragStart() < 5)
+        return;
+
+    if (auto* processorController = dynamic_cast<foleys::ProcessorController*>(&controller))
+    {
+        if (auto* dndContainer = findParentComponentOfClass<DragAndDropContainer>())
+        {
+            processorController->readPluginStatesIntoValueTree();
+            dndContainer->startDragging (processorController->getProcessorState().toXmlString(), this);
+        }
+    }
 }
 
-bool ProcessorComponent::isCollapsed() const
-{
-    return controller.getProcessorState().getProperty (IDs::collapsed, false);
-}
-
-int ProcessorComponent::getHeightForWidth(int width) const
+int AutomationComponent::getHeightForWidth(int width) const
 {
     // todo: adapt to width
     ignoreUnused (width);
 
-    if (isCollapsed())
-        return 40;
+    auto height = 40 * controller.getNumParameters();
 
-    return int (40 + 40 * controller.getNumParameters());
+    if (processorControls.get() != nullptr)
+    {
+        if (processorControls->isCollapsed())
+            return 40;
+    }
+
+    return height + 40;
 }
 
-void ProcessorComponent::timecodeChanged (int64_t count, double seconds)
+void AutomationComponent::timecodeChanged (int64_t, double)
 {
-    auto localTime = controller.getOwningClipDescriptor().getClipTimeInDescriptorTime (seconds);
+    auto localTime = controller.getCurrentPTS();
+
     for (auto& c : parameterComponents)
         c->updateForTime (localTime);
 }
 
-void ProcessorComponent::processorControllerToBeDeleted (const foleys::ProcessorController* controllerToBeDeleted)
+void AutomationComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
 {
-    if (controllerToBeDeleted == &controller)
-        audioProcessorWindow.reset();
-}
-
-void ProcessorComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
-{
-    auto seconds = controller.getOwningClipDescriptor().getCurrentPTS();
+    auto seconds = controller.getCurrentPTS();
     for (auto& c : parameterComponents)
         c->updateForTime (seconds);
 }
 
-const foleys::ProcessorController* ProcessorComponent::getProcessorController() const
+const foleys::ProcessorController* AutomationComponent::getProcessorController() const
 {
-    return &controller;
+    if (processorControls.get() != nullptr)
+        return &processorControls->getProcessorController();
+
+    return nullptr;
+}
+
+void AutomationComponent::changeListenerCallback (ChangeBroadcaster*)
+{
+    sendChangeMessage();
 }
 
 //==============================================================================
 
-class ParameterSlider : public ProcessorComponent::ParameterComponent::ParameterWidget
+class ParameterSlider : public AutomationComponent::ParameterComponent::ParameterWidget
 {
 public:
-    ParameterSlider (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    ParameterSlider (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware& timeReference)
     {
         const auto numSteps = parameter.getNumSteps();
 
@@ -220,17 +203,16 @@ public:
         valueSlider.onValueChange = [&]
         {
             if (dragging)
-            {
-                parameter.setValue (clip.getCurrentPTS(), valueSlider.getValue());
-                if (parameter.isVideoParameter())
-                    clip.getOwningClip().invalidateVideo();
-            }
+                parameter.setValue (timeReference.getCurrentTimeInSeconds(), valueSlider.getValue());
         };
 
         valueSlider.textFromValueFunction = [&parameter](double value) { return parameter.getText (value); };
         valueSlider.valueFromTextFunction = [&parameter](String text) { return parameter.getValueForText (text); };
 
         valueSlider.setNormalisableRange (range);
+
+        auto colour = Colour::fromString (parameter.getParameterProperties().getWithDefault ("Colour", "ffa0a0a0").toString());
+        valueSlider.setColour (Slider::trackColourId, colour);
     }
 
     void setValue (double value) override
@@ -256,10 +238,10 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterSlider)
 };
 
-class ParameterChoice : public ProcessorComponent::ParameterComponent::ParameterWidget
+class ParameterChoice : public AutomationComponent::ParameterComponent::ParameterWidget
 {
 public:
-    ParameterChoice (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    ParameterChoice (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware& timeReference)
     {
         choice.addItemList (parameter.getAllValueStrings(), 1);
         choice.onChange = [&]
@@ -298,17 +280,17 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterChoice)
 };
 
-class ParameterSwitch : public ProcessorComponent::ParameterComponent::ParameterWidget
+class ParameterSwitch : public AutomationComponent::ParameterComponent::ParameterWidget
 {
 public:
-    ParameterSwitch (foleys::ParameterAutomation& parameter, foleys::ClipDescriptor& clip)
+    ParameterSwitch (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware& timeReference)
     {
         button.setButtonText (parameter.getText (1.0f));
         button.setClickingTogglesState (true);
         button.onClick = [&]
         {
             parameter.startAutomationGesture();
-            parameter.setValue (clip.getCurrentPTS(), button.getToggleState() ? 1.0 : 0.0);
+            parameter.setValue (timeReference.getCurrentTimeInSeconds(), button.getToggleState() ? 1.0 : 0.0);
             parameter.finishAutomationGesture();
         };
     }
@@ -336,10 +318,10 @@ private:
 
 //==============================================================================
 
-ProcessorComponent::ParameterComponent::ParameterComponent (foleys::ClipDescriptor& clipToControl,
+AutomationComponent::ParameterComponent::ParameterComponent (foleys::TimeCodeAware& reference,
                                                             foleys::ParameterAutomation& parameterToControl,
                                                             Player& player)
-  : clip (clipToControl),
+  : timeReference (reference),
     parameter (parameterToControl)
 {
     prev.setConnectedEdges (TextButton::ConnectedOnRight);
@@ -355,15 +337,15 @@ ProcessorComponent::ParameterComponent::ParameterComponent (foleys::ClipDescript
     auto options = parameter.getAllValueStrings();
     if (numSteps == 2)
     {
-        widget = std::make_unique<ParameterSwitch>(parameter, clip);
+        widget = std::make_unique<ParameterSwitch>(parameter, timeReference);
     }
     else if (! options.isEmpty())
     {
-        widget = std::make_unique<ParameterChoice>(parameter, clip);
+        widget = std::make_unique<ParameterChoice>(parameter, timeReference);
     }
     else
     {
-        widget = std::make_unique<ParameterSlider>(parameter, clip);
+        widget = std::make_unique<ParameterSlider>(parameter, timeReference);
     }
 
     widget->setValue (parameter.getValue());
@@ -371,31 +353,33 @@ ProcessorComponent::ParameterComponent::ParameterComponent (foleys::ClipDescript
 
     add.onClick = [this]
     {
-        parameter.addKeyframe (clip.getCurrentPTS(), widget->getValue());
+        parameter.addKeyframe (timeReference.getCurrentTimeInSeconds(), widget->getValue());
     };
 
     prev.onClick = [&]
     {
-        auto prev = parameter.getPreviousKeyframeTime (clip.getCurrentPTS());
-        player.setPosition (prev + clip.getStart() - clip.getOffset());
+        auto prev = parameter.getPreviousKeyframeTime (timeReference.getCurrentTimeInSeconds());
+        if (auto* descriptor = dynamic_cast<foleys::ClipDescriptor*>(&reference))
+            player.setPosition (prev + descriptor->getStart() - descriptor->getOffset());
     };
 
     next.onClick = [&]
     {
-        auto next = parameter.getNextKeyframeTime (clip.getCurrentPTS());
-        player.setPosition (next + clip.getStart() - clip.getOffset());
+        auto next = parameter.getNextKeyframeTime (timeReference.getCurrentTimeInSeconds());
+        if (auto* descriptor = dynamic_cast<foleys::ClipDescriptor*>(&reference))
+            player.setPosition (next + descriptor->getStart() - descriptor->getOffset());
     };
 
 }
 
-void ProcessorComponent::ParameterComponent::paint (Graphics& g)
+void AutomationComponent::ParameterComponent::paint (Graphics& g)
 {
     auto area = getLocalBounds().reduced (3);
     g.setColour (Colours::silver);
     g.drawFittedText (parameter.getName(), area, Justification::topLeft, 1);
 }
 
-void ProcessorComponent::ParameterComponent::resized()
+void AutomationComponent::ParameterComponent::resized()
 {
     auto area = getLocalBounds().reduced (3);
     add.setBounds (area.removeFromRight (24).withTop (area.getHeight() - 24));
@@ -404,14 +388,106 @@ void ProcessorComponent::ParameterComponent::resized()
     widget->getComponent().setBounds (area.withTop (20).withTrimmedRight (3));
 }
 
-void ProcessorComponent::ParameterComponent::updateForTime (double pts)
+void AutomationComponent::ParameterComponent::updateForTime (double pts)
 {
     widget->setValue (parameter.getValueForTime (pts));
 }
 
 //==============================================================================
 
-ProcessorComponent::AudioProcessorWindow::AudioProcessorWindow (AudioProcessorEditor* editor, const String& title)
+AutomationComponent::ProcessorControls::ProcessorControls (foleys::ProcessorController& controllerToUse)
+  : controller (controllerToUse)
+{
+    editor.setConnectedEdges (Button::ConnectedOnRight);
+    remove.setConnectedEdges (Button::ConnectedOnRight);
+    collapse.setConnectedEdges (Button::ConnectedOnLeft);
+
+    active.setClickingTogglesState (true);
+    active.setToggleState (controller.isActive(), dontSendNotification);
+    addAndMakeVisible (active);
+    active.onStateChange = [&]
+    {
+        controller.setActive (active.getToggleState());
+    };
+    active.setColour (TextButton::buttonOnColourId, Colours::green);
+
+    addChildComponent (editor);
+    if (auto* processor = controller.getAudioProcessor())
+    {
+        if (processor->hasEditor())
+        {
+            remove.setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
+
+            editor.setVisible (processor->hasEditor());
+            editor.onClick = [&]
+            {
+                if (auto* processor = controller.getAudioProcessor())
+                    showProcessorEditor (processor->createEditor(), processor->getName() + " - " + controller.getOwningClipDescriptor().getDescription());
+
+                sendChangeMessage();
+            };
+        }
+    }
+
+    collapse.setClickingTogglesState (true);
+    collapse.setToggleState (isCollapsed(), dontSendNotification);
+    addAndMakeVisible (collapse);
+    collapse.onClick = [&]
+    {
+        controller.getProcessorState().setProperty (IDs::collapsed, collapse.getToggleState(), nullptr);
+        sendChangeMessage();
+    };
+
+    addAndMakeVisible (remove);
+    remove.onClick = [&]
+    {
+        controller.getOwningClipDescriptor().removeProcessor (&controller);
+    };
+
+    controller.getOwningClipDescriptor().addListener (this);
+}
+
+AutomationComponent::ProcessorControls::~ProcessorControls()
+{
+    controller.getOwningClipDescriptor().removeListener (this);
+}
+
+void AutomationComponent::ProcessorControls::showProcessorEditor (AudioProcessorEditor* editor, const String& title)
+{
+    audioProcessorWindow = std::make_unique<AudioProcessorWindow>(editor, title);
+    audioProcessorWindow->centreAroundComponent (getTopLevelComponent(), audioProcessorWindow->getWidth(), audioProcessorWindow->getHeight());
+}
+
+void AutomationComponent::ProcessorControls::resized()
+{
+    auto bounds = getLocalBounds();
+
+    active.setBounds (bounds.removeFromLeft (getHeight()));
+
+    collapse.setBounds (bounds.removeFromRight (getHeight()));
+    remove.setBounds (bounds.removeFromRight (getHeight()));
+    editor.setBounds (bounds.removeFromRight (getHeight()));
+}
+
+bool AutomationComponent::ProcessorControls::isCollapsed() const
+{
+    return controller.getProcessorState().getProperty (IDs::collapsed, false);
+}
+
+void AutomationComponent::ProcessorControls::processorControllerToBeDeleted (const foleys::ProcessorController* controllerToBeDeleted)
+{
+    if (controllerToBeDeleted == &controller)
+        audioProcessorWindow.reset();
+}
+
+foleys::ProcessorController& AutomationComponent::ProcessorControls::getProcessorController()
+{
+    return controller;
+}
+
+//==============================================================================
+
+AutomationComponent::AudioProcessorWindow::AudioProcessorWindow (AudioProcessorEditor* editor, const String& title)
   : DocumentWindow (title, Colours::darkgrey, DocumentWindow::closeButton, true)
 {
     setAlwaysOnTop (true);
@@ -422,7 +498,7 @@ ProcessorComponent::AudioProcessorWindow::AudioProcessorWindow (AudioProcessorEd
     setVisible (true);
 }
 
-void ProcessorComponent::AudioProcessorWindow::closeButtonPressed()
+void AutomationComponent::AudioProcessorWindow::closeButtonPressed()
 {
     setVisible (false);
     setContentOwned (nullptr, false);

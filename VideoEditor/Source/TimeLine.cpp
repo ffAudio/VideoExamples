@@ -42,6 +42,8 @@ TimeLine::TimeLine (foleys::VideoEngine& theVideoEngine, Player& playerToUse, Pr
     player (playerToUse),
     properties (properiesToUse)
 {
+    setWantsKeyboardFocus (true);
+
     addAndMakeVisible (timemarker);
     timemarker.setAlwaysOnTop (true);
 }
@@ -111,6 +113,23 @@ void TimeLine::timecodeChanged (int64_t count, double seconds)
 void TimeLine::mouseDown (const MouseEvent& event)
 {
     player.setPosition (getTimeFromX (event.x));
+}
+
+bool TimeLine::keyPressed (const KeyPress& key)
+{
+    if (key.isKeyCode (KeyPress::leftKey))
+    {
+        player.previousFrame();
+        return true;
+    }
+
+    if (key.isKeyCode (KeyPress::rightKey))
+    {
+        player.nextFrame();
+        return true;
+    }
+
+    return false;
 }
 
 bool TimeLine::isInterestedInFileDrag (const StringArray& files)
@@ -410,6 +429,8 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
   : clip (clipToUse),
     timeline (tl)
 {
+    setWantsKeyboardFocus (true);
+
     if (video)
     {
         filmstrip = std::make_unique<foleys::FilmStrip>();
@@ -537,6 +558,8 @@ void TimeLine::ClipComponent::mouseMove (const MouseEvent& event)
 
 void TimeLine::ClipComponent::mouseDown (const MouseEvent& event)
 {
+    wasSelected = timeline.getSelectedClip() == clip;
+
     localDragStart = event.getPosition();
     timeline.setSelectedClip (clip, isVideoClip());
 
@@ -591,8 +614,13 @@ void TimeLine::ClipComponent::mouseUp (const MouseEvent& event)
 {
     dragmode = notDragging;
 
-    if (event.mouseWasDraggedSinceMouseDown() == false)
+    if (event.mouseWasDraggedSinceMouseDown() == false && wasSelected)
         timeline.player.setPosition (timeline.getTimeFromX (timeline.getLocalPoint (this, event.getPosition()).getX()));
+}
+
+bool TimeLine::ClipComponent::keyPressed (const KeyPress& key)
+{
+    return timeline.keyPressed (key);
 }
 
 bool TimeLine::ClipComponent::isInterestedInDragSource (const SourceDetails &dragSourceDetails)
@@ -705,11 +733,6 @@ void TimeLine::ClipComponent::processorControllerToBeDeleted (const foleys::Proc
     updateProcessorList();
 }
 
-void TimeLine::ClipComponent::parameterAutomationChanged (const foleys::ParameterAutomation*)
-{
-    repaint();
-}
-
 //==============================================================================
 
 TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToUse,
@@ -718,6 +741,12 @@ TimeLine::ClipComponent::ParameterGraph::ParameterGraph (ClipComponent& ownerToU
     automation (automationToUse)
 {
     setOpaque (false);
+    automation.getControllable().addListener (this);
+}
+
+TimeLine::ClipComponent::ParameterGraph::~ParameterGraph()
+{
+    automation.getControllable().removeListener (this);
 }
 
 void TimeLine::ClipComponent::ParameterGraph::setColour (juce::Colour colourToUse)
@@ -842,4 +871,10 @@ double TimeLine::ClipComponent::ParameterGraph::mapToValue (int y) const
         return 0;
 
     return 1.0 - (y - 1.0) / (h - 2.0);
+}
+
+void TimeLine::ClipComponent::ParameterGraph::parameterAutomationChanged (const foleys::ParameterAutomation* a)
+{
+    if (a == &automation)
+        repaint();
 }
