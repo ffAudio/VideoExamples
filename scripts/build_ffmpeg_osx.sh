@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 pushd ../libraries
 mkdir build
