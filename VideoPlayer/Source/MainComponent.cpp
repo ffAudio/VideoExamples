@@ -79,7 +79,7 @@ public:
 */
 class MainContentComponent   :  public AudioAppComponent,
                                 public ChangeBroadcaster,
-                                public foleys::AVClip::TimecodeListener
+                                public foleys::TimeCodeAware::Listener
 {
 public:
     //==============================================================================
