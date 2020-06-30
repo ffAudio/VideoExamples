@@ -16,7 +16,7 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror -Wall"
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror -Wall -Werror=sign-compare"
                extraLinkerFlags="-L../../../libraries/build/ffmpeg_libs" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
                extraDefs="FFMPEG_ROOT=../../../libraries/build/" bigIcon="ynetjT"
                smallIcon="ynetjT" customXcodeResourceFolders="../libraries/build/ffmpeg_libs">

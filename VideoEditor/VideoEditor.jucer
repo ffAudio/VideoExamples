@@ -39,7 +39,7 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror -Wall"
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror -Wall -Werror=sign-compare"
                extraLinkerFlags="-L../../../libraries/build/ffmpeg_libs" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
                smallIcon="t8hwFJ" bigIcon="t8hwFJ" documentExtensions=".videdit"
                customXcodeResourceFolders="../libraries/build/ffmpeg_libs">
