@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="agVUOj" name="VideoPlayer" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.yourcompany.VideoLibTest" includeBinaryInAppConfig="1"
-              jucerVersion="5.4.5" displaySplashScreen="0" splashScreenColour="Dark"
+              jucerVersion="5.4.7" displaySplashScreen="0" splashScreenColour="Dark"
               companyCopyright="" cppLanguageStandard="17">
   <MAINGROUP id="N4nDda" name="VideoPlayer">
     <GROUP id="{3157C055-224D-BD2E-9A8C-CDE725FE3ADB}" name="Source">
@@ -16,10 +16,10 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-Wno-reserved-user-defined-literal&#10;-I${FFMPEG_ROOT}/include"
-               extraLinkerFlags="-L${FFMPEG_ROOT}/lib" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample&#10;avresample"
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror -Wall"
+               extraLinkerFlags="-L../../../libraries/build/ffmpeg_libs" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
                extraDefs="FFMPEG_ROOT=../../../libraries/build/" bigIcon="ynetjT"
-               smallIcon="ynetjT">
+               smallIcon="ynetjT" customXcodeResourceFolders="../libraries/build/ffmpeg_libs">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="VideoPlayer"
                        osxCompatibility="10.9 SDK" cppLanguageStandard="c++11" cppLibType="libc++"

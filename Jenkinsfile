@@ -108,23 +108,12 @@ void buildProject(String folder, String project, String configuration)
 
 void buildFFmpeg(String folder)
 {
-    if (env.BUILD_SERVER_PLATFORM == 'mac')
+    if (env.BUILD_SERVER_PLATFORM == 'mac' ||
+        env.BUILD_SERVER_PLATFORM == 'linux')
     {
         sh """
-        cd ${folder}
-        PATH=$PATH:/usr/local/bin
-        ./configure --disable-programs --disable-doc --enable-gpl --enable-shared --enable-pthreads --enable-version3 --enable-hardcoded-tables --enable-avresample --cc=clang --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 --enable-libxvid --enable-lzma --enable-libopenjpeg --enable-libspeex --enable-videotoolbox --prefix=../build/
-        make -j 8
-        make install
-        """
-    }
-    else if (env.BUILD_SERVER_PLATFORM == 'linux')
-    {
-        sh """
-        cd ${folder}
-        ./configure --disable-programs --disable-doc --enable-gpl --enable-shared --enable-pthreads --enable-version3 --enable-hardcoded-tables --enable-avresample --cc=clang --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 --enable-libxvid --prefix=../build/
-        make -j 8
-        make install
+        cd scripts
+        ./build_ffmpeg_osx.sh
         """
     }
     else if (env.BUILD_SERVER_PLATFORM == 'windows')
