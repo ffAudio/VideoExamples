@@ -36,9 +36,7 @@ class RenderDialog    : public Component,
 {
 public:
     RenderDialog (foleys::ClipRenderer& renderer);
-    ~RenderDialog();
 
-//    void paint (Graphics&) override;
     void resized() override;
 
     void timerCallback() override;

@@ -36,7 +36,7 @@ class Player  : public ChangeBroadcaster,
 {
 public:
     Player (AudioDeviceManager& deviceManager, foleys::VideoEngine& engine, foleys::VideoPreview& preview);
-    ~Player();
+    ~Player() override;
 
     void setClip (std::shared_ptr<foleys::AVClip> clip, bool needsPrepare);
 

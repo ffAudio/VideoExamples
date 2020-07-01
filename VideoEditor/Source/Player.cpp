@@ -67,7 +67,7 @@ void Player::setPosition (double pts)
         stopAudition();
 
     if (clip)
-        clip->setNextReadPosition (pts * getSampleRate());
+        clip->setNextReadPosition (int64 (pts * getSampleRate()));
 
     sendChangeMessage();
 }
@@ -78,7 +78,7 @@ void Player::nextFrame()
         return;
 
     auto samples = clip->getNextReadPosition();
-    clip->setNextReadPosition (samples + clip->getFrameDurationInSeconds() * getSampleRate());
+    clip->setNextReadPosition (int64 (samples + clip->getFrameDurationInSeconds() * getSampleRate()));
 }
 
 void Player::previousFrame()
@@ -87,7 +87,7 @@ void Player::previousFrame()
         return;
 
     auto samples = clip->getNextReadPosition();
-    clip->setNextReadPosition (samples - clip->getFrameDurationInSeconds() * getSampleRate());
+    clip->setNextReadPosition (int64 (samples - clip->getFrameDurationInSeconds() * getSampleRate()));
 }
 
 double Player::getCurrentTimeInSeconds() const
@@ -189,7 +189,7 @@ double Player::getSampleRate() const
     return 0;
 }
 
-void Player::changeListenerCallback (ChangeBroadcaster* sender)
+void Player::changeListenerCallback (ChangeBroadcaster*)
 {
     if (auto* device = deviceManager.getCurrentAudioDevice())
     {

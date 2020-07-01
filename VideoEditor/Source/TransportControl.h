@@ -37,7 +37,7 @@ class TransportControl    : public Component,
 {
 public:
     TransportControl (Player& player);
-    ~TransportControl();
+    ~TransportControl() override;
 
     void paint (Graphics&) override;
     void resized() override;

@@ -43,7 +43,7 @@ public:
     AutomationComponent (const juce::String& title,
                          foleys::ControllableBase& controller,
                          Player& player);
-    ~AutomationComponent();
+    ~AutomationComponent() override;
 
     void paint (Graphics&) override;
     void resized() override;
@@ -68,9 +68,9 @@ public:
         void paint (Graphics&) override;
         void resized() override;
 
-        void valueChanged (foleys::ProcessorParameter& parameter, double value) override {}
-        void gestureStarted (foleys::ProcessorParameter& parameter) override {}
-        void gestureFinished (foleys::ProcessorParameter& parameter) override {}
+        void valueChanged (foleys::ProcessorParameter&, double) override {}
+        void gestureStarted (foleys::ProcessorParameter&) override {}
+        void gestureFinished (foleys::ProcessorParameter&) override {}
 
         void updateForTime (double pts);
 
@@ -127,7 +127,7 @@ private:
     {
     public:
         ProcessorControls (foleys::ProcessorController& controller);
-        ~ProcessorControls();
+        ~ProcessorControls() override;
 
         void showProcessorEditor (AudioProcessorEditor* editor, const String& title);
         void resized() override;
@@ -142,10 +142,10 @@ private:
     private:
         foleys::ProcessorController&    controller;
 
-        TextButton active   { "A" };
-        TextButton editor   { "E" };
-        TextButton collapse { "v" };
-        TextButton remove   { "X" };
+        TextButton activeButton   { "A" };
+        TextButton editorButton   { "E" };
+        TextButton collapseButton { "v" };
+        TextButton removeButton   { "X" };
 
         std::unique_ptr<AudioProcessorWindow> audioProcessorWindow;
 

@@ -85,10 +85,6 @@ RenderDialog::RenderDialog (foleys::ClipRenderer& rendererToUse) : renderer (ren
     };
 }
 
-RenderDialog::~RenderDialog()
-{
-}
-
 void RenderDialog::resized()
 {
     auto line = 30;

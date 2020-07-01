@@ -46,7 +46,7 @@ class MainComponent   : public Component,
 public:
     //==============================================================================
     MainComponent();
-    ~MainComponent();
+    ~MainComponent() override;
 
     //==============================================================================
     void paint (Graphics&) override;
@@ -64,8 +64,7 @@ public:
     StringArray getMenuBarNames() override;
     PopupMenu getMenuForIndex (int topLevelMenuIndex,
                                const String& menuName) override;
-    void menuItemSelected (int menuItemID,
-                           int topLevelMenuIndex) override {}
+    void menuItemSelected (int, int) override {}
 
     KeyPressMappingSet* getKeyMappings() const;
 

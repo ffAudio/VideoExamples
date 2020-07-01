@@ -40,7 +40,7 @@ class TimeLine    : public Component,
 {
 public:
     TimeLine (foleys::VideoEngine& videoEngine, Player& player, Properties& properies);
-    ~TimeLine();
+    ~TimeLine() override;
 
     bool isInterestedInFileDrag (const StringArray& files) override;
     void filesDropped (const StringArray& files, int x, int y) override;
@@ -76,7 +76,7 @@ public:
     {
     public:
         ClipComponent (TimeLine& tl, std::shared_ptr<foleys::ClipDescriptor> clip, ThreadPool& threadPool, bool video);
-        ~ClipComponent();
+        ~ClipComponent() override;
 
         void paint (Graphics& g) override;
         void resized() override;
@@ -105,7 +105,7 @@ public:
         {
         public:
             ParameterGraph (ClipComponent& owner, foleys::ParameterAutomation& automation);
-            ~ParameterGraph();
+            ~ParameterGraph() override;
 
             void setColour (juce::Colour colour);
 
@@ -203,10 +203,9 @@ public:
                                 juce::ValueTree& childWhichHasBeenRemoved,
                                 int indexFromWhichChildWasRemoved) override;
 
-    void valueTreeChildOrderChanged (juce::ValueTree& parentTreeWhoseChildrenHaveMoved,
-                                     int oldIndex, int newIndex) override {}
+    void valueTreeChildOrderChanged (juce::ValueTree&, int, int) override {}
 
-    void valueTreeParentChanged (juce::ValueTree& treeWhoseParentHasChanged) override {}
+    void valueTreeParentChanged (juce::ValueTree&) override {}
 
 private:
 

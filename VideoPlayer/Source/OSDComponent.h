@@ -86,10 +86,6 @@ public:
         ffwd.setConnectedEdges  (TextButton::ConnectedOnLeft);
     }
 
-    ~OSDComponent()
-    {
-    }
-
     void paint (Graphics& g) override
     {
         if (clip && clip->getLengthInSeconds() > 0)
@@ -124,7 +120,7 @@ public:
     void sliderValueChanged (juce::Slider* slider) override
     {
         if (slider == &seekBar) {
-            clip->setNextReadPosition (slider->getValue() * 48000);
+            clip->setNextReadPosition (juce::int64 (slider->getValue() * 48000));
         }
     }
 
@@ -205,7 +201,7 @@ public:
             }
             else if (relTime < 2300)
             {
-                component.setAlpha (1.0 - jmax (0.0, (relTime - 2000.0) / 300.0));
+                component.setAlpha (1.0f - jmax (0.0f, (relTime - 2000.0f) / 300.0f));
             }
             else
             {

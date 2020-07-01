@@ -64,10 +64,6 @@ Library::Library (Player& player, foleys::VideoEngine& engine)
     addAndMakeVisible (tabs);
 }
 
-Library::~Library()
-{
-}
-
 void Library::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
@@ -109,7 +105,7 @@ void Library::MediaList::fileDoubleClicked (const File& file)
     player.setAuditionFile (file);
 }
 
-void Library::MediaList::fileClicked (const File& file, const MouseEvent&)
+void Library::MediaList::fileClicked (const File&, const MouseEvent&)
 {
     player.stopAudition();
 }

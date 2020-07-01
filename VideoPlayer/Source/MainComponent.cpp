@@ -53,14 +53,12 @@ public:
         setClip (clip);
     }
 
-    virtual ~VideoComponentWithDropper () {}
-
-    bool isInterestedInFileDrag (const StringArray &files) override
+    bool isInterestedInFileDrag (const StringArray &) override
     {
         return true;
     }
 
-    void filesDropped (const StringArray &files, int x, int y) override
+    void filesDropped (const StringArray &files, int, int) override
     {
         if (auto movieClip = std::dynamic_pointer_cast<foleys::MovieClip>(getClip()))
         {
@@ -121,7 +119,7 @@ public:
         setSize (800, 600);
     }
 
-    ~MainContentComponent()
+    ~MainContentComponent() override
     {
         shutdownAudio();
     }
@@ -163,7 +161,7 @@ public:
                     // add center to left and right
                     bufferToFill.buffer->addFrom (i, bufferToFill.startSample,
                                                   readBuffer.getReadPointer (2),
-                                                  bufferToFill.numSamples, 0.7);
+                                                  bufferToFill.numSamples, 0.7f);
                 }
             }
         }
@@ -179,7 +177,7 @@ public:
         movieClip->releaseResources ();
     }
 
-    void timecodeChanged (int64_t count, double seconds) override
+    void timecodeChanged (int64_t, double seconds) override
     {
         MessageManager::callAsync (std::bind (&OSDComponent::setCurrentTime,
                                               &osdComponent,

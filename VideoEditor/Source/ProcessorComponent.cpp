@@ -206,7 +206,7 @@ public:
                 parameter.setValue (timeReference.getCurrentTimeInSeconds(), valueSlider.getValue());
         };
 
-        valueSlider.textFromValueFunction = [&parameter](double value) { return parameter.getText (value); };
+        valueSlider.textFromValueFunction = [&parameter](double value) { return parameter.getText (float(value)); };
         valueSlider.valueFromTextFunction = [&parameter](String text) { return parameter.getValueForText (text); };
 
         valueSlider.setNormalisableRange (range);
@@ -241,7 +241,7 @@ private:
 class ParameterChoice : public AutomationComponent::ParameterComponent::ParameterWidget
 {
 public:
-    ParameterChoice (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware& timeReference)
+    ParameterChoice (foleys::ParameterAutomation& parameter, foleys::TimeCodeAware&)
     {
         choice.addItemList (parameter.getAllValueStrings(), 1);
         choice.onChange = [&]
@@ -255,7 +255,7 @@ public:
     {
         auto numChoices = choice.getNumItems();
         if (numChoices > 1)
-            choice.setSelectedItemIndex (value * (numChoices - 1.0));
+            choice.setSelectedItemIndex (roundToInt (value * (numChoices - 1.0)));
         else
             choice.setSelectedItemIndex (0);
     }
@@ -358,16 +358,16 @@ AutomationComponent::ParameterComponent::ParameterComponent (foleys::TimeCodeAwa
 
     prev.onClick = [&]
     {
-        auto prev = parameter.getPreviousKeyframeTime (timeReference.getCurrentTimeInSeconds());
+        auto p = parameter.getPreviousKeyframeTime (timeReference.getCurrentTimeInSeconds());
         if (auto* descriptor = dynamic_cast<foleys::ClipDescriptor*>(&reference))
-            player.setPosition (prev + descriptor->getStart() - descriptor->getOffset());
+            player.setPosition (p + descriptor->getStart() - descriptor->getOffset());
     };
 
     next.onClick = [&]
     {
-        auto next = parameter.getNextKeyframeTime (timeReference.getCurrentTimeInSeconds());
+        auto n = parameter.getNextKeyframeTime (timeReference.getCurrentTimeInSeconds());
         if (auto* descriptor = dynamic_cast<foleys::ClipDescriptor*>(&reference))
-            player.setPosition (next + descriptor->getStart() - descriptor->getOffset());
+            player.setPosition (n + descriptor->getStart() - descriptor->getOffset());
     };
 
 }
@@ -398,48 +398,48 @@ void AutomationComponent::ParameterComponent::updateForTime (double pts)
 AutomationComponent::ProcessorControls::ProcessorControls (foleys::ProcessorController& controllerToUse)
   : controller (controllerToUse)
 {
-    editor.setConnectedEdges (Button::ConnectedOnRight);
-    remove.setConnectedEdges (Button::ConnectedOnRight);
-    collapse.setConnectedEdges (Button::ConnectedOnLeft);
+    editorButton.setConnectedEdges (Button::ConnectedOnRight);
+    removeButton.setConnectedEdges (Button::ConnectedOnRight);
+    collapseButton.setConnectedEdges (Button::ConnectedOnLeft);
 
-    active.setClickingTogglesState (true);
-    active.setToggleState (controller.isActive(), dontSendNotification);
-    addAndMakeVisible (active);
-    active.onStateChange = [&]
+    activeButton.setClickingTogglesState (true);
+    activeButton.setToggleState (controller.isActive(), dontSendNotification);
+    addAndMakeVisible (activeButton);
+    activeButton.onStateChange = [&]
     {
-        controller.setActive (active.getToggleState());
+        controller.setActive (activeButton.getToggleState());
     };
-    active.setColour (TextButton::buttonOnColourId, Colours::green);
+    activeButton.setColour (TextButton::buttonOnColourId, Colours::green);
 
-    addChildComponent (editor);
+    addChildComponent (editorButton);
     if (auto* processor = controller.getAudioProcessor())
     {
         if (processor->hasEditor())
         {
-            remove.setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
+            removeButton.setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
 
-            editor.setVisible (processor->hasEditor());
-            editor.onClick = [&]
+            editorButton.setVisible (processor->hasEditor());
+            editorButton.onClick = [&]
             {
-                if (auto* processor = controller.getAudioProcessor())
-                    showProcessorEditor (processor->createEditor(), processor->getName() + " - " + controller.getOwningClipDescriptor().getDescription());
+                if (auto* p = controller.getAudioProcessor())
+                    showProcessorEditor (p->createEditor(), p->getName() + " - " + controller.getOwningClipDescriptor().getDescription());
 
                 sendChangeMessage();
             };
         }
     }
 
-    collapse.setClickingTogglesState (true);
-    collapse.setToggleState (isCollapsed(), dontSendNotification);
-    addAndMakeVisible (collapse);
-    collapse.onClick = [&]
+    collapseButton.setClickingTogglesState (true);
+    collapseButton.setToggleState (isCollapsed(), dontSendNotification);
+    addAndMakeVisible (collapseButton);
+    collapseButton.onClick = [&]
     {
-        controller.getProcessorState().setProperty (IDs::collapsed, collapse.getToggleState(), nullptr);
+        controller.getProcessorState().setProperty (IDs::collapsed, collapseButton.getToggleState(), nullptr);
         sendChangeMessage();
     };
 
-    addAndMakeVisible (remove);
-    remove.onClick = [&]
+    addAndMakeVisible (removeButton);
+    removeButton.onClick = [&]
     {
         controller.getOwningClipDescriptor().removeProcessor (&controller);
     };
@@ -452,9 +452,9 @@ AutomationComponent::ProcessorControls::~ProcessorControls()
     controller.getOwningClipDescriptor().removeListener (this);
 }
 
-void AutomationComponent::ProcessorControls::showProcessorEditor (AudioProcessorEditor* editor, const String& title)
+void AutomationComponent::ProcessorControls::showProcessorEditor (AudioProcessorEditor* editor, const String& editorTitle)
 {
-    audioProcessorWindow = std::make_unique<AudioProcessorWindow>(editor, title);
+    audioProcessorWindow = std::make_unique<AudioProcessorWindow>(editor, editorTitle);
     audioProcessorWindow->centreAroundComponent (getTopLevelComponent(), audioProcessorWindow->getWidth(), audioProcessorWindow->getHeight());
 }
 
@@ -462,11 +462,11 @@ void AutomationComponent::ProcessorControls::resized()
 {
     auto bounds = getLocalBounds();
 
-    active.setBounds (bounds.removeFromLeft (getHeight()));
+    activeButton.setBounds (bounds.removeFromLeft (getHeight()));
 
-    collapse.setBounds (bounds.removeFromRight (getHeight()));
-    remove.setBounds (bounds.removeFromRight (getHeight()));
-    editor.setBounds (bounds.removeFromRight (getHeight()));
+    collapseButton.setBounds (bounds.removeFromRight (getHeight()));
+    removeButton.setBounds (bounds.removeFromRight (getHeight()));
+    editorButton.setBounds (bounds.removeFromRight (getHeight()));
 }
 
 bool AutomationComponent::ProcessorControls::isCollapsed() const
@@ -487,8 +487,8 @@ foleys::ProcessorController& AutomationComponent::ProcessorControls::getProcesso
 
 //==============================================================================
 
-AutomationComponent::AudioProcessorWindow::AudioProcessorWindow (AudioProcessorEditor* editor, const String& title)
-  : DocumentWindow (title, Colours::darkgrey, DocumentWindow::closeButton, true)
+AutomationComponent::AudioProcessorWindow::AudioProcessorWindow (AudioProcessorEditor* editor, const String& titleToUse)
+  : DocumentWindow (titleToUse, Colours::darkgrey, DocumentWindow::closeButton, true)
 {
     setAlwaysOnTop (true);
     setWantsKeyboardFocus (false);

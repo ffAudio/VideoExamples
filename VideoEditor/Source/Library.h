@@ -37,7 +37,6 @@ class Library    : public Component
 {
 public:
     Library (Player& player, foleys::VideoEngine& engine);
-    ~Library();
 
     void paint (Graphics&) override;
     void resized() override;
@@ -47,14 +46,14 @@ public:
     {
     public:
         MediaList (Player& player, TimeSliceThread& readThread, const File& root, std::unique_ptr<FileFilter> filter);
-        ~MediaList();
+        ~MediaList() override;
 
         void resized() override;
 
         void selectionChanged() override {}
         void fileClicked (const File &file, const MouseEvent &e) override;
         void fileDoubleClicked (const File &file) override;
-        void browserRootChanged (const File &newRoot) override {}
+        void browserRootChanged (const File &) override {}
 
     private:
         Player&                     player;

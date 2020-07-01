@@ -103,7 +103,7 @@ void TimeLine::resized()
     timemarker.setBounds (tx, 0, 3, getHeight());
 }
 
-void TimeLine::timecodeChanged (int64_t count, double seconds)
+void TimeLine::timecodeChanged (int64_t, double seconds)
 {
     ignoreUnused (time);
     auto tx = getXFromTime (seconds);
@@ -132,7 +132,7 @@ bool TimeLine::keyPressed (const KeyPress& key)
     return false;
 }
 
-bool TimeLine::isInterestedInFileDrag (const StringArray& files)
+bool TimeLine::isInterestedInFileDrag (const StringArray&)
 {
     return edit != nullptr;
 }
@@ -214,7 +214,7 @@ void TimeLine::addClipToEdit (std::shared_ptr<foleys::AVClip> clip, double start
     auto descriptor = edit->addClip (clip, start, length);
     if (y < 190)
     {
-        int line = (y - margin) / double (videoHeight + margin);
+        int line = juce::roundToInt ((y - margin) / double (videoHeight + margin));
         setVideoLine (descriptor, line);
     }
     else
@@ -305,14 +305,14 @@ void TimeLine::restoreClipComponents()
     {
         if (descriptor->clip->hasVideo())
         {
-            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [descriptor](const auto& comp){ return comp->isVideoClip() && comp->clip == descriptor; });
+            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [descriptor](const auto& c){ return c->isVideoClip() && c->clip == descriptor; });
             if (comp == clipComponents.end())
                 addClipComponent (descriptor, true);
         }
 
         if (descriptor->clip->hasAudio())
         {
-            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [descriptor](const auto& comp){ return !comp->isVideoClip() && comp->clip == descriptor; });
+            auto comp = std::find_if (clipComponents.begin(), clipComponents.end(), [descriptor](const auto& c){ return !c->isVideoClip() && c->clip == descriptor; });
             if (comp == clipComponents.end())
                 addClipComponent (descriptor, false);
         }
@@ -364,7 +364,7 @@ std::shared_ptr<foleys::ComposedClip> TimeLine::getEditClip() const
 
 int TimeLine::getXFromTime (double seconds) const
 {
-    return (seconds / timelineLength) * getWidth();
+    return juce::roundToInt ((seconds / timelineLength) * getWidth());
 }
 
 double TimeLine::getTimeFromX (int pixels) const
@@ -402,21 +402,17 @@ double TimeLine::getSampleRate() const
     return player.getSampleRate();
 }
 
-void TimeLine::valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged,
-                                         const juce::Identifier& property)
+void TimeLine::valueTreePropertyChanged (juce::ValueTree&, const juce::Identifier&)
 {
     MessageManager::callAsync ([safeComponent = SafePointer<TimeLine> (this)] () mutable { if (safeComponent) safeComponent->resized(); });
 }
 
-void TimeLine::valueTreeChildAdded (juce::ValueTree& parentTree,
-                                    juce::ValueTree& childWhichHasBeenAdded)
+void TimeLine::valueTreeChildAdded (juce::ValueTree&, juce::ValueTree&)
 {
     MessageManager::callAsync ([safeComponent = SafePointer<TimeLine> (this)] () mutable { if (safeComponent) safeComponent->restoreClipComponents(); });
 }
 
-void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
-                                      juce::ValueTree& childWhichHasBeenRemoved,
-                                      int indexFromWhichChildWasRemoved)
+void TimeLine::valueTreeChildRemoved (juce::ValueTree&, juce::ValueTree&, int)
 {
     MessageManager::callAsync ([safeComponent = SafePointer<TimeLine> (this)] () mutable { if (safeComponent) safeComponent->restoreClipComponents(); });
 }
@@ -425,7 +421,7 @@ void TimeLine::valueTreeChildRemoved (juce::ValueTree& parentTree,
 
 TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
                                         std::shared_ptr<foleys::ClipDescriptor> clipToUse,
-                                        ThreadPool& threadPool, bool video)
+                                        ThreadPool&, bool video)
   : clip (clipToUse),
     timeline (tl)
 {
@@ -463,12 +459,12 @@ TimeLine::ClipComponent::ClipComponent (TimeLine& tl,
             if (isVideoClip())
             {
                 if (isPositiveAndBelow (index, clip->getVideoProcessors().size()))
-                    updateParameterGraphs (*clip->getVideoProcessors() [index]);
+                    updateParameterGraphs (*clip->getVideoProcessors() [size_t(index)]);
             }
             else
             {
                 if (isPositiveAndBelow (index, clip->getAudioProcessors().size()))
-                    updateParameterGraphs (*clip->getAudioProcessors() [index]);
+                    updateParameterGraphs (*clip->getAudioProcessors() [size_t(index)]);
             }
         }
     };
@@ -641,7 +637,7 @@ void TimeLine::ClipComponent::itemDragEnter (const SourceDetails &dragSourceDeta
     repaint();
 }
 
-void TimeLine::ClipComponent::itemDragExit (const SourceDetails &dragSourceDetails)
+void TimeLine::ClipComponent::itemDragExit (const SourceDetails&)
 {
     highlight = false;
     repaint();
@@ -851,12 +847,12 @@ int TimeLine::ClipComponent::ParameterGraph::findClosestKeyFrame (int x, int y) 
 
 int TimeLine::ClipComponent::ParameterGraph::mapFromTime (double time) const
 {
-    return jmap (time, owner.getLeftTime(), owner.getRightTime(), 1.0, getWidth() - 2.0);
+    return roundToInt (jmap (time, owner.getLeftTime(), owner.getRightTime(), 1.0, getWidth() - 2.0));
 }
 
 int TimeLine::ClipComponent::ParameterGraph::mapFromValue (double value) const
 {
-    return jmap (value, getHeight()-1.0, 1.0);
+    return roundToInt (jmap (value, getHeight()-1.0, 1.0));
 }
 
 double TimeLine::ClipComponent::ParameterGraph::mapToTime (int x) const

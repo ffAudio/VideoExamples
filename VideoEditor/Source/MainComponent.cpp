@@ -140,12 +140,12 @@ void MainComponent::resized()
     else
     {
         auto bounds = getLocalBounds().reduced (1);
-        lowerPart = bounds.getHeight() * 0.4;
+        lowerPart = juce::roundToInt (bounds.getHeight() * 0.4);
         auto lower  = bounds.removeFromBottom (lowerPart);
         levelMeter.setBounds (lower.removeFromRight (120).reduced (2));
         lower.removeFromTop (14); // TODO: ruler
         viewport.setBounds (lower);
-        auto sides = bounds.getWidth() / 4.0;
+        auto sides = juce::roundToInt (bounds.getWidth() / 4.0);
         library.setBounds (bounds.removeFromLeft (sides));
         properties.setBounds (bounds.removeFromRight (sides));
         transport.setBounds (bounds.removeFromBottom (24));
@@ -454,7 +454,7 @@ StringArray MainComponent::getMenuBarNames()
 }
 
 PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
-                                          const String& menuName)
+                                          const String&)
 {
     PopupMenu menu;
     if (topLevelMenuIndex == 0)

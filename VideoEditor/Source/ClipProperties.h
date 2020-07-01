@@ -37,7 +37,7 @@ class ClipProcessorProperties  : public Component,
 {
 public:
     ClipProcessorProperties (foleys::VideoEngine& engine, std::shared_ptr<foleys::ClipDescriptor> clip, Player& player, bool video);
-    ~ClipProcessorProperties();
+    ~ClipProcessorProperties() override;
 
     void paint (Graphics& g) override;
 

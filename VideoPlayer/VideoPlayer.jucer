@@ -16,17 +16,17 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror -Wall -Werror=sign-compare"
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror"
                extraLinkerFlags="-L../../../libraries/build/ffmpeg_libs" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
                extraDefs="FFMPEG_ROOT=../../../libraries/build/" bigIcon="ynetjT"
                smallIcon="ynetjT" customXcodeResourceFolders="../libraries/build/ffmpeg_libs">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="VideoPlayer"
                        osxCompatibility="10.9 SDK" cppLanguageStandard="c++11" cppLibType="libc++"
-                       customXcodeFlags="" enablePluginBinaryCopyStep="0"/>
+                       customXcodeFlags="" enablePluginBinaryCopyStep="0" recommendedWarnings="LLVM"/>
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="VideoPlayer"
                        osxCompatibility="10.9 SDK" cppLanguageStandard="c++11" cppLibType="libc++"
-                       customXcodeFlags="" enablePluginBinaryCopyStep="1"/>
+                       customXcodeFlags="" enablePluginBinaryCopyStep="1" recommendedWarnings="LLVM"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../JUCE/modules"/>
