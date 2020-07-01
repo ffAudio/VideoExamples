@@ -112,6 +112,7 @@ void buildFFmpeg(String folder)
         env.BUILD_SERVER_PLATFORM == 'linux')
     {
         sh """
+        PATH=$PATH:/usr/local/bin
         cd scripts
         ./build_ffmpeg_osx.sh
         """
