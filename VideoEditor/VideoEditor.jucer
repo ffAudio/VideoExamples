@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="EUnLYn" name="VideoEditor" projectType="guiapp" jucerVersion="5.4.7"
-              companyName="Foleys Finest" companyCopyright="2019 by Foleys Finest Audio"
-              companyWebsite="https://foleysfinest.com" companyEmail="info@foleysfinest.com"
-              cppLanguageStandard="17" projectLineFeed="&#10;">
+<JUCERPROJECT id="EUnLYn" name="VideoEditor" projectType="guiapp" companyName="Foleys Finest"
+              companyCopyright="2019 by Foleys Finest Audio" companyWebsite="https://foleysfinest.com"
+              companyEmail="info@foleysfinest.com" cppLanguageStandard="17"
+              projectLineFeed="&#10;" jucerFormatVersion="1">
   <MAINGROUP id="r4Bi02" name="VideoEditor">
     <GROUP id="{E81F3B37-CAD9-A723-6FDE-B69EFB1DEF5C}" name="Source">
       <FILE id="ABGRJ3" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -39,8 +39,8 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../libraries/build/include&#10;-Werror"
-               extraLinkerFlags="-L../../../libraries/build/ffmpeg_libs" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I/usr/local/opt/ffmpeg/include&#10;-Werror"
+               extraLinkerFlags="-L/usr/local/opt/ffmpeg/lib" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
                smallIcon="t8hwFJ" bigIcon="t8hwFJ" documentExtensions=".videdit"
                customXcodeResourceFolders="../libraries/build/ffmpeg_libs">
       <CONFIGURATIONS>
@@ -192,5 +192,6 @@
     <LINUX/>
   </LIVE_SETTINGS>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" FOLEYS_USE_OPENGL="1" JUCE_PLUGINHOST_AU="1"
-               JUCE_PLUGINHOST_VST3="1" JUCE_PLUGINHOST_LADSPA="1" FF_AUDIO_ALLOW_ALLOCATIONS_IN_MEASURE_BLOCK="0"/>
+               JUCE_PLUGINHOST_VST3="1" JUCE_PLUGINHOST_LADSPA="1" FF_AUDIO_ALLOW_ALLOCATIONS_IN_MEASURE_BLOCK="0"
+               FOLEYS_DEBUG_LOGGING="1" FOLEYS_REPORT_USAGE="0"/>
 </JUCERPROJECT>
