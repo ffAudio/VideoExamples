@@ -168,7 +168,6 @@ public:
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClipComponent)
     };
-    friend ClipComponent;
 
     int getXFromTime (double seconds) const;
     double getTimeFromX (int pixels) const;

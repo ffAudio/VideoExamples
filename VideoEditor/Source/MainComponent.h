@@ -31,6 +31,7 @@
 #include "Properties.h"
 #include "TimeLine.h"
 #include "TransportControl.h"
+#include "PlayerWindow.h"
 
 //==============================================================================
 /*
@@ -49,10 +50,18 @@ public:
     ~MainComponent() override;
 
     //==============================================================================
+    enum class Mode
+    {
+        NormalView = 0,
+        MaximiseView,
+        ExtraWindow
+    };
+
+    //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
 
-    void setViewerFullScreen (bool shouldBeFullScreen);
+    void setViewerFullScreen (Mode mode);
 
     void timerCallback() override;
 
@@ -104,9 +113,11 @@ private:
     foleys::LevelMeterLookAndFeel   lmLookAndFeel;
     foleys::LevelMeter              levelMeter;
 
+    std::unique_ptr<PlayerWindow>   playerWindow;
+
     File editFileName;
     int  lowerPart = 0;
-    bool viewerFullScreen = false;
+    Mode viewerFullscreenMode = Mode::NormalView;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

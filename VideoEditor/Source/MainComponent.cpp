@@ -49,6 +49,7 @@ namespace CommandIDs
         trackRemove,
 
         viewFullScreen = 500,
+        viewExtraWindow,
         viewExitFullScreen,
 
         helpAbout = 600,
@@ -132,7 +133,7 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
-    if (viewerFullScreen)
+    if (viewerFullscreenMode == Mode::MaximiseView)
     {
         preview.setBounds (getLocalBounds());
         preview.toFront (false);
@@ -290,9 +291,36 @@ void MainComponent::updateTitleBar()
     }
 }
 
-void MainComponent::setViewerFullScreen (bool shouldBeFullScreen)
+void MainComponent::setViewerFullScreen (Mode fullscreenMode)
 {
-    viewerFullScreen = shouldBeFullScreen;
+    viewerFullscreenMode = fullscreenMode;
+    if (viewerFullscreenMode == Mode::ExtraWindow)
+    {
+        playerWindow = std::make_unique<PlayerWindow>();
+        playerWindow->video.setClip (timeline.getEditClip());
+        preview.setClip ({});
+        auto displays = juce::Desktop::getInstance().getDisplays();
+        if (displays.displays.size() > 1)
+        {
+            auto currentDisplay = displays.findDisplayForRect (getScreenBounds());
+            for (auto d : displays.displays)
+            {
+                if (d.totalArea != currentDisplay.totalArea)
+                {
+                    playerWindow->setBounds (d.totalArea);
+                    break;
+                }
+            }
+        }
+
+        playerWindow->setVisible (true);
+    }
+    else
+    {
+        playerWindow.reset();
+        preview.setClip (timeline.getEditClip());
+    }
+
     resized();
 }
 
@@ -306,7 +334,7 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
                   CommandIDs::editSplice, CommandIDs::editVisibility, CommandIDs::editPreferences);
     commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
     commands.add (CommandIDs::trackAdd, CommandIDs::trackRemove);
-    commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExitFullScreen);
+    commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExtraWindow, CommandIDs::viewExitFullScreen);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
 }
 
@@ -398,6 +426,10 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.setInfo ("Fullscreen", "Maximise Viewer", categoryView, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::returnKey, ModifierKeys::commandModifier, 0));
             break;
+        case CommandIDs::viewExtraWindow:
+            result.setInfo ("Full extra Monitor", "Maximise Viewer on extra monitor", categoryView, 0);
+            result.defaultKeypresses.add (KeyPress (KeyPress::returnKey, ModifierKeys::commandModifier | ModifierKeys::shiftModifier, 0));
+            break;
         case CommandIDs::viewExitFullScreen:
             result.setInfo ("Exit Fullscreen", "Normal viewer size", categoryView, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::escapeKey, ModifierKeys::noModifiers, 0));
@@ -439,8 +471,9 @@ bool MainComponent::perform (const InvocationInfo& info)
         case CommandIDs::trackAdd: break;
         case CommandIDs::trackRemove: break;
 
-        case CommandIDs::viewFullScreen: setViewerFullScreen (! viewerFullScreen); break;
-        case CommandIDs::viewExitFullScreen: setViewerFullScreen (false); break;
+        case CommandIDs::viewFullScreen: setViewerFullScreen (viewerFullscreenMode == Mode::NormalView ? Mode::MaximiseView : Mode::NormalView); break;
+        case CommandIDs::viewExtraWindow: setViewerFullScreen (Mode::ExtraWindow); break;
+        case CommandIDs::viewExitFullScreen: setViewerFullScreen (Mode::NormalView); break;
         default:
             jassertfalse;
             break;
@@ -499,6 +532,7 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
     else if (topLevelMenuIndex == 4)
     {
         menu.addCommandItem (&commandManager, CommandIDs::viewFullScreen);
+        menu.addCommandItem (&commandManager, CommandIDs::viewExtraWindow);
         menu.addCommandItem (&commandManager, CommandIDs::viewExitFullScreen);
     }
     else if (topLevelMenuIndex == 5)

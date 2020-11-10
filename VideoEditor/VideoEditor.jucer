@@ -10,6 +10,9 @@
       <FILE id="fJYbQ1" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="sX877b" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
+      <FILE id="D3p721" name="PlayerWindow.cpp" compile="1" resource="0"
+            file="Source/PlayerWindow.cpp"/>
+      <FILE id="dFQvHX" name="PlayerWindow.h" compile="0" resource="0" file="Source/PlayerWindow.h"/>
       <FILE id="jPh8B5" name="Player.cpp" compile="1" resource="0" file="Source/Player.cpp"/>
       <FILE id="MMghtW" name="Player.h" compile="0" resource="0" file="Source/Player.h"/>
       <FILE id="yhGqAG" name="Library.cpp" compile="1" resource="0" file="Source/Library.cpp"/>
@@ -193,5 +196,5 @@
   </LIVE_SETTINGS>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" FOLEYS_USE_OPENGL="1" JUCE_PLUGINHOST_AU="1"
                JUCE_PLUGINHOST_VST3="1" JUCE_PLUGINHOST_LADSPA="1" FF_AUDIO_ALLOW_ALLOCATIONS_IN_MEASURE_BLOCK="0"
-               FOLEYS_DEBUG_LOGGING="1" FOLEYS_REPORT_USAGE="0"/>
+               FOLEYS_REPORT_USAGE="0"/>
 </JUCERPROJECT>
