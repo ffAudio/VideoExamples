@@ -75,8 +75,8 @@ MainComponent::MainComponent()
     viewport.setViewedComponent (&timeline);
     timeline.setSize (2000, 510);
 
-    const auto area = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
-    setBounds (area);
+    if (const auto* primaryDisplay = Desktop::getInstance().getDisplays().getPrimaryDisplay())
+        setBounds (primaryDisplay->totalArea);
 
     player.initialise();
     lmLookAndFeel.setColour (foleys::LevelMeter::lmBackgroundColour, getLookAndFeel().findColour (ResizableWindow::backgroundColourId).darker());
@@ -302,13 +302,15 @@ void MainComponent::setViewerFullScreen (Mode fullscreenMode)
         auto displays = juce::Desktop::getInstance().getDisplays();
         if (displays.displays.size() > 1)
         {
-            auto currentDisplay = displays.findDisplayForRect (getScreenBounds());
-            for (auto d : displays.displays)
+            if (auto* currentDisplay = displays.getDisplayForRect (getScreenBounds()))
             {
-                if (d.totalArea != currentDisplay.totalArea)
+                for (auto d : displays.displays)
                 {
-                    playerWindow->setBounds (d.totalArea);
-                    break;
+                    if (d.totalArea != currentDisplay->totalArea)
+                    {
+                        playerWindow->setBounds (d.totalArea);
+                        break;
+                    }
                 }
             }
         }
