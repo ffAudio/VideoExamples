@@ -47,6 +47,7 @@ public:
     OSDComponent (std::shared_ptr<foleys::AVClip> clipToControl, AudioTransportSource* transportToControl)
     : clip (clipToControl), transport (transportToControl)
     {
+        setOpaque (false);
         setInterceptsMouseClicks (false, true);
         setWantsKeyboardFocus (false);
 

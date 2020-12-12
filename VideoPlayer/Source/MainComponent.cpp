@@ -41,7 +41,12 @@
  This component lives inside our window, and this is where you should put all
  your controls and content.
  */
-class VideoComponentWithDropper :   public foleys::VideoPreview,
+class VideoComponentWithDropper :
+#if FOLEYS_USE_OPENGL
+                                    public foleys::OpenGLView,
+#else
+                                    public foleys::VideoPreview,
+#endif
                                     public FileDragAndDropTarget,
                                     public ChangeBroadcaster
 {
