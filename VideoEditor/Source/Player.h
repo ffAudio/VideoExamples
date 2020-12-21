@@ -35,7 +35,7 @@ class Player  : public ChangeBroadcaster,
                 public ChangeListener
 {
 public:
-    Player (AudioDeviceManager& deviceManager, foleys::VideoEngine& engine, foleys::OpenGLView& preview);
+    Player (AudioDeviceManager& deviceManager, foleys::VideoEngine& engine, foleys::VideoPreview& preview);
     ~Player() override;
 
     void setClip (std::shared_ptr<foleys::AVClip> clip, bool needsPrepare);
@@ -106,7 +106,7 @@ private:
     std::shared_ptr<foleys::AVClip> clip;
     MeasuredTransportSource     transportSource;
     AudioSourcePlayer           sourcePlayer;
-    foleys::OpenGLView&         preview;
+    foleys::VideoPreview&       preview;
 
     std::unique_ptr<juce::PositionableAudioSource> auditionSource;
     juce::AudioTransportSource  auditionTransport;

@@ -38,211 +38,143 @@
 //==============================================================================
 /*
 */
-class OSDComponent    : public Component,
-                        public Slider::Listener,
-                        public Button::Listener,
-                        public ChangeListener
+class OSDComponent    : public juce::Component
 {
 public:
-    OSDComponent (std::shared_ptr<foleys::AVClip> clipToControl, AudioTransportSource* transportToControl)
-    : clip (clipToControl), transport (transportToControl)
+    OSDComponent()
     {
         setOpaque (false);
         setInterceptsMouseClicks (false, true);
         setWantsKeyboardFocus (false);
 
-        openFile.addListener (this);
-        openFile.setWantsKeyboardFocus (false);
-        addAndMakeVisible (openFile);
-        flexBox.items.add (FlexItem (openFile).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+        open.setWantsKeyboardFocus (false);
+        addAndMakeVisible (open);
+        flexBox.items.add (juce::FlexItem (open).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+
+#if FOLEYS_CAMERA_SUPPORT
+        camera.setWantsKeyboardFocus (false);
+        addAndMakeVisible (camera);
+        flexBox.items.add (juce::FlexItem (camera).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+#endif
 
         addAndMakeVisible (seekBar);
-        seekBar.addListener (this);
         seekBar.setWantsKeyboardFocus (false);
-        flexBox.items.add (FlexItem (seekBar).withFlex (6.0, 1.0, 0.5).withHeight (20.0));
+        flexBox.items.add (juce::FlexItem (seekBar).withFlex (6.0, 1.0, 0.5).withHeight (20.0));
 
-        stop.addListener (this);
         stop.setWantsKeyboardFocus (false);
         addAndMakeVisible (stop);
-        flexBox.items.add (FlexItem (stop).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+        flexBox.items.add (juce::FlexItem (stop).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
 
-        pause.addListener (this);
         pause.setWantsKeyboardFocus (false);
         addAndMakeVisible (pause);
-        flexBox.items.add (FlexItem (pause).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+        flexBox.items.add (juce::FlexItem (pause).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
 
-        play.addListener (this);
         play.setWantsKeyboardFocus (false);
         addAndMakeVisible (play);
-        flexBox.items.add (FlexItem (play).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+        flexBox.items.add (juce::FlexItem (play).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
 
-        ffwd.addListener (this);
         ffwd.setWantsKeyboardFocus (false);
         addAndMakeVisible (ffwd);
-        flexBox.items.add (FlexItem (ffwd).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
+        flexBox.items.add (juce::FlexItem (ffwd).withFlex (1.0, 1.0, 0.5).withHeight (20.0));
 
-        stop.setConnectedEdges  (TextButton::ConnectedOnRight);
-        pause.setConnectedEdges (TextButton::ConnectedOnRight | TextButton::ConnectedOnLeft);
-        play.setConnectedEdges  (TextButton::ConnectedOnRight | TextButton::ConnectedOnLeft);
-        ffwd.setConnectedEdges  (TextButton::ConnectedOnLeft);
+#if FOLEYS_CAMERA_SUPPORT
+        open.setConnectedEdges   (juce::TextButton::ConnectedOnRight);
+        camera.setConnectedEdges (juce::TextButton::ConnectedOnLeft);
+#endif
+
+        stop.setConnectedEdges  (juce::TextButton::ConnectedOnRight);
+        pause.setConnectedEdges (juce::TextButton::ConnectedOnRight | juce::TextButton::ConnectedOnLeft);
+        play.setConnectedEdges  (juce::TextButton::ConnectedOnRight | juce::TextButton::ConnectedOnLeft);
+        ffwd.setConnectedEdges  (juce::TextButton::ConnectedOnLeft);
     }
 
-    void paint (Graphics& g) override
+    void paint (juce::Graphics& g) override
     {
         if (clip && clip->getLengthInSeconds() > 0)
         {
-            g.setColour (Colours::white);
+            g.setColour (juce::Colours::white);
             g.setFont (24);
             auto size = clip->getVideoSize();
-            String dim = String (size.width) + " x " + String (size.height);
-            g.drawFittedText (dim, getLocalBounds(), Justification::topLeft, 1);
+            auto dim = juce::String (size.width) + " x " + juce::String (size.height);
+            g.drawFittedText (dim, getLocalBounds(), juce::Justification::topLeft, 1);
             g.drawFittedText (foleys::timecodeToString (clip->getCurrentTimeInSeconds()),
-                              getLocalBounds(), Justification::topRight, 1);
+                              getLocalBounds(), juce::Justification::topRight, 1);
         }
     }
 
     void resized() override
     {
-        Rectangle<int> bounds = getBounds().withTop (getHeight() - 50).reduced (10);
+        auto bounds = getBounds().withTop (getHeight() - 50).reduced (10);
         flexBox.performLayout (bounds);
     }
 
-    void setCurrentTime (const double time)
+    void setClip (std::shared_ptr<foleys::AVClip> newClip)
     {
-        seekBar.setValue (time, dontSendNotification);
+        clip = newClip;
     }
 
-    void setVideoLength (const double length)
-    {
-        seekBar.setRange (0.0, length);
-    }
-
-    /** React to slider changes with seeking */
-    void sliderValueChanged (juce::Slider* slider) override
-    {
-        if (slider == &seekBar) {
-            clip->setNextReadPosition (juce::int64 (slider->getValue() * 48000));
-        }
-    }
-
-    void buttonClicked (Button* b) override
-    {
-        if (b == &openFile)
-        {
-            transport->stop();
-            FileChooser chooser ("Open Video File");
-            if (chooser.browseForFileToOpen())
-            {
-                auto video = chooser.getResult();
-                if (auto movie = std::dynamic_pointer_cast<foleys::MovieClip> (clip))
-                    movie->openFromFile (video);
-
-                if (clip != nullptr)
-                    seekBar.setRange (0, clip->getLengthInSeconds());
-            }
-        }
-        else if (b == &play)
-        {
-            if (ffwdSpeed != 2)
-            {
-                int64 lastPos = clip->getNextReadPosition();
-                ffwdSpeed = 2;
-                auto factor = 0.5 + (ffwdSpeed / 4.0);
-                transport->setSource (clip.get(), 0, nullptr, factor, 2);
-                clip->setNextReadPosition (lastPos);
-            }
-            transport->start();
-        }
-        else if (b == &stop)
-        {
-            transport->stop();
-            clip->setNextReadPosition (0);
-        }
-        else if (b == &pause)
-        {
-            transport->stop();
-        }
-        else if (b == &ffwd)
-        {
-            auto lastPos = clip->getNextReadPosition();
-            ffwdSpeed = (ffwdSpeed + 1) % 7;
-            auto factor = 0.5 + (ffwdSpeed / 4.0);
-            transport->setSource (clip.get(), 0, nullptr, factor, 2);
-            clip->setNextReadPosition (lastPos);
-            transport->start ();
-        }
-    }
-
-    void changeListenerCallback (ChangeBroadcaster*) override
-    {
-        if (clip != nullptr)
-            seekBar.setRange (0, clip->getLengthInSeconds());
-    }
-
-    class MouseIdle : public MouseListener, public Timer
+    class MouseIdle : public juce::MouseListener, public juce::Timer
     {
     public:
         MouseIdle (Component& c) :
         component (c),
-        lastMovement (Time::getMillisecondCounter())
+        lastMovement (juce::Time::getMillisecondCounter())
         {
-            Desktop::getInstance().addGlobalMouseListener (this);
+            juce::Desktop::getInstance().addGlobalMouseListener (this);
             startTimerHz (20);
         }
 
         void timerCallback () override
         {
-            const auto relTime = Time::getMillisecondCounter() - lastMovement;
+            const auto relTime = juce::Time::getMillisecondCounter() - lastMovement;
             if (relTime < 2000)
             {
                 component.setVisible (true);
                 component.setAlpha (1.0);
                 if (auto* parent = component.getParentComponent())
-                    parent->setMouseCursor (MouseCursor::StandardCursorType::NormalCursor);
+                    parent->setMouseCursor (juce::MouseCursor::StandardCursorType::NormalCursor);
             }
             else if (relTime < 2300)
             {
-                component.setAlpha (1.0f - jmax (0.0f, (relTime - 2000.0f) / 300.0f));
+                component.setAlpha (1.0f - std::max (0.0f, (relTime - 2000.0f) / 300.0f));
             }
             else
             {
                 component.setVisible (false);
                 if (auto* parent = component.getParentComponent())
                 {
-                    parent->setMouseCursor (MouseCursor::StandardCursorType::NoCursor);
-                    Desktop::getInstance().getMainMouseSource().forceMouseCursorUpdate();
+                    parent->setMouseCursor (juce::MouseCursor::StandardCursorType::NoCursor);
+                    juce::Desktop::getInstance().getMainMouseSource().forceMouseCursorUpdate();
                 }
             }
         }
 
-        void mouseMove (const MouseEvent &event) override
+        void mouseMove (const juce::MouseEvent &event) override
         {
             if (event.position.getDistanceFrom (lastPosition) > 3.0) {
-                lastMovement = Time::getMillisecondCounter();
+                lastMovement = juce::Time::getMillisecondCounter();
                 lastPosition = event.position;
             }
         }
     private:
-        Component&   component;
-        int64        lastMovement;
-        Point<float> lastPosition;
+        juce::Component&   component;
+        juce::int64        lastMovement;
+        juce::Point<float> lastPosition;
     };
 
+    juce::Slider            seekBar   { juce::Slider::LinearHorizontal, juce::Slider::NoTextBox };
+    juce::TextButton        camera    { TRANS ("Camera") };
+    juce::TextButton        open      { TRANS ("Open") };
+    juce::TextButton        play      { TRANS ("Play") };
+    juce::TextButton        pause     { TRANS ("Pause") };
+    juce::TextButton        stop      { TRANS ("Stop") };
+    juce::TextButton        ffwd      { TRANS ("FWD") };
+
 private:
-    MouseIdle       idle      { *this };
-    Slider          seekBar   { Slider::LinearHorizontal, Slider::NoTextBox };
-    TextButton      openFile  { TRANS ("Open") };
-    TextButton      play      { TRANS ("Play") };
-    TextButton      pause     { TRANS ("Pause") };
-    TextButton      stop      { TRANS ("Stop") };
-    TextButton      ffwd      { TRANS ("FWD") };
+    MouseIdle               idle      { *this };
+    juce::FlexBox           flexBox;
 
-    FlexBox         flexBox;
-
-    int             ffwdSpeed = 2;
     std::shared_ptr<foleys::AVClip> clip;
-
-    AudioTransportSource* transport;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OSDComponent)
 };

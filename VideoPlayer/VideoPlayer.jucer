@@ -3,7 +3,8 @@
 <JUCERPROJECT id="agVUOj" name="VideoPlayer" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.yourcompany.VideoLibTest" includeBinaryInAppConfig="1"
               displaySplashScreen="0" splashScreenColour="Dark" companyCopyright=""
-              cppLanguageStandard="17" jucerFormatVersion="1">
+              cppLanguageStandard="17" jucerFormatVersion="1" projectLineFeed="&#10;"
+              addUsingNamespaceToJuceHeader="0">
   <MAINGROUP id="N4nDda" name="VideoPlayer">
     <GROUP id="{3157C055-224D-BD2E-9A8C-CDE725FE3ADB}" name="Source">
       <FILE id="sWTx6g" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -17,7 +18,8 @@
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-Werror" externalLibraries="avformat&#10;avutil&#10;avcodec&#10;swscale&#10;swresample"
-               bigIcon="ynetjT" smallIcon="ynetjT" customXcodeResourceFolders="../modules/foleys_video_engine/libs/MacOSX/x86_64">
+               bigIcon="ynetjT" smallIcon="ynetjT" customXcodeResourceFolders="../modules/foleys_video_engine/libs/MacOSX/x86_64"
+               cameraPermissionNeeded="1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="VideoPlayer"
                        osxCompatibility="10.9 SDK" cppLanguageStandard="c++11" cppLibType="libc++"
@@ -136,7 +138,7 @@
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
-  <JUCEOPTIONS/>
+  <JUCEOPTIONS FOLEYS_CAMERA_SUPPORT="1"/>
   <LIVE_SETTINGS>
     <OSX/>
   </LIVE_SETTINGS>

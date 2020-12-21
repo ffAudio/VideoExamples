@@ -30,7 +30,7 @@
 //==============================================================================
 Player::Player (AudioDeviceManager& deviceManagerToUse,
                 foleys::VideoEngine& engine,
-                foleys::OpenGLView& previewToUse)
+                foleys::VideoPreview& previewToUse)
   : deviceManager (deviceManagerToUse),
     videoEngine (engine),
     preview (previewToUse)
