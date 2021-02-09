@@ -40,16 +40,17 @@
 /*
  The display plus drop target to allow movies dragged into
  */
-class VideoComponentWithDropper :
 #if FOLEYS_USE_OPENGL
-                                    public foleys::OpenGLView,
+using ViewType=foleys::OpenGLView;
 #else
-                                    public foleys::VideoPreview,
+using ViewType=foleys::SoftwareView;
 #endif
+
+class VideoComponentWithDropper :   public ViewType,
                                     public juce::FileDragAndDropTarget
 {
 public:
-    VideoComponentWithDropper ()
+    VideoComponentWithDropper()
     {
         setInterceptsMouseClicks (true, true);
         setWantsKeyboardFocus (false);
@@ -87,8 +88,11 @@ public:
     {
         setWantsKeyboardFocus (true);
 
+        dummy.setBounds (0, 0, 1, 1);
+        addAndMakeVisible (dummy);
+        
         addAndMakeVisible (videoComponent);
-        addAndMakeVisible (osdComponent);
+        videoComponent.addAndMakeVisible (osdComponent);
 
         // specify the number of input and output channels that we want to open
         setAudioChannels (0, 2);
@@ -247,6 +251,9 @@ public:
 
     void openFile (juce::File name)
     {
+        if (clip.get() != nullptr)
+            clip->removeTimecodeListener (this);
+
         osdComponent.setClip ({});
         auto newClip = videoEngine.createClipFromFile (juce::URL (name));
 
@@ -277,13 +284,14 @@ public:
         }
     }
 
+#if FOLEYS_CAMERA_SUPPORT
     void openCamera()
     {
         osdComponent.setClip ({});
         transportSource.stop();
         transportSource.setSource (nullptr);
 
-        auto newClip = videoEngine.getCameraManager().createCameraClip (0);
+        auto newClip = cameraManager.createCameraClip (0);
         videoEngine.manageLifeTime (newClip);
         newClip->prepareToPlay (blockSize, sampleRate);
         clip = newClip;
@@ -291,6 +299,7 @@ public:
         clip->addTimecodeListener (this);
         transportSource.setSource (clip.get(), 0, nullptr);
     }
+#endif
 
     void paint (juce::Graphics& g) override
     {
@@ -326,7 +335,13 @@ public:
 private:
     //==============================================================================
 
+    juce::Component     dummy;
     foleys::VideoEngine videoEngine;
+
+#if FOLEYS_CAMERA_SUPPORT
+    foleys::CameraManager cameraManager { videoEngine };
+#endif
+
     std::shared_ptr<foleys::AVClip> clip;
 
     juce::AudioTransportSource  transportSource;

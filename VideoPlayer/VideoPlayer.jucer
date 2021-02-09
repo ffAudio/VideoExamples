@@ -138,7 +138,7 @@
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
-  <JUCEOPTIONS FOLEYS_CAMERA_SUPPORT="1"/>
+  <JUCEOPTIONS FOLEYS_CAMERA_SUPPORT="1" FOLEYS_USE_OPENGL="1"/>
   <LIVE_SETTINGS>
     <OSX/>
   </LIVE_SETTINGS>

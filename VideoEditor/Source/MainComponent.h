@@ -101,9 +101,13 @@ private:
 
     ApplicationCommandManager   commandManager;
 
-//    foleys::OpenGLView    preview;
+#if FOLEYS_USE_OPENGL
+    foleys::OpenGLView    preview;
+#else
     foleys::VideoPreview  preview;
-    Player                player  { deviceManager, videoEngine, preview };
+#endif
+
+    Player                player     { deviceManager, videoEngine, preview };
 
     Library               library    { player, videoEngine };
     Properties            properties;

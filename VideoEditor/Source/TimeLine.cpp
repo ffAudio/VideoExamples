@@ -142,7 +142,7 @@ void TimeLine::filesDropped (const StringArray& files, int x, int y)
     if (files.isEmpty() || edit == nullptr)
         return;
 
-    auto clip = videoEngine.createClipFromFile (files [0]);
+    auto clip = videoEngine.createClipFromFile (juce::URL (juce::File (files [0])));
     if (clip.get() != nullptr)
         addClipToEdit (clip, getTimeFromX (x), y);
 }

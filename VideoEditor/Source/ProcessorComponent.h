@@ -41,6 +41,7 @@ class AutomationComponent   : public Component,
 {
 public:
     AutomationComponent (const juce::String& title,
+                         foleys::AVClip& clip,
                          foleys::ControllableBase& controller,
                          Player& player);
     ~AutomationComponent() override;
@@ -102,11 +103,11 @@ public:
     };
 private:
 
-    foleys::ControllableBase&    controller;
+    String                    title;
+    foleys::AVClip&           clip;
+    foleys::ControllableBase& controller;
 
     std::vector<std::unique_ptr<ParameterComponent>> parameterComponents;
-
-    String title;
 
     //==============================================================================
 

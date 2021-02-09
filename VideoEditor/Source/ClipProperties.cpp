@@ -110,7 +110,7 @@ void ClipProcessorProperties::updateEditors()
     auto& clipController = video ? lockedClip->getVideoParameterController() : lockedClip->getAudioParameterController();
 
     {
-        auto editor = std::make_unique<AutomationComponent>(lockedClip->getDescription(), clipController, player);
+        auto editor = std::make_unique<AutomationComponent>(lockedClip->getDescription(), lockedClip->getOwningClip(), clipController, player);
         container.addAndMakeVisible (editor.get());
         editor->timecodeChanged (0 , lockedClip->getOwningClip().getCurrentTimeInSeconds());
         editor->addChangeListener (this);
@@ -121,7 +121,7 @@ void ClipProcessorProperties::updateEditors()
 
     for (auto& processor : processors)
     {
-        auto editor = std::make_unique<AutomationComponent>(processor->getName(), *processor, player);
+        auto editor = std::make_unique<AutomationComponent>(processor->getName(), lockedClip->getOwningClip(), *processor, player);
         container.addAndMakeVisible (editor.get());
         editor->timecodeChanged (0 , lockedClip->getOwningClip().getCurrentTimeInSeconds());
         editor->addChangeListener (this);

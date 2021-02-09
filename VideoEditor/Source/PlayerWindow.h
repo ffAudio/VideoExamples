@@ -22,7 +22,11 @@ public:
 
     void resized() override;
 
-    foleys::VideoPreview video;
+#if FOLEYS_USE_OPENGL
+    foleys::OpenGLView    video;
+#else
+    foleys::SoftwareView  video;
+#endif
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PlayerWindow)

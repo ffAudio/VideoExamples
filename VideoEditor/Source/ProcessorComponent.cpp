@@ -36,10 +36,12 @@ namespace IDs
 }
 
 AutomationComponent::AutomationComponent (const juce::String& titleToUse,
+                                          foleys::AVClip& clipToUse,
                                           foleys::ControllableBase& controllerToUse,
                                           Player& player)
-  : controller (controllerToUse),
-    title (titleToUse)
+  : title (titleToUse),
+    clip (clipToUse),
+    controller (controllerToUse)
 {
     if (auto* processorController = dynamic_cast<foleys::ProcessorController*>(&controller))
     {
@@ -62,12 +64,12 @@ AutomationComponent::AutomationComponent (const juce::String& titleToUse,
     }
 
     controller.addListener (this);
-    controller.getTimeReference().addTimecodeListener (this);
+    clip.addTimecodeListener (this);
 }
 
 AutomationComponent::~AutomationComponent()
 {
-    controller.getTimeReference().removeTimecodeListener (this);
+    clip.removeTimecodeListener (this);
     controller.removeListener (this);
 
     if (processorControls.get() != nullptr)
