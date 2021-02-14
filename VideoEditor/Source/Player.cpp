@@ -29,11 +29,9 @@
 
 //==============================================================================
 Player::Player (AudioDeviceManager& deviceManagerToUse,
-                foleys::VideoEngine& engine,
-                foleys::VideoView& previewToUse)
+                foleys::VideoEngine& engine)
   : deviceManager (deviceManagerToUse),
-    videoEngine (engine),
-    preview (previewToUse)
+    videoEngine (engine)
 {
 }
 
@@ -115,8 +113,6 @@ void Player::setClip (std::shared_ptr<foleys::AVClip> clipToUse, bool needsPrepa
 
     transportSource.setSource (clip.get());
     transportSource.meterSource.resize (numChannels, 5);
-
-    preview.setClip (clip);
 
     sendChangeMessage();
 }

@@ -12,14 +12,27 @@
 #include "PlayerWindow.h"
 
 //==============================================================================
-PlayerWindow::PlayerWindow() : juce::TopLevelWindow ("Output", true)
+PlayerWindow::PlayerWindow (bool shouldUseOpenGL) : juce::TopLevelWindow ("Output", true)
 {
+#if FOLEYS_USE_OPENGL
+    if (shouldUseOpenGL)
+        video = std::make_unique<foleys::OpenGLView>();
+    else
+        video = std::make_unique<foleys::SoftwareView>();
+#else
+    juce::IgnoreUnused (shouldUseOpenGL);
+    video = std::make_unique<foleys::SoftwareView>();
+#endif
+
     setUsingNativeTitleBar (false);
-    addAndMakeVisible (video);
+
+    if (auto* v = dynamic_cast<juce::Component*>(video.get()))
+        addAndMakeVisible (v);
 }
 
 
 void PlayerWindow::resized()
 {
-    video.setBounds (getLocalBounds());
+    if (auto* v = dynamic_cast<juce::Component*>(video.get()))
+        v->setBounds (getLocalBounds());
 }

@@ -83,6 +83,8 @@ public:
 
 private:
 
+    void setUseOpenGL (bool shouldUseOpenGL);
+
     void resetEdit();
     void loadEdit();
     void saveEdit (bool saveAs);
@@ -101,13 +103,9 @@ private:
 
     ApplicationCommandManager   commandManager;
 
-#if FOLEYS_USE_OPENGL
-    foleys::OpenGLView    preview;
-#else
-    foleys::VideoPreview  preview;
-#endif
+    std::unique_ptr<foleys::VideoView> preview;
 
-    Player                player     { deviceManager, videoEngine, preview };
+    Player                player     { deviceManager, videoEngine };
 
     Library               library    { player, videoEngine };
     Properties            properties;
@@ -123,6 +121,7 @@ private:
     File editFileName;
     int  lowerPart = 0;
     Mode viewerFullscreenMode = Mode::NormalView;
+    bool usesOpenGL = true;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

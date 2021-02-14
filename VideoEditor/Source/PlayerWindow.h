@@ -18,15 +18,11 @@
 class PlayerWindow  : public juce::TopLevelWindow
 {
 public:
-    PlayerWindow();
+    PlayerWindow (bool shouldUseOpenGL);
 
     void resized() override;
 
-#if FOLEYS_USE_OPENGL
-    foleys::OpenGLView    video;
-#else
-    foleys::SoftwareView  video;
-#endif
+    std::unique_ptr<foleys::VideoView> video;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PlayerWindow)

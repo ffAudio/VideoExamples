@@ -51,6 +51,7 @@ namespace CommandIDs
         viewFullScreen = 500,
         viewExtraWindow,
         viewExitFullScreen,
+        viewOpenGL,
 
         helpAbout = 600,
         helpHelp
@@ -66,7 +67,6 @@ MainComponent::MainComponent()
 //    lookAndFeel.setColour (FFAU::LevelMeter::lmTicksColour, Colours::silver);
 
     addAndMakeVisible (library);
-    addAndMakeVisible (preview);
     addAndMakeVisible (properties);
     addAndMakeVisible (viewport);
     addAndMakeVisible (transport);
@@ -74,6 +74,8 @@ MainComponent::MainComponent()
 
     viewport.setViewedComponent (&timeline);
     timeline.setSize (2000, 510);
+
+    setUseOpenGL (usesOpenGL);
 
     if (const auto* primaryDisplay = Desktop::getInstance().getDisplays().getPrimaryDisplay())
         setBounds (primaryDisplay->totalArea);
@@ -106,13 +108,39 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
     if (auto edit = timeline.getEditClip())
-        edit->removeTimecodeListener (&preview);
+        edit->removeTimecodeListener (preview.get());
 
 #if JUCE_MAC
     setMacMainMenu (nullptr);
 #endif
 
     levelMeter.setLookAndFeel (nullptr);
+}
+
+void MainComponent::setUseOpenGL (bool shouldUseOpenGL)
+{
+    if (preview.get() != nullptr)
+        if (auto edit = timeline.getEditClip())
+            edit->removeTimecodeListener (preview.get());
+
+#if FOLEYS_USE_OPENGL
+    if (shouldUseOpenGL)
+        preview = std::make_unique<foleys::OpenGLView>();
+    else
+#endif
+        preview = std::make_unique<foleys::SoftwareView>();
+
+    preview->setClip (timeline.getEditClip());
+
+    if (auto edit = timeline.getEditClip())
+        edit->addTimecodeListener (preview.get());
+
+    if (auto* p = dynamic_cast<juce::Component*>(preview.get()))
+        addAndMakeVisible (p);
+
+    menuItemsChanged();
+
+    resized();
 }
 
 KeyPressMappingSet* MainComponent::getKeyMappings() const
@@ -135,8 +163,11 @@ void MainComponent::resized()
 {
     if (viewerFullscreenMode == Mode::MaximiseView)
     {
-        preview.setBounds (getLocalBounds());
-        preview.toFront (false);
+        if (auto* p = dynamic_cast<juce::Component*>(preview.get()))
+        {
+            p->setBounds (getLocalBounds());
+            p->toFront (false);
+        }
     }
     else
     {
@@ -150,7 +181,8 @@ void MainComponent::resized()
         library.setBounds (bounds.removeFromLeft (sides));
         properties.setBounds (bounds.removeFromRight (sides));
         transport.setBounds (bounds.removeFromBottom (24));
-        preview.setBounds (bounds);
+        if (auto* p = dynamic_cast<juce::Component*>(preview.get()))
+            p->setBounds (bounds);
     }
 }
 
@@ -160,7 +192,9 @@ void MainComponent::resetEdit()
     videoEngine.manageLifeTime (edit);
 
     timeline.setEditClip (edit);
-    edit->addTimecodeListener (&preview);
+    edit->addTimecodeListener (preview.get());
+    preview->setClip (edit);
+
     editFileName = File();
     updateTitleBar();
 
@@ -198,7 +232,7 @@ void MainComponent::loadEditFile (const File& file)
         edit->getStatusTree().appendChild (clip.createCopy(), nullptr);
 
     timeline.setEditClip (edit);
-    edit->addTimecodeListener (&preview);
+    edit->addTimecodeListener (preview.get());
 
     player.setPosition (0);
     updateTitleBar();
@@ -296,9 +330,9 @@ void MainComponent::setViewerFullScreen (Mode fullscreenMode)
     viewerFullscreenMode = fullscreenMode;
     if (viewerFullscreenMode == Mode::ExtraWindow)
     {
-        playerWindow = std::make_unique<PlayerWindow>();
-        playerWindow->video.setClip (timeline.getEditClip());
-        preview.setClip ({});
+        playerWindow = std::make_unique<PlayerWindow>(usesOpenGL);
+        playerWindow->video->setClip (timeline.getEditClip());
+        preview->setClip ({});
         auto displays = juce::Desktop::getInstance().getDisplays();
         if (displays.displays.size() > 1)
         {
@@ -320,7 +354,7 @@ void MainComponent::setViewerFullScreen (Mode fullscreenMode)
     else
     {
         playerWindow.reset();
-        preview.setClip (timeline.getEditClip());
+        preview->setClip (timeline.getEditClip());
     }
 
     resized();
@@ -336,7 +370,7 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
                   CommandIDs::editSplice, CommandIDs::editVisibility, CommandIDs::editPreferences);
     commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
     commands.add (CommandIDs::trackAdd, CommandIDs::trackRemove);
-    commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExtraWindow, CommandIDs::viewExitFullScreen);
+    commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExtraWindow, CommandIDs::viewExitFullScreen, CommandIDs::viewOpenGL);
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
 }
 
@@ -436,6 +470,10 @@ void MainComponent::getCommandInfo (CommandID commandID, ApplicationCommandInfo&
             result.setInfo ("Exit Fullscreen", "Normal viewer size", categoryView, 0);
             result.defaultKeypresses.add (KeyPress (KeyPress::escapeKey, ModifierKeys::noModifiers, 0));
             break;
+        case CommandIDs::viewOpenGL:
+            result.setInfo ("Enable OpenGL", "Switch OpenGL on or off", categoryView, 0);
+            result.setTicked (usesOpenGL);
+            break;
         case CommandIDs::helpAbout:
             result.setInfo ("About", "Show information about the program", categoryHelp, 0);
             break;
@@ -476,6 +514,7 @@ bool MainComponent::perform (const InvocationInfo& info)
         case CommandIDs::viewFullScreen: setViewerFullScreen (viewerFullscreenMode == Mode::NormalView ? Mode::MaximiseView : Mode::NormalView); break;
         case CommandIDs::viewExtraWindow: setViewerFullScreen (Mode::ExtraWindow); break;
         case CommandIDs::viewExitFullScreen: setViewerFullScreen (Mode::NormalView); break;
+        case CommandIDs::viewOpenGL: usesOpenGL = !usesOpenGL; setUseOpenGL (usesOpenGL); break;
         default:
             jassertfalse;
             break;
@@ -536,6 +575,8 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
         menu.addCommandItem (&commandManager, CommandIDs::viewFullScreen);
         menu.addCommandItem (&commandManager, CommandIDs::viewExtraWindow);
         menu.addCommandItem (&commandManager, CommandIDs::viewExitFullScreen);
+        menu.addSeparator();
+        menu.addCommandItem (&commandManager, CommandIDs::viewOpenGL);
     }
     else if (topLevelMenuIndex == 5)
     {
