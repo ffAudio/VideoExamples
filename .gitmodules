@@ -14,3 +14,6 @@
 [submodule "libraries/x264"]
 	path = libraries/x264
 	url = https://code.videolan.org/videolan/x264.git
+[submodule "foleys_video_addons"]
+	path = modules/foleys_video_addons
+	url = git@git.audiomodeling.com:audiomodeling/foleys_video_addons.git
