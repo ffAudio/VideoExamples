@@ -24,11 +24,13 @@
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="VideoPlayer"
                        osxCompatibility="10.9 SDK" cppLanguageStandard="c++11" cppLibType="libc++"
                        customXcodeFlags="" enablePluginBinaryCopyStep="0" recommendedWarnings="LLVM"
-                       headerPath="../../../modules/foleys_video_engine/libs/include"/>
+                       headerPath="../../../modules/foleys_video_engine/libs/include"
+                       libraryPath="../../../modules/foleys_video_engine/libs/MacOSX/ffmpeg/${CURRENT_ARCH}"/>
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="VideoPlayer"
                        osxCompatibility="10.9 SDK" cppLanguageStandard="c++11" cppLibType="libc++"
                        customXcodeFlags="" enablePluginBinaryCopyStep="1" recommendedWarnings="LLVM"
-                       headerPath="../../../modules/foleys_video_engine/libs/include"/>
+                       headerPath="../../../modules/foleys_video_engine/libs/include"
+                       libraryPath="../../../modules/foleys_video_engine/libs/MacOSX/ffmpeg/${CURRENT_ARCH}"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../JUCE/modules"/>
@@ -52,8 +54,10 @@
                   smallIcon="ynetjT" bigIcon="ynetjT" cameraPermissionNeeded="1"
                   UIFileSharingEnabled="1">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../modules/foleys_video_engine/libs/include"/>
-        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../modules/foleys_video_engine/libs/include"/>
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../modules/foleys_video_engine/libs/include"
+                       libraryPath="../../../modules/foleys_video_engine/libs/MacOSX/ffmpeg/${CURRENT_ARCH}"/>
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../modules/foleys_video_engine/libs/include"
+                       libraryPath="../../../modules/foleys_video_engine/libs/MacOSX/ffmpeg/${CURRENT_ARCH}"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_opengl"/>
