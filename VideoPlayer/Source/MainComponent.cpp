@@ -54,6 +54,8 @@ public:
     {
         setInterceptsMouseClicks (true, true);
         setWantsKeyboardFocus (false);
+
+        setContinuousRepaint (30);
     }
 
     bool isInterestedInFileDrag (const juce::StringArray &) override
@@ -165,7 +167,7 @@ public:
                 clip->setNextReadPosition (juce::int64 (osdComponent.seekBar.getValue() * sampleRate));
         };
 
-#if FOLEYS_CAMERA_SUPPORT
+#if FOLEYS_HAS_ADDONS
         osdComponent.camera.onClick = [this]
         {
             openCamera();
@@ -284,14 +286,14 @@ public:
         }
     }
 
-#if FOLEYS_CAMERA_SUPPORT
+#if FOLEYS_HAS_ADDONS
     void openCamera()
     {
         osdComponent.setClip ({});
         transportSource.stop();
         transportSource.setSource (nullptr);
 
-        auto newClip = cameraManager.createCameraClip (0);
+        auto newClip = cameraManager.createCameraClip (1);
         videoEngine.manageLifeTime (newClip);
         newClip->prepareToPlay (blockSize, sampleRate);
         clip = newClip;

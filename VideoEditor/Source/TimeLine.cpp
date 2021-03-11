@@ -211,7 +211,10 @@ void TimeLine::addClipToEdit (std::shared_ptr<foleys::AVClip> clip, double start
         length = editLength > start ? std::min (editLength - start, 60.0) : 60.0;
     }
 
-    auto descriptor = edit->addClip (clip, start, length);
+    foleys::ComposedClip::ClipPosition position;
+    position.start = start;
+    position.length = length;
+    auto descriptor = edit->addClip (clip, position);
     if (y < 190)
     {
         int line = juce::roundToInt ((y - margin) / double (videoHeight + margin));

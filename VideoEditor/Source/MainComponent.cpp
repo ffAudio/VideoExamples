@@ -127,8 +127,12 @@ void MainComponent::setUseOpenGL (bool shouldUseOpenGL)
     if (shouldUseOpenGL)
         preview = std::make_unique<foleys::OpenGLView>();
     else
-#endif
         preview = std::make_unique<foleys::SoftwareView>();
+
+#else
+    juce::ignoreUnused (shouldUseOpenGL);
+    preview = std::make_unique<foleys::SoftwareView>();
+#endif
 
     preview->setClip (timeline.getEditClip());
 

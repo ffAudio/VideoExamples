@@ -20,7 +20,7 @@ PlayerWindow::PlayerWindow (bool shouldUseOpenGL) : juce::TopLevelWindow ("Outpu
     else
         video = std::make_unique<foleys::SoftwareView>();
 #else
-    juce::IgnoreUnused (shouldUseOpenGL);
+    juce::ignoreUnused (shouldUseOpenGL);
     video = std::make_unique<foleys::SoftwareView>();
 #endif
 
