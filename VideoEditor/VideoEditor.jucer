@@ -29,6 +29,8 @@
             file="Source/ProcessorComponent.h"/>
       <FILE id="xBzud2" name="TimeLine.cpp" compile="1" resource="0" file="Source/TimeLine.cpp"/>
       <FILE id="xSXKGD" name="TimeLine.h" compile="0" resource="0" file="Source/TimeLine.h"/>
+      <FILE id="Z5GIts" name="TimeMeter.cpp" compile="1" resource="0" file="Source/TimeMeter.cpp"/>
+      <FILE id="gooVcr" name="TimeMeter.h" compile="0" resource="0" file="Source/TimeMeter.h"/>
       <FILE id="C66jwn" name="TransportControl.cpp" compile="1" resource="0"
             file="Source/TransportControl.cpp"/>
       <FILE id="tjoZLs" name="TransportControl.h" compile="0" resource="0"

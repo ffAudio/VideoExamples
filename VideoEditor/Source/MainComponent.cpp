@@ -69,11 +69,20 @@ MainComponent::MainComponent()
     addAndMakeVisible (library);
     addAndMakeVisible (properties);
     addAndMakeVisible (viewport);
+    addAndMakeVisible (timeMeter);
+    addAndMakeVisible (zoom);
     addAndMakeVisible (transport);
     addAndMakeVisible (levelMeter);
 
     viewport.setViewedComponent (&timeline);
     timeline.setSize (2000, 510);
+
+    zoom.setRange (1.0, 10.0, 1.0);
+    zoom.onValueChange = [&]
+    {
+        timeline.setSize (juce::roundToInt (2000 * zoom.getValue()), 510);
+        timeMeter.repaint();
+    };
 
     setUseOpenGL (usesOpenGL);
 
@@ -147,7 +156,7 @@ void MainComponent::setUseOpenGL (bool shouldUseOpenGL)
     resized();
 }
 
-KeyPressMappingSet* MainComponent::getKeyMappings() const
+juce::KeyPressMappingSet* MainComponent::getKeyMappings() const
 {
     return commandManager.getKeyMappings();
 }
@@ -179,7 +188,9 @@ void MainComponent::resized()
         lowerPart = juce::roundToInt (bounds.getHeight() * 0.4);
         auto lower  = bounds.removeFromBottom (lowerPart);
         levelMeter.setBounds (lower.removeFromRight (120).reduced (2));
-        lower.removeFromTop (14); // TODO: ruler
+        auto ruler  = lower.removeFromTop (14);
+        zoom.setBounds (ruler.removeFromRight (200));
+        timeMeter.setBounds (ruler);
         viewport.setBounds (lower);
         auto sides = juce::roundToInt (bounds.getWidth() / 4.0);
         library.setBounds (bounds.removeFromLeft (sides));
@@ -374,7 +385,11 @@ void MainComponent::getAllCommands (Array<CommandID>& commands)
                   CommandIDs::editSplice, CommandIDs::editVisibility, CommandIDs::editPreferences);
     commands.add (CommandIDs::playStart, CommandIDs::playStop, CommandIDs::playReturn);
     commands.add (CommandIDs::trackAdd, CommandIDs::trackRemove);
-    commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExtraWindow, CommandIDs::viewExitFullScreen, CommandIDs::viewOpenGL);
+    commands.add (CommandIDs::viewFullScreen, CommandIDs::viewExtraWindow, CommandIDs::viewExitFullScreen
+#if FOLEYS_USE_OPENGL
+                  , CommandIDs::viewOpenGL
+#endif
+                  );
     commands.add (CommandIDs::helpAbout, CommandIDs::helpHelp);
 }
 
@@ -526,15 +541,15 @@ bool MainComponent::perform (const InvocationInfo& info)
     return true;
 }
 
-StringArray MainComponent::getMenuBarNames()
+juce::StringArray MainComponent::getMenuBarNames()
 {
     return {NEEDS_TRANS ("File"), NEEDS_TRANS ("Edit"), NEEDS_TRANS ("Play"), NEEDS_TRANS ("Track"), NEEDS_TRANS ("View"), NEEDS_TRANS ("Help")};
 }
 
-PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
-                                          const String&)
+juce::PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
+                                                const String&)
 {
-    PopupMenu menu;
+    juce::PopupMenu menu;
     if (topLevelMenuIndex == 0)
     {
         menu.addCommandItem (&commandManager, CommandIDs::fileNew);
@@ -579,8 +594,10 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
         menu.addCommandItem (&commandManager, CommandIDs::viewFullScreen);
         menu.addCommandItem (&commandManager, CommandIDs::viewExtraWindow);
         menu.addCommandItem (&commandManager, CommandIDs::viewExitFullScreen);
+#if FOLEYS_USE_OPENGL
         menu.addSeparator();
         menu.addCommandItem (&commandManager, CommandIDs::viewOpenGL);
+#endif
     }
     else if (topLevelMenuIndex == 5)
     {
@@ -592,7 +609,7 @@ PopupMenu MainComponent::getMenuForIndex (int topLevelMenuIndex,
 
 void MainComponent::timerCallback()
 {
-    for (auto& source : Desktop::getInstance().getMouseSources())
+    for (auto& source : juce::Desktop::getInstance().getMouseSources())
         if (source.isDragging())
             return;
 

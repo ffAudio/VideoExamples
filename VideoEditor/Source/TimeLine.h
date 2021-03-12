@@ -28,6 +28,9 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+class Player;
+class Properties;
+
 //==============================================================================
 /*
 */

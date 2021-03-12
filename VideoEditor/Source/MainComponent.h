@@ -30,6 +30,7 @@
 #include "Library.h"
 #include "Properties.h"
 #include "TimeLine.h"
+#include "TimeMeter.h"
 #include "TransportControl.h"
 #include "PlayerWindow.h"
 
@@ -38,11 +39,11 @@
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent   : public Component,
-                        public DragAndDropContainer,
-                        private ApplicationCommandTarget,
-                        public MenuBarModel,
-                        private Timer
+class MainComponent   : public juce::Component,
+                        public juce::DragAndDropContainer,
+                        private juce::ApplicationCommandTarget,
+                        public juce::MenuBarModel,
+                        private juce::Timer
 {
 public:
     //==============================================================================
@@ -58,26 +59,26 @@ public:
     };
 
     //==============================================================================
-    void paint (Graphics&) override;
+    void paint (juce::Graphics&) override;
     void resized() override;
 
     void setViewerFullScreen (Mode mode);
 
     void timerCallback() override;
 
-    ApplicationCommandTarget* getNextCommandTarget() override { return nullptr; }
-    void getAllCommands (Array<CommandID>& commands) override;
+    juce::ApplicationCommandTarget* getNextCommandTarget() override { return nullptr; }
+    void getAllCommands (juce::Array<CommandID>& commands) override;
     void getCommandInfo (CommandID commandID, ApplicationCommandInfo& result) override;
     bool perform (const InvocationInfo& info) override;
 
-    StringArray getMenuBarNames() override;
-    PopupMenu getMenuForIndex (int topLevelMenuIndex,
+    juce::StringArray getMenuBarNames() override;
+    juce::PopupMenu getMenuForIndex (int topLevelMenuIndex,
                                const String& menuName) override;
     void menuItemSelected (int, int) override {}
 
-    KeyPressMappingSet* getKeyMappings() const;
+    juce::KeyPressMappingSet* getKeyMappings() const;
 
-    void loadEditFile (const File& file);
+    void loadEditFile (const juce::File& file);
 
     bool handleQuitRequest();
 
@@ -97,11 +98,11 @@ private:
 
     //==============================================================================
 
-    AudioDeviceManager    deviceManager;
+    juce::AudioDeviceManager deviceManager;
     foleys::VideoEngine   videoEngine;
     foleys::ClipRenderer  renderer { videoEngine };
 
-    ApplicationCommandManager   commandManager;
+    juce::ApplicationCommandManager    commandManager;
 
     std::unique_ptr<foleys::VideoView> preview;
 
@@ -111,14 +112,16 @@ private:
     Properties            properties;
     Viewport              viewport;
     TimeLine              timeline   { videoEngine, player, properties };
+    TimeMeter             timeMeter  { timeline, viewport.getHorizontalScrollBar() };
     TransportControl      transport  { player };
+    juce::Slider          zoom       { juce::Slider::LinearHorizontal, juce::Slider::NoTextBox };
 
     foleys::LevelMeterLookAndFeel   lmLookAndFeel;
     foleys::LevelMeter              levelMeter;
 
     std::unique_ptr<PlayerWindow>   playerWindow;
 
-    File editFileName;
+    juce::File editFileName;
     int  lowerPart = 0;
     Mode viewerFullscreenMode = Mode::NormalView;
     bool usesOpenGL = true;
