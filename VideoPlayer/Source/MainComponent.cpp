@@ -93,6 +93,10 @@ public:
         dummy.setBounds (0, 0, 1, 1);
         addAndMakeVisible (dummy);
         
+#if FOLEYS_USE_FFMPEG
+        videoEngine.getFormatManager().registerFormat(std::make_unique<foleys::FFmpegFormat>());
+#endif
+
         addAndMakeVisible (videoComponent);
         videoComponent.addAndMakeVisible (osdComponent);
 
