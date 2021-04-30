@@ -297,7 +297,9 @@ public:
         transportSource.stop();
         transportSource.setSource (nullptr);
 
-        auto newClip = cameraManager.createCameraClip (1);
+        auto camera = cameraManager.openCamera(0);
+        camera->onCaptureEngineInitialized = [c = camera.get()]() { c->start(); };
+        auto newClip = cameraManager.createCameraClip (std::move (camera));
         videoEngine.manageLifeTime (newClip);
         newClip->prepareToPlay (blockSize, sampleRate);
         clip = newClip;
