@@ -107,6 +107,10 @@ MainComponent::MainComponent()
 
     commandManager.getKeyMappings()->resetToDefaultMappings();
 
+#if FOLEYS_USE_FFMPEG
+    videoEngine.getFormatManager().registerFormat (std::make_unique<foleys::FFmpegFormat>());
+#endif
+
     auto settingsFolder = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile (ProjectInfo::companyName).getChildFile (ProjectInfo::projectName);
     settingsFolder.createDirectory();
     videoEngine.getAudioPluginManager().setPluginDataFile (settingsFolder.getChildFile ("PluginList.xml"));
