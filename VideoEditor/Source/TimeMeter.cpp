@@ -36,7 +36,7 @@ void TimeMeter::paint (juce::Graphics& g)
     auto start = timeline.getTimeFromX (juce::roundToInt (left));
     auto end   = timeline.getTimeFromX (juce::roundToInt (left + scrollbar.getCurrentRangeSize()));
 
-    auto step = std::ceil (timeline.getTimeFromX (50));
+    auto step = int (std::ceil (timeline.getTimeFromX (50)));
 
     for (int i = static_cast<int>(start); i < end; i += step)
     {

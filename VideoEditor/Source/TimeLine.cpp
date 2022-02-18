@@ -166,7 +166,7 @@ void TimeLine::itemDropped (const SourceDetails &dragSourceDetails)
 
         if (clip.get() == nullptr)
         {
-            AlertWindow::showNativeDialogBox (NEEDS_TRANS ("Loading failed"), NEEDS_TRANS (""), true);
+//            AlertWindow::showNativeDialogBox (NEEDS_TRANS ("Loading failed"), NEEDS_TRANS (""), true);
             return;
         }
 

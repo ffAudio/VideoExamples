@@ -1,5 +1,5 @@
 **/.DS*
 **/Builds/
 **/JuceLibraryCode/
-**/!JuceLibraryCode/AppConfig.h
+!**/JuceLibraryCode/AppConfig.h
 libraries/build*/

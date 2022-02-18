@@ -51,13 +51,20 @@ ClipProcessorProperties::ClipProcessorProperties (foleys::VideoEngine& engineToU
             auto& manager = engine.getVideoPluginManager();
             manager.populatePluginSelection (menu);
 
-            auto description = manager.getPluginDescriptionFromMenuID (menu.show());
-            String error;
-            auto processor = manager.createVideoPluginInstance (description, error);
-            if (processor != nullptr)
-                lockedClip->addVideoProcessor (std::move (processor));
+            auto safePointer = juce::Component::SafePointer<ClipProcessorProperties>(this);
+            menu.showMenuAsync (juce::PopupMenu::Options(), [&, safePointer](int itemID)
+            {
+                if (!safePointer)
+                    return;
 
-            updateEditors();
+                auto description = manager.getPluginDescriptionFromMenuID (itemID);
+                String error;
+                auto processor = manager.createVideoPluginInstance (description, error);
+                if (processor != nullptr)
+                    lockedClip->addVideoProcessor (std::move (processor));
+
+                updateEditors();
+            });
         };
     }
     else
@@ -73,17 +80,25 @@ ClipProcessorProperties::ClipProcessorProperties (foleys::VideoEngine& engineToU
             auto plugins = manager.getKnownPluginDescriptions();
             KnownPluginList::addToMenu (menu, plugins, KnownPluginList::sortByManufacturer);
 
-            auto selected = KnownPluginList::getIndexChosenByMenu (plugins, menu.show());
-            if (isPositiveAndBelow (selected, plugins.size()) == false)
-                return;
+            auto safePointer = juce::Component::SafePointer<ClipProcessorProperties>(this);
+            menu.showMenuAsync (juce::PopupMenu::Options(), [&, safePointer](int itemID)
+            {
+                if (!safePointer)
+                    return;
 
-            String error;
-            auto& owningClip = lockedClip->getOwningClip();
-            auto processor = manager.createAudioPluginInstance (plugins.getReference (selected).createIdentifierString(), owningClip.getSampleRate(), owningClip.getDefaultBufferSize(), error);
-            if (processor != nullptr)
-                lockedClip->addAudioProcessor (std::move (processor));
+                auto selected = KnownPluginList::getIndexChosenByMenu (plugins, itemID);
+                if (isPositiveAndBelow (selected, plugins.size()) == false)
+                    return;
 
-            updateEditors();
+                String error;
+                auto& owningClip = lockedClip->getOwningClip();
+                auto processor = manager.createAudioPluginInstance (plugins.getReference (selected).createIdentifierString(), owningClip.getSampleRate(), owningClip.getDefaultBufferSize(), error);
+                if (processor != nullptr)
+                    lockedClip->addAudioProcessor (std::move (processor));
+
+                updateEditors();
+
+            });
         };
     }
 
