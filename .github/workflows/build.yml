@@ -1,0 +1,44 @@
+---
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - feature/cmake
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  Build:
+
+    name: ${{ matrix.os }} tests
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 1
+          ref: feature/cmake
+
+      - name: Set up cache
+        uses: actions/cache@v2
+        with:
+          path: Cache
+          key: ${{ runner.os }}.tests.${{ hashFiles('**/') }}
+          restore-keys: ${{ runner.os }}.tests.
+
+      - name: Build
+        run: make build

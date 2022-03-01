@@ -107,7 +107,7 @@ public:
         }
 #endif /* DEBUG */
 
-#ifdef USE_FF_AUDIO_METERS
+#if USE_FF_AUDIO_METERS
         meter = std::make_unique<foleys::LevelMeter>();
         meter->getLookAndFeel()->setMeterColour (foleys::LevelMeterLookAndFeel::lmBackgroundColour,
                                                  juce::Colour::fromFloatRGBA (0.0f, 0.0f, 0.0f, 0.6f));
@@ -213,7 +213,7 @@ public:
         // the AudioTransportSource takes care of start, stop and resample
         transportSource.getNextAudioBlock (info);
 
-#ifdef USE_FF_AUDIO_METERS
+#if USE_FF_AUDIO_METERS
         meterSource.measureBlock (readBuffer);
 #endif
 
@@ -313,7 +313,7 @@ public:
         videoComponent.setBounds (getBounds());
         osdComponent.setBounds (getBounds());
 
-#ifdef USE_FF_AUDIO_METERS
+#if USE_FF_AUDIO_METERS
         const int w = 30 + 20 * videoReader->getVideoChannels();
         meter->setBounds (getWidth() - w, getHeight() - 240, w, 200);
 #endif
@@ -354,7 +354,7 @@ private:
     VideoComponentWithDropper   videoComponent;
     OSDComponent                osdComponent;
 
-#ifdef USE_FF_AUDIO_METERS
+#if USE_FF_AUDIO_METERS
     std::unique_ptr<LevelMeter> meter;
     LevelMeterSource            meterSource;
 #endif

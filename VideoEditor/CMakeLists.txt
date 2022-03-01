@@ -43,7 +43,7 @@ target_sources (${PROJECT_NAME} PRIVATE
 	"${sourceDir}/TransportControl.cpp")
 
 target_link_libraries (${PROJECT_NAME} PRIVATE
-	foleys_video_engine
+	Foleys::foleys_video_engine
 	ff_meters
 	juce_audio_utils 
 	juce_opengl
@@ -59,5 +59,8 @@ target_compile_definitions (${PROJECT_NAME} PRIVATE
 	JUCE_PLUGINHOST_LADSPA=1
 	FOLEYS_USE_OPENGL=0
 	FF_AUDIO_ALLOW_ALLOCATIONS_IN_MEASURE_BLOCK=0
-	FOLEYS_REPORT_USAGE=0)
+	FOLEYS_REPORT_USAGE=0
+	FOLEYS_CAMERA_SUPPORT=0
+	USE_FF_AUDIO_METERS=0)
 
+juce_generate_juce_header (${PROJECT_NAME})

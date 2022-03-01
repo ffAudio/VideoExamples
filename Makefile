@@ -30,7 +30,7 @@ override FOLEYS_ROOT := $(patsubst %/,%,$(strip $(dir $(realpath $(firstword $(M
 
 override THIS_MAKEFILE := $(FOLEYS_ROOT)/Makefile
 
-override cmake_config = cd $(FOLEYS_ROOT) && $(CMAKE) -B $(BUILDS) -G "$(CMAKE_GENERATOR)" --log-level=DEBUG
+override cmake_config = cd $(FOLEYS_ROOT) && $(CMAKE) -B $(BUILDS) -G "$(CMAKE_GENERATOR)" --log-level=DEBUG -D FOLEYS_MAC_UNIVERSAL_BINARY=OFF
 
 override cmake_build_configuration = echo "Building $(1) configuration..."; $(CMAKE) --build $(BUILDS) -j $(NUM_CORES) --config $(1)
 
@@ -54,3 +54,7 @@ config: ## Configure cmake
 
 build: config ## Build the examples
 	@$(call cmake_build_configuration,Debug)
+
+#
+
+.PHONY: $(shell grep -E '^[a-zA-Z_-]+:.*?\#\# .*$$' $(THIS_MAKEFILE) | sed 's/:.*/\ /' | tr '\n' ' ')
