@@ -15,7 +15,7 @@ CPMAddPackage (NAME foleys_video_engine
                GIT_TAG origin/feature/cmake
                OPTIONS "FOLEYS_BUILD_TESTS OFF")
 
-juce_add_module ("${CMAKE_CURRENT_LIST_DIR}/modules/ff_meters")
+#juce_add_module ("${CMAKE_CURRENT_LIST_DIR}/modules/ff_meters")
 
 add_subdirectory (VideoEditor)
 add_subdirectory (VideoPlayer)
