@@ -109,10 +109,10 @@ public:
 
 #if USE_FF_AUDIO_METERS
         meter = std::make_unique<foleys::LevelMeter>();
-        meter->getLookAndFeel()->setMeterColour (foleys::LevelMeterLookAndFeel::lmBackgroundColour,
-                                                 juce::Colour::fromFloatRGBA (0.0f, 0.0f, 0.0f, 0.6f));
+        meter->getLookAndFeel().setColour (foleys::LevelMeter::ColourIds::lmBackgroundColour,
+										   juce::Colour::fromFloatRGBA (0.0f, 0.0f, 0.0f, 0.6f));
         meter->setMeterSource (&meterSource);
-        addAndMakeVisible (meter);
+        addAndMakeVisible (*meter);
 #endif
 
         osdComponent.open.onClick = [this]
@@ -314,7 +314,7 @@ public:
         osdComponent.setBounds (getBounds());
 
 #if USE_FF_AUDIO_METERS
-        const int w = 30 + 20 * videoReader->getVideoChannels();
+		const int w = 30 + 20 * meterSource.getNumChannels();
         meter->setBounds (getWidth() - w, getHeight() - 240, w, 200);
 #endif
     }
@@ -355,8 +355,8 @@ private:
     OSDComponent                osdComponent;
 
 #if USE_FF_AUDIO_METERS
-    std::unique_ptr<LevelMeter> meter;
-    LevelMeterSource            meterSource;
+    std::unique_ptr<foleys::LevelMeter> meter;
+    foleys::LevelMeterSource            meterSource;
 #endif
 
     juce::AudioBuffer<float>    readBuffer;

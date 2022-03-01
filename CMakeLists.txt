@@ -8,6 +8,8 @@ if (NOT DEFINED ENV{CPM_SOURCE_CACHE})
     set (ENV{CPM_SOURCE_CACHE} "${CMAKE_CURRENT_LIST_DIR}/Cache")
 endif()
 
+set (ENV{CPM_USE_NAMED_CACHE_DIRECTORIES} ON)
+
 include ("${CMAKE_CURRENT_LIST_DIR}/cmake/CPM.cmake")
 
 CPMAddPackage (NAME foleys_video_engine
@@ -15,7 +17,12 @@ CPMAddPackage (NAME foleys_video_engine
                GIT_TAG origin/feature/cmake
                OPTIONS "FOLEYS_BUILD_TESTS OFF")
 
-#juce_add_module ("${CMAKE_CURRENT_LIST_DIR}/modules/ff_meters")
+CPMAddPackage (NAME ff_meters
+               GITHUB_REPOSITORY ffAudio/ff_meters
+               GIT_TAG origin/master
+               DOWNLOAD_ONLY ON)
+
+juce_add_module ("${ff_meters_SOURCE_DIR}")
 
 add_subdirectory (VideoEditor)
 add_subdirectory (VideoPlayer)

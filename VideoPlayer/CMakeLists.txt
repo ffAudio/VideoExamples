@@ -25,6 +25,7 @@ target_sources (${PROJECT_NAME} PRIVATE
 
 target_link_libraries (${PROJECT_NAME} PRIVATE
 	Foleys::foleys_video_engine
+	ff_meters
 	juce_audio_utils 
 	juce_opengl
 	juce_gui_extra
@@ -38,6 +39,6 @@ target_compile_definitions (${PROJECT_NAME} PRIVATE
 	FOLEYS_USE_OPENGL=1
 	FOLEYS_REPORT_USAGE=0
 	FOLEYS_CAMERA_SUPPORT=0
-	USE_FF_AUDIO_METERS=0)
+	USE_FF_AUDIO_METERS=1)
 
 juce_generate_juce_header (${PROJECT_NAME})
