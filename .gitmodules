@@ -1,16 +1,7 @@
-[submodule "JUCE"]
-	path = JUCE
-	url = https://github.com/juce-framework/JUCE.git
 [submodule "modules/foleys_video_engine"]
 	path = modules/foleys_video_engine
 	url = https://github.com/ffAudio/foleys_video_engine.git
+	branch = feature/cmake
 [submodule "modules/ff_meters"]
 	path = modules/ff_meters
 	url = https://github.com/ffAudio/ff_meters.git
-[submodule "libraries/ffmpeg"]
-	path = libraries/ffmpeg
-	url = https://git.ffmpeg.org/ffmpeg.git
-
-[submodule "libraries/x264"]
-	path = libraries/x264
-	url = https://code.videolan.org/videolan/x264.git
