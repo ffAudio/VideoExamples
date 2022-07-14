@@ -30,7 +30,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          submodules: false
+          submodules: true
           fetch-depth: 1
           ref: feature/cmake
 
